@@ -5,7 +5,7 @@
 \title{runs a beeswarm plot}
 \usage{
 getBeeswarm(name, dataMat, what = c("tpm", "count"), phenoData, patientID,
-  repeat_biotype)
+  repeat_biotype, how)
 }
 \description{
 runs a beeswarm plot

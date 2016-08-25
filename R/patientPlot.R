@@ -2,13 +2,14 @@
 #' @param kexp a kallisto Experiment
 #' @param patientID a patient id to split a kexp by
 #' @param repeatType a repeat biotype of interest, 'LTR', 'SINE', 'element', etc
+#' @param normType   either TMM CQN or none
 #' @importFrom ComplexHeatmap Heatmap draw
 #' @importFrom graphics grid
 #' @import beeswarm
 #' @importFrom EDASeq plotPCA plotRLE
 #' @export
 #' @return returns NULL but plots cool stuff
-patientPlot<-function(kexp,patientID=NULL,repeatType=NULL){
+patientPlot<-function(kexp,patientID=NULL,repeatType=NULL, normType=c("TMM","CQN","none")){
 
  readkey<-function()
 {
@@ -16,11 +17,11 @@ patientPlot<-function(kexp,patientID=NULL,repeatType=NULL){
     line <- readline()
 }
 
-#subset repeats
-repKexp<-findRepeats(kexp)
-##grab patient
-
-patient.kexp<-kexpByPatient(repKexp,patientID=patientID)
+  how<-match.arg(normType,c("TMM","CQN","none"))
+  #subset repeats
+  repKexp<-findRepeats(kexp)
+  ##grab patient
+  patient.kexp<-kexpByPatient(repKexp,patientID=patientID)
 
 ##grab repeat gene biotype
 if(is.null(repeatType)==FALSE){
@@ -54,8 +55,8 @@ patient.type<-kexpByType(patient.kexp,biotype=repeatType)
   ##add beeswarm plots
 
   #plots top 20 byMAD individual repeats across clonal evolution
-  beePatient(patient.ltr,patientID=patientID,repeat_biotype="LTR",selected=20)
-  beePatient(patient.sine,patientID=patientID,repeat_biotype="SINE",selected=20)
+  beePatient(patient.ltr,patientID=patientID,repeat_biotype="LTR",selected=20,how)
+  beePatient(patient.sine,patientID=patientID,repeat_biotype="SINE",selected=20,how)
   
   #now plot all repeats together
   plotRLE(counts(patient.ltr))
@@ -66,25 +67,20 @@ patient.type<-kexpByType(patient.kexp,biotype=repeatType)
   readkey()
   
   #plot by columns
-  beeColumns(patient.ltr,patientID=patientID,repeat_biotype="LTR",selected=nrow(patient.ltr),what="count")
+  beeColumns(patient.ltr,patientID=patientID,repeat_biotype="LTR",selected=nrow(patient.ltr),what="count",how="none")
   readkey() 
-  beeColumns(patient.sine,patientID=patientID,repeat_biotype="SINE",selected=nrow(patient.sine),what="count") 
+  beeColumns(patient.sine,patientID=patientID,repeat_biotype="SINE",selected=nrow(patient.sine),what="count",how="none") 
   readkey()
-  beeColumns(patient.ltr,patientID=patientID,repeat_biotype="LTR",selected=nrow(patient.ltr),what="tpm") 
+  beeColumns(patient.ltr,patientID=patientID,repeat_biotype="LTR",selected=nrow(patient.ltr),what="tpm",how="none") 
   readkey()
-  beeColumns(patient.sine,patientID=patientID,repeat_biotype="SINE",selected=nrow(patient.sine),what="tpm")
+  beeColumns(patient.sine,patientID=patientID,repeat_biotype="SINE",selected=nrow(patient.sine),what="tpm", how="none")
  readkey()
   ##calculate pearson coef   cor() 
   #FIX ME: add mutation annotations plotRLE(counts(SU583.ltr))
    ##FIX ME::  calculate TMM and normalize by library size
 
    ##FIX ME ::  run CQN   
-
-
-
-}
-
-
+  } #else repeatType as null, plots both LTR and SINE
 
 
 } #{{{ main

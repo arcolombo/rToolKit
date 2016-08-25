@@ -2,10 +2,10 @@
 % Please edit documentation in R/beeColumns.R
 \name{beeColumns}
 \alias{beeColumns}
-\title{plots beeswarm of all repeats by clonal stage}
+\title{beeswarm plot of expression columns}
 \usage{
 beeColumns(kexp, patientID = NULL, repeat_biotype = NULL, selected = 20,
-  what = c("tpm", "counts"))
+  what = c("tpm", "counts"), how = c("TMM", "CQN", "none"))
 }
 \arguments{
 \item{kexp}{a kexp}
@@ -17,8 +17,10 @@ beeColumns(kexp, patientID = NULL, repeat_biotype = NULL, selected = 20,
 \item{selected}{how many byMads to select}
 
 \item{what}{is count or tpm}
+
+\item{how}{norm method TMM CQN or none (raw est_counts)}
 }
 \description{
-plots beeswarm of all repeats by clonal stage
+plots beeswarm of all repeats by clonal stage with options for normalized CPM , note that TPM is not normalized.
 }
 

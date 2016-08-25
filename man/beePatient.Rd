@@ -4,7 +4,8 @@
 \alias{beePatient}
 \title{beeswarm patient info plotting cpm or tpm of patient specific, repeat specififc of three interesting clonal processes.}
 \usage{
-beePatient(kexp, patientID = NULL, repeat_biotype = NULL, selected = 20)
+beePatient(kexp, patientID = NULL, repeat_biotype = NULL, selected = 20,
+  how = c("TMM", "CQN", "none"))
 }
 \arguments{
 \item{kexp}{a kexp}
@@ -12,6 +13,8 @@ beePatient(kexp, patientID = NULL, repeat_biotype = NULL, selected = 20)
 \item{patientID}{a character to select patient info}
 
 \item{repeat_biotype}{a character either 'element','LTR','SINE', etc}
+
+\item{how}{norm type TMM CQN none}
 }
 \description{
 beeswarm patient info plotting cpm or tpm of patient specific, repeat specififc of three interesting clonal processes.

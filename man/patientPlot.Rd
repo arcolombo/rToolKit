@@ -4,7 +4,8 @@
 \alias{patientPlot}
 \title{plots a heatmap of patient specific information using a heatmap and beeswarm for the scatter.  each plot shows fixed patient and fixed repeat biotype}
 \usage{
-patientPlot(kexp, patientID = NULL, repeatType = NULL)
+patientPlot(kexp, patientID = NULL, repeatType = NULL, normType = c("TMM",
+  "CQN", "none"))
 }
 \arguments{
 \item{kexp}{a kallisto Experiment}
@@ -12,6 +13,8 @@ patientPlot(kexp, patientID = NULL, repeatType = NULL)
 \item{patientID}{a patient id to split a kexp by}
 
 \item{repeatType}{a repeat biotype of interest, 'LTR', 'SINE', 'element', etc}
+
+\item{normType}{either TMM CQN or none}
 }
 \value{
 returns NULL but plots cool stuff
