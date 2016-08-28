@@ -1,14 +1,76 @@
 #' @title find the repeats falling into orders
 #' @description  find the repeats fallingo into clonal ordering with the alternative model and hypothesis model input for element selection.  
-#' @param kexp a kallistoExperiment
+#' @param kexp a kallistoExperiment of a clonal patient kexp repeat
 #' @param clones preferable the column names of a kexp
 #' @param hypothesis  an ordering character
 #' @param alternative an alternative ordering character
 #' @param patientID  a patient character identifier
 #' @param repeatType a repeat character biotype
+#' @param read.cutoff integer a min cutoff 
+#' @param outputReport boolean if true print a CSV
+#' @param outputDir   character path
+#' @importFrom graphics pie
 #' @export
 #' @return a repeat listing for each hypothesis 
-findModel<-function(kexp,clones=NULL,hypothesis=NULL, alternative=NULL,patientID=NULL,repeatType=NULL){
+findModel<-function(kexp,clones=NULL,globalMax="pHSC", globalMin="LSC",patientID=NULL,repeatType=NULL,read.cutoff=1,outputReport=FALSE,outputDir=NULL){
+ 
+ #the input is a clonal kexp, findModel will split
+  if(is.null(patientID)==FALSE){
+ kexp<-kexpByPatient(kexp,patientID=patientID)
+  }
+  globalmax<-grep(globalMax,colnames(kexp))
+  globalmin<-grep(globalMin,colnames(kexp))
+   midID<-which(colnames(kexp)!=colnames(kexp)[globalmax])
+  globalmid<-midID[which(colnames(kexp)[midID] !=colnames(kexp)[globalmin])]
+   globalMid<-colnames(kexp)[globalmid]
+  
+  mt<-collapseBundles(kexp,"tx_id",read.cutoff=read.cutoff)
+  ##quety repeats with globalMax > globalmid> globalMin
+  id1<- mt[,globalmax]>mt[,globalmin]
+  id2<-mt[id1,globalmax]>mt[id1,globalmid]
+  hypothesis<-mt[id2,]
+  ##find annotations
+  df<-data.frame(names=rownames(hypothesis),
+                 tx_biotype=rowRanges(kexp)[rownames(hypothesis)]$tx_biotype,
+                 gene_biotype=rowRanges(kexp)[rownames(hypothesis)]$gene_biotype)
+ 
+  df2<-cbind(hypothesis,df)
 
+  dTab<-(table(df[,2]))
+  
+  pie(dTab[which(dTab>1)] )
+  dTabFreq <- prop.table(dTab[which(dTab>1)] )
+  textRad  <- 0.5
+  angles   <- dTabFreq * 2 * pi
+  csAngles <- cumsum(angles)
+  csAngles <- csAngles - angles/2
+  textX    <- textRad * cos(csAngles)
+  textY    <- textRad * sin(csAngles)
+  text(x=textX, y=textY, labels=round(dTabFreq,3))
+  title(paste0("TxBiotypes N=",nrow(hypothesis),"/",nrow(mt)," ",colnames(kexp)[globalmax],">",globalMid,">",colnames(kexp)[globalmin],">1" ))
+  readkey()
 
-}
+  dTab<-(table(df[,3]))
+  pie(dTab)
+  dTabFreq <- prop.table(dTab )
+  textRad  <- 0.5
+  angles   <- dTabFreq * 2 * pi
+  csAngles <- cumsum(angles)
+  csAngles <- csAngles - angles/2
+  textX    <- textRad * cos(csAngles)
+  textY    <- textRad * sin(csAngles)
+  text(x=textX, y=textY, labels=round(dTabFreq,3))
+  title(paste0("GeneBiotypes N=",nrow(hypothesis),"/",nrow(mt)," ",colnames(kexp)[globalmax],">",globalMid,">",colnames(kexp)[globalmin],">0"))
+  readkey()
+
+ ##print out
+
+ if(outputReport==TRUE){
+ write.csv(df2,file=paste0(outDir,"/",globalMax,"_",globalMid,"_",globalMin,".csv",row.names=TRUE))
+ }
+
+   ###FIX ME :  add beeswarm plots
+
+ ###FIX ME:  do a multiplot of pHSC > LSC and LSC > pHSC  show all combos
+  ###FIX ME ::  N(pHSC>LSC) + N(LSC>pHSC ) = N_total
+} #{{{main

@@ -5,7 +5,8 @@
 \title{CQN and edgeR analysis}
 \usage{
 cqnDE(kexp, contrastMatrix = NULL, design = NULL, patientID = NULL,
-  comparison, control, group3)
+  comparison = comparison, control = control, group3 = group3,
+  cutoff = 2)
 }
 \arguments{
 \item{kexp}{a kallistoExperiment preferably only repeats, also the repeat kexp must not be TMM Normalized}
@@ -19,6 +20,8 @@ cqnDE(kexp, contrastMatrix = NULL, design = NULL, patientID = NULL,
 \item{control}{not comparison}
 
 \item{group3}{not comparison and not control}
+
+\item{cutoff}{integer  a minimum cutoff threshold}
 }
 \value{
 returns

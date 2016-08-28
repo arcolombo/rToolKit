@@ -6,12 +6,25 @@
 #' @param comparison  the column group either pHSC , LSC ,or Blast
 #' @param control  not comparison
 #' @param group3   not comparison and not control
+#' @param cutoff   integer  a minimum cutoff threshold
 #' @import cqn
 #' @import edgeR 
+#' @importFrom quantreg rq
 #' @importFrom scales alpha
 #' @importFrom graphics par grid
+#' @importFrom grid unit gpar
+#' @import ComplexHeatmap
+#' @export
 #' @return returns 
-cqnDE<-function(kexp,contrastMatrix=NULL,design=NULL,patientID=NULL, comparison,control,group3){
+cqnDE<-function(kexp,contrastMatrix=NULL,design=NULL,patientID=NULL, comparison=comparison,control=control,group3=group3,cutoff=2){
+
+   readkey<-function()
+{
+    cat ("Press [enter] to continue")
+    line <- readline()
+}
+
+
   stopifnot(is.null(design)==FALSE) 
   #FIX ME: currently only supports 2 group comparisons
   #FIX ME: test this out across groups Blast vs LSC,  Blast vs pHSC.   
@@ -20,28 +33,29 @@ cqnDE<-function(kexp,contrastMatrix=NULL,design=NULL,patientID=NULL, comparison,
   design<-metadata(kexp)$design
   } 
   message("note the kexp must not be TMM normalized")
- 
-  dge<-DGEList(counts=counts(kexp))
-  assays(kexp)$rpkm<-rpkm(dge,log=FALSE,gene.length=eff_length(kexp))
+  cnts<-collapseBundles(kexp,read.cutoff=cutoff) 
+  dge<-DGEList(counts=cnts)
+  #assays(kexp)$rpkm<-rpkm(dge,log=FALSE,gene.length=eff_length(kexp))
+  #passing in rpkm does worse
   sizeFactors.subset<-dge$samples$lib.size #grabs sequence depth
   names(sizeFactors.subset)<-rownames(dge$samples)
-  uCovar<-data.frame(length=rowRanges(kexp)$tx_length,gccontent=rowRanges(kexp)$gc_content)
-  rownames(uCovar)<-rownames(kexp)
+  uCovar<-data.frame(length=rowRanges(kexp)[rownames(cnts)]$tx_length,gccontent=rowRanges(kexp)[rownames(cnts)]$gc_content)
+  rownames(uCovar)<-rownames(cnts)
   
   
-  stopifnot(all(rownames(kexp)==rownames(uCovar)))
-  stopifnot(all(colnames(kexp)==names(sizeFactors.subset)))
+  stopifnot(all(rownames(cnts)==rownames(uCovar)))
+  stopifnot(all(colnames(cnts)==names(sizeFactors.subset)))
 
-  cqn.subset<-cqn(round(assays(kexp)$rpkm),lengths=uCovar$length,x=uCovar$gccontent,sizeFactors=sizeFactors.subset,verbose=TRUE)
+  cqn.subset<-cqn(round(cnts),lengths=uCovar$length,x=uCovar$gccontent,sizeFactors=sizeFactors.subset,verbose=TRUE)
 
 
   par(mfrow=c(1,2))
  cqnplot(cqn.subset, n = 1, xlab = paste0("GC content Samples RPKM ",comparison," ",control," ",group3), lty = 1)
  cqnplot(cqn.subset, n = 2, xlab =paste0("length Samples RPKM ",comparison," ",control," ",group3), lty = 1)
-
+  readkey()
   RPKM.cqn<-cqn.subset$y + cqn.subset$offset #on log2 scale
 
-  RPM <- sweep(log2(counts(kexp) + 1), 2, log2(sizeFactors.subset/10^6)) #CPM
+  RPM <- sweep(log2(cnts + 1), 2, log2(sizeFactors.subset/10^6)) #CPM
   RPKM.std <- sweep(RPM, 1, log2(uCovar$length / 10^3)) #standard RPKM
 
   #need to identify groups
@@ -61,7 +75,7 @@ par(mfrow = c(1,2))
  plot(A.cqn, M.cqn, cex = 0.5, pch = 16, xlab = "A", ylab = "M",
  main = "CQN normalized RPKM", ylim = c(-4,4), xlim = c(0,12),
  col = alpha("black", 0.55))
-
+  readkey()
 
 
 par(mfrow = c(1,2))
@@ -74,30 +88,26 @@ par(mfrow = c(1,2))
  points(A.std[whLow], M.std[whLow], cex = 0.55, pch = 16, col = "blue")
  plot(A.cqn[whHigh], M.cqn[whHigh], cex = 0.55, pch = 16, xlab = "A",
  ylab = "M", main = "CQN normalized RPKM",
- ylim = c(-4,4), xlim = c(0,19), col = "red")
+ ylim = c(-6,6), xlim = c(0,19), col = "red")
  points(A.cqn[whLow], M.cqn[whLow], cex = 0.55, pch = 16, col = "blue")
-
+ readkey()
 
 ########edgeR differential expression analysis
 
-d.mont <- DGEList(counts = counts(kexp), lib.size = sizeFactors.subset, group = sapply(strsplit(pData(kexp)$ID,"_"),function(x) x[1])
+d.mont <- DGEList(counts = cnts, lib.size = sizeFactors.subset, group = sapply(strsplit(pData(kexp)$ID,"_"),function(x) x[1])
 , genes = uCovar)
 
   ##FIX ME add multi group
   d.mont$offset<-cqn.subset$glm.offset
   d.mont.cqn<-estimateGLMCommonDisp(d.mont,design=design)
 
-  ###FIX ME::: have users input this
- # if(is.null(contrastMatrix)==TRUE){
- # contrast.matrix<-makeContrasts(LSCvpHSC=LSC-pHSC,Blast-LSC,Blast-pHSC,pHSC-LSC-Blast,levels=groupModel)
- # } else {
- #  contrast.matrix<-contrastMatrix
- #  print(contrast.matrix)
-# }  ###issue with dispersion estimation with multi groups,  getting LAPACK errors... 2 group only for now....
-  
   efit.cqn<-glmFit(d.mont.cqn,design=design)
   elrt.cqn<-glmLRT(efit.cqn,coef=2)
   tagd<-topTags(elrt.cqn,n=100,adjust="BH",p=0.05)
+
+  #####heatmap ###########
+  drawHeatmap(kexp,tags=tagd,byType="counts",cutoff=2)
+ 
   return(list(fitted=elrt.cqn,topTags=tagd))
 
 } #{{{ main
