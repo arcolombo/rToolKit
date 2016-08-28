@@ -4,21 +4,28 @@
 \alias{findModel}
 \title{find the repeats falling into orders}
 \usage{
-findModel(kexp, clones = NULL, hypothesis = NULL, alternative = NULL,
-  patientID = NULL, repeatType = NULL)
+findModel(kexp, clones = NULL, globalMax = "pHSC", globalMin = "LSC",
+  patientID = NULL, repeatType = NULL, read.cutoff = 1,
+  outputReport = FALSE, outputDir = NULL)
 }
 \arguments{
-\item{kexp}{a kallistoExperiment}
+\item{kexp}{a kallistoExperiment of a clonal patient kexp repeat}
 
 \item{clones}{preferable the column names of a kexp}
-
-\item{hypothesis}{an ordering character}
-
-\item{alternative}{an alternative ordering character}
 
 \item{patientID}{a patient character identifier}
 
 \item{repeatType}{a repeat character biotype}
+
+\item{read.cutoff}{integer a min cutoff}
+
+\item{outputReport}{boolean if true print a CSV}
+
+\item{outputDir}{character path}
+
+\item{hypothesis}{an ordering character}
+
+\item{alternative}{an alternative ordering character}
 }
 \value{
 a repeat listing for each hypothesis

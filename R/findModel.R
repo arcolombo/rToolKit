@@ -26,9 +26,14 @@ findModel<-function(kexp,clones=NULL,globalMax="pHSC", globalMin="LSC",patientID
   
   mt<-collapseBundles(kexp,"tx_id",read.cutoff=read.cutoff)
   ##quety repeats with globalMax > globalmid> globalMin
-  id1<- mt[,globalmax]>mt[,globalmin]
-  id2<-mt[id1,globalmax]>mt[id1,globalmid]
-  hypothesis<-mt[id2,]
+  id1<- which(mt[,globalmax]>mt[,globalmin])
+   tt<-mt[id1,]
+   stopifnot(all(tt[,globalmax]>tt[,globalmin])==TRUE)
+  id2<-which(tt[,globalmax]>=tt[,globalmid])
+  t2<-tt[id2,]
+   stopifnot(all(t2[,globalmax]>=t2[,globalmid]))
+ 
+  hypothesis<-t2
   ##find annotations
   df<-data.frame(names=rownames(hypothesis),
                  tx_biotype=rowRanges(kexp)[rownames(hypothesis)]$tx_biotype,
@@ -47,7 +52,7 @@ findModel<-function(kexp,clones=NULL,globalMax="pHSC", globalMin="LSC",patientID
   textX    <- textRad * cos(csAngles)
   textY    <- textRad * sin(csAngles)
   text(x=textX, y=textY, labels=round(dTabFreq,3))
-  title(paste0("TxBiotypes N=",nrow(hypothesis),"/",nrow(mt)," ",colnames(kexp)[globalmax],">",globalMid,">",colnames(kexp)[globalmin],">1" ))
+  title(paste0("TxBiotypes N=",nrow(hypothesis),"/",nrow(mt)," ",colnames(kexp)[globalmax],">=",globalMid,">",colnames(kexp)[globalmin],">1" ))
   readkey()
 
   dTab<-(table(df[,3]))
@@ -60,17 +65,25 @@ findModel<-function(kexp,clones=NULL,globalMax="pHSC", globalMin="LSC",patientID
   textX    <- textRad * cos(csAngles)
   textY    <- textRad * sin(csAngles)
   text(x=textX, y=textY, labels=round(dTabFreq,3))
-  title(paste0("GeneBiotypes N=",nrow(hypothesis),"/",nrow(mt)," ",colnames(kexp)[globalmax],">",globalMid,">",colnames(kexp)[globalmin],">0"))
+  title(paste0("GeneBiotypes N=",nrow(hypothesis),"/",nrow(mt)," ",colnames(kexp)[globalmax],">=",globalMid,">",colnames(kexp)[globalmin],">0"))
   readkey()
+
+  beeswarm(asinh(df2[,c(globalmax,globalmid,globalmin)]), pch=16,xlab=paste0(colnames(kexp)[globalmax],">=",globalMid,">",colnames(kexp)[globalmin],">1") ) 
+    readkey()
+    boxplot(asinh(df2[,c(globalmax,globalmid,globalmin)] ) )
+    title(paste0(colnames(kexp)[globalmax],">=",globalMid,">",colnames(kexp)[globalmin],">1"))
 
  ##print out
 
  if(outputReport==TRUE){
  write.csv(df2,file=paste0(outDir,"/",globalMax,"_",globalMid,"_",globalMin,".csv",row.names=TRUE))
+ } else {
+  return(df2) 
  }
 
-   ###FIX ME :  add beeswarm plots
 
+
+  ##FIX ME:  should not the groups  A > B > C   and A < B < C  be equal to N? 
  ###FIX ME:  do a multiplot of pHSC > LSC and LSC > pHSC  show all combos
   ###FIX ME ::  N(pHSC>LSC) + N(LSC>pHSC ) = N_total
 } #{{{main
