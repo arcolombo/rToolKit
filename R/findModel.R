@@ -72,11 +72,14 @@ findModel<-function(kexp,clones=NULL,globalMax="pHSC", globalMin="LSC",patientID
     readkey()
     boxplot(asinh(df2[,c(globalmax,globalmid,globalmin)] ) )
     title(paste0(colnames(kexp)[globalmax],">=",globalMid,">",colnames(kexp)[globalmin],">1"))
-
+   
+   ##FIX ME:  print out the top 40-50 repeats
  ##print out
 
  if(outputReport==TRUE){
  write.csv(df2,file=paste0(outDir,"/",globalMax,"_",globalMid,"_",globalMin,".csv",row.names=TRUE))
+  ##FIX ME:  create a pdf with every repeat 1 pdf
+
  } else {
   return(df2) 
  }
