@@ -1,7 +1,6 @@
 #' @title find the repeats falling into orders
 #' @description  find the repeats fallingo into clonal ordering with the alternative model and hypothesis model input for element selection.  
 #' @param kexp a kallistoExperiment of a clonal patient kexp repeat
-#' @param clones preferable the column names of a kexp
 #' @param hypothesis  an ordering character
 #' @param alternative an alternative ordering character
 #' @param patientID  a patient character identifier
@@ -12,7 +11,7 @@
 #' @importFrom graphics pie
 #' @export
 #' @return a repeat listing for each hypothesis 
-findModel<-function(kexp,clones=NULL,globalMax="pHSC", globalMin="LSC",patientID=NULL,repeatType=NULL,read.cutoff=1,outputReport=FALSE,outputDir=NULL){
+findModel<-function(kexp,globalMax="pHSC", globalMin="LSC",patientID=NULL,repeatType=NULL,read.cutoff=1,outputReport=FALSE,outputDir=NULL){
  
  #the input is a clonal kexp, findModel will split
   if(is.null(patientID)==FALSE){
@@ -29,10 +28,23 @@ findModel<-function(kexp,clones=NULL,globalMax="pHSC", globalMin="LSC",patientID
   id1<- which(mt[,globalmax]>mt[,globalmin])
    tt<-mt[id1,]
    stopifnot(all(tt[,globalmax]>tt[,globalmin])==TRUE)
-  id2<-which(tt[,globalmax]>=tt[,globalmid])
+  id2<-which(tt[,globalmax]>tt[,globalmid])
   t2<-tt[id2,]
-   stopifnot(all(t2[,globalmax]>=t2[,globalmid]))
+   stopifnot(all(t2[,globalmax]>t2[,globalmid]))
  
+  ##fix me add all query groups
+  ## globalMax =globalmid>globalMin
+  ## gobalMax>mid=min
+  ##Mid > max > min
+  ## max = mid = min
+ ## Max > min > mid
+ ## Max < min < mid
+
+ ##inverted
+  ##min > max > mid
+  ##min = mid > max
+  ## 
+
   hypothesis<-t2
   ##find annotations
   df<-data.frame(names=rownames(hypothesis),
@@ -42,8 +54,21 @@ findModel<-function(kexp,clones=NULL,globalMax="pHSC", globalMin="LSC",patientID
   df2<-cbind(hypothesis,df)
 
   dTab<-(table(df[,2]))
-  
-  pie(dTab[which(dTab>1)] )
+  #####freq bar chart of nominal category variables
+  barplot(dTab,main=paste0("TxBiotypes N=",nrow(hypothesis),"/",nrow(mt)," ",colnames(kexp)[globalmax],">",globalMid,">",colnames(kexp)[globalmin],">",read.cutoff ),las=2,cex.names=0.6)
+  readkey()
+
+  ######## relative freq bar chart of category variables
+   barplot((dTab/sum(dTab))*100, main=paste0("TxBio RF N=",nrow(hypothesis),"/",nrow(mt)," ",colnames(kexp)[globalmax],">",globalMid,">",colnames(kexp)[globalmin],">",read.cutoff ),las=2,cex.names=0.6)
+  readkey()
+
+
+  ######gene biotype
+  barplot(table(df[,3]),main=paste0("Genetypes Freq N=",nrow(hypothesis),"/",nrow(mt)," ",colnames(kexp)[globalmax],">=",globalMid,">",colnames(kexp)[globalmin],">0"),las=2,cex.names=0.6)
+
+
+  #########pie chart 
+  pie(dTab[which(dTab>read.cutoff)] )
   dTabFreq <- prop.table(dTab[which(dTab>1)] )
   textRad  <- 0.5
   angles   <- dTabFreq * 2 * pi
@@ -52,7 +77,7 @@ findModel<-function(kexp,clones=NULL,globalMax="pHSC", globalMin="LSC",patientID
   textX    <- textRad * cos(csAngles)
   textY    <- textRad * sin(csAngles)
   text(x=textX, y=textY, labels=round(dTabFreq,3))
-  title(paste0("TxBiotypes N=",nrow(hypothesis),"/",nrow(mt)," ",colnames(kexp)[globalmax],">=",globalMid,">",colnames(kexp)[globalmin],">1" ))
+  title(paste0("TxBiotypes N=",nrow(hypothesis),"/",nrow(mt)," ",colnames(kexp)[globalmax],">=",globalMid,">",colnames(kexp)[globalmin],">",read.cutoff ))
   readkey()
 
   dTab<-(table(df[,3]))
@@ -68,10 +93,13 @@ findModel<-function(kexp,clones=NULL,globalMax="pHSC", globalMin="LSC",patientID
   title(paste0("GeneBiotypes N=",nrow(hypothesis),"/",nrow(mt)," ",colnames(kexp)[globalmax],">=",globalMid,">",colnames(kexp)[globalmin],">0"))
   readkey()
 
-  beeswarm(asinh(df2[,c(globalmax,globalmid,globalmin)]), pch=16,xlab=paste0(colnames(kexp)[globalmax],">=",globalMid,">",colnames(kexp)[globalmin],">1") ) 
+
+  boxplot(asinh(df2[,c(globalmax,globalmid,globalmin)]),medcol="red",boxcol="red",whiskcol="red")
+   axis(side=4)
+  par(new=TRUE)
+  beeswarm(asinh(df2[,c(globalmax,globalmid,globalmin)]), pch=16,xlab=paste0(colnames(kexp)[globalmax],">",globalMid,">",colnames(kexp)[globalmin],">1") ) 
     readkey()
-    boxplot(asinh(df2[,c(globalmax,globalmid,globalmin)] ) )
-    title(paste0(colnames(kexp)[globalmax],">=",globalMid,">",colnames(kexp)[globalmin],">1"))
+  
    
    ##FIX ME:  print out the top 40-50 repeats
  ##print out
