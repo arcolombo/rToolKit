@@ -21,6 +21,6 @@ beeColumns(kexp, patientID = NULL, repeat_biotype = NULL, selected = 20,
 \item{how}{norm method TMM CQN or none (raw est_counts)}
 }
 \description{
-plots beeswarm of all repeats by clonal stage with options for normalized CPM , note that TPM is not normalized.
+plots beeswarm of all repeats by clonal stage with options for normalized CPM , note that TPM is not normalized. Overlays the scatter plot with boxplot
 }
 

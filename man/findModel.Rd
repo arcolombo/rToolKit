@@ -4,14 +4,12 @@
 \alias{findModel}
 \title{find the repeats falling into orders}
 \usage{
-findModel(kexp, clones = NULL, globalMax = "pHSC", globalMin = "LSC",
+findModel(kexp, stage1 = "pHSC", stage2 = "LSC", stage3 = "Blast",
   patientID = NULL, repeatType = NULL, read.cutoff = 1,
-  outputReport = FALSE, outputDir = NULL)
+  outputReport = FALSE, outputDir = NULL, what = c("counts", "tpm"))
 }
 \arguments{
 \item{kexp}{a kallistoExperiment of a clonal patient kexp repeat}
-
-\item{clones}{preferable the column names of a kexp}
 
 \item{patientID}{a patient character identifier}
 

@@ -11,110 +11,71 @@
 #' @importFrom graphics pie
 #' @export
 #' @return a repeat listing for each hypothesis 
-findModel<-function(kexp,globalMax="pHSC", globalMin="LSC",patientID=NULL,repeatType=NULL,read.cutoff=1,outputReport=FALSE,outputDir=NULL){
- 
+findModel<-function(kexp,stage1="pHSC", stage2="LSC",stage3="Blast",patientID=NULL,repeatType=NULL,read.cutoff=1,outputReport=FALSE,outputDir=NULL, what=c("counts","tpm")){
+  what<-match.arg(what,c("counts","tpm"))
  #the input is a clonal kexp, findModel will split
   if(is.null(patientID)==FALSE){
  kexp<-kexpByPatient(kexp,patientID=patientID)
   }
-  globalmax<-grep(globalMax,colnames(kexp))
-  globalmin<-grep(globalMin,colnames(kexp))
-   midID<-which(colnames(kexp)!=colnames(kexp)[globalmax])
-  globalmid<-midID[which(colnames(kexp)[midID] !=colnames(kexp)[globalmin])]
-   globalMid<-colnames(kexp)[globalmid]
-  
+  stageId1<-grep(stage1,colnames(kexp))
+  stageId2<-grep(stage2,colnames(kexp))
+  stageId3<-grep(stage3,colnames(kexp))
+
+  if(what=="counts"){
   mt<-collapseBundles(kexp,"tx_id",read.cutoff=read.cutoff)
-  ##quety repeats with globalMax > globalmid> globalMin
-  id1<- which(mt[,globalmax]>mt[,globalmin])
-   tt<-mt[id1,]
-   stopifnot(all(tt[,globalmax]>tt[,globalmin])==TRUE)
-  id2<-which(tt[,globalmax]>tt[,globalmid])
-  t2<-tt[id2,]
-   stopifnot(all(t2[,globalmax]>t2[,globalmid]))
- 
+  } else {
+  mt<-collapseTpm(kexp,"tx_id",read.cutoff=read.cutoff)
+  }
+  ##FIX ME : add option for normalization
+  
   ##fix me add all query groups
-  ## globalMax =globalmid>globalMin
-  ## gobalMax>mid=min
-  ##Mid > max > min
-  ## max = mid = min
- ## Max > min > mid
- ## Max < min < mid
+  ## Non-Monotonic Group Strict Ordering only
+  ## 1>3>2 
+  pHSC.max.min.LSC<-orderMonotonicity(mt,globalMax=stageId1,globalMin=stageId2,globalMid=stageId3)
+  plotMonotonicity(kexp,nominalGroup=pHSC.max.min.LSC,stageId1=stageId1,stageId2=stageId2,stageId3=stageId3,mt,read.cutoff=read.cutoff,stage3=stage3,Max=colnames(kexp)[stageId1],Mid=colnames(kexp)[stageId3],Min=colnames(kexp)[stageId2] )
+  ### 3>1>2
+   blast.max.min.LSC<-orderMonotonicity(mt,globalMax=stageId3,globalMin=stageId2,globalMid=stageId1)
+   plotMonotonicity(kexp,nominalGroup=blast.max.min.LSC,stageId1=stageId1,stageId2=stageId2,stageId3=stageId3,mt,read.cutoff=read.cutoff,stage3=stage3, Max=colnames(kexp)[stageId3],Mid=colnames(kexp)[stageId1],Min=colnames(kexp)[stageId2])
 
- ##inverted
-  ##min > max > mid
-  ##min = mid > max
-  ## 
+  ###2>3>1
+  LSC.max.min.pHSC<-orderMonotonicity(mt,globalMax=stageId2,globalMin=stageId1,globalMid=stageId3)
+ plotMonotonicity(kexp,nominalGroup=LSC.max.min.pHSC,stageId1=stageId1,stageId2=stageId2,stageId3=stageId3,mt,read.cutoff=read.cutoff,stage3=stage3,Max=colnames(kexp)[stageId2],Mid=colnames(kexp)[stageId3], Min=colnames(kexp)[stageId1] )
 
-  hypothesis<-t2
-  ##find annotations
-  df<-data.frame(names=rownames(hypothesis),
-                 tx_biotype=rowRanges(kexp)[rownames(hypothesis)]$tx_biotype,
-                 gene_biotype=rowRanges(kexp)[rownames(hypothesis)]$gene_biotype)
+  ### 2>1>3
+  LSC.max.min.blast<-orderMonotonicity(mt,globalMax=stageId2,globalMin=stageId3,globalMid=stageId1)
+ plotMonotonicity(kexp,nominalGroup=LSC.max.min.blast,stageId1=stageId1,stageId2=stageId2,stageId3=stageId3,mt,read.cutoff=read.cutoff,stage3=stage3, Max=colnames(kexp)[stageId2], Mid=colnames(kexp)[stageId1], Min=colnames(kexp)[stageId3])
+
+  ###
+  
+  ### Mono Tonic Group
+  ## 1<2<3
+  pHSC.to.blast<-orderMonotonicity(mt,globalMax=stageId3,globalMin=stageId1,globalMid=stageId2)
+ plotMonotonicity(kexp,nominalGroup=pHSC.to.blast,stageId1=stageId1,stageId2=stageId2,stageId3=stageId3,mt,read.cutoff=read.cutoff,stage3=stage3, Max=colnames(kexp)[stageId3],Mid=colnames(kexp)[stageId2],Min=colnames(kexp)[stageId1])
+
+  ## 1>2>3
+  blast.to.pHSC<-orderMonotonicity(mt,globalMax=stageId1,globalMin=stageId3,globalMid=stageId2)
+ plotMonotonicity(kexp,nominalGroup=blast.to.pHSC,stageId1=stageId1,stageId2=stageId2,stageId3=stageId3,mt,read.cutoff=read.cutoff,stage3=stage3, Max=colnames(kexp)[stageId1],Mid=colnames(kexp)[stageId2],Min=colnames(kexp)[stageId3])
+
+  ####
+
+  ####Non Decreasing Group
+  ##need to specif
  
-  df2<-cbind(hypothesis,df)
-
-  dTab<-(table(df[,2]))
-  #####freq bar chart of nominal category variables
-  barplot(dTab,main=paste0("TxBiotypes N=",nrow(hypothesis),"/",nrow(mt)," ",colnames(kexp)[globalmax],">",globalMid,">",colnames(kexp)[globalmin],">",read.cutoff ),las=2,cex.names=0.6)
-  readkey()
-
-  ######## relative freq bar chart of category variables
-   barplot((dTab/sum(dTab))*100, main=paste0("TxBio RF N=",nrow(hypothesis),"/",nrow(mt)," ",colnames(kexp)[globalmax],">",globalMid,">",colnames(kexp)[globalmin],">",read.cutoff ),las=2,cex.names=0.6)
-  readkey()
-
-
-  ######gene biotype
-  barplot(table(df[,3]),main=paste0("Genetypes Freq N=",nrow(hypothesis),"/",nrow(mt)," ",colnames(kexp)[globalmax],">=",globalMid,">",colnames(kexp)[globalmin],">0"),las=2,cex.names=0.6)
-
-
-  #########pie chart 
-  pie(dTab[which(dTab>read.cutoff)] )
-  dTabFreq <- prop.table(dTab[which(dTab>1)] )
-  textRad  <- 0.5
-  angles   <- dTabFreq * 2 * pi
-  csAngles <- cumsum(angles)
-  csAngles <- csAngles - angles/2
-  textX    <- textRad * cos(csAngles)
-  textY    <- textRad * sin(csAngles)
-  text(x=textX, y=textY, labels=round(dTabFreq,3))
-  title(paste0("TxBiotypes N=",nrow(hypothesis),"/",nrow(mt)," ",colnames(kexp)[globalmax],">=",globalMid,">",colnames(kexp)[globalmin],">",read.cutoff ))
-  readkey()
-
-  dTab<-(table(df[,3]))
-  pie(dTab)
-  dTabFreq <- prop.table(dTab )
-  textRad  <- 0.5
-  angles   <- dTabFreq * 2 * pi
-  csAngles <- cumsum(angles)
-  csAngles <- csAngles - angles/2
-  textX    <- textRad * cos(csAngles)
-  textY    <- textRad * sin(csAngles)
-  text(x=textX, y=textY, labels=round(dTabFreq,3))
-  title(paste0("GeneBiotypes N=",nrow(hypothesis),"/",nrow(mt)," ",colnames(kexp)[globalmax],">=",globalMid,">",colnames(kexp)[globalmin],">0"))
-  readkey()
-
-
-  boxplot(asinh(df2[,c(globalmax,globalmid,globalmin)]),medcol="red",boxcol="red",whiskcol="red")
-   axis(side=4)
-  par(new=TRUE)
-  beeswarm(asinh(df2[,c(globalmax,globalmid,globalmin)]), pch=16,xlab=paste0(colnames(kexp)[globalmax],">",globalMid,">",colnames(kexp)[globalmin],">1") ) 
-    readkey()
   
    
    ##FIX ME:  print out the top 40-50 repeats
  ##print out
 
  if(outputReport==TRUE){
- write.csv(df2,file=paste0(outDir,"/",globalMax,"_",globalMid,"_",globalMin,".csv",row.names=TRUE))
+ write.csv(df2,file=paste0(outDir,"/",stage1,"_",stage3,"_",stage2,".csv",row.names=TRUE))
   ##FIX ME:  create a pdf with every repeat 1 pdf
-
+  ##save all data
  } else {
-  return(df2) 
+  return(NULL) 
  }
 
 
 
   ##FIX ME:  should not the groups  A > B > C   and A < B < C  be equal to N? 
- ###FIX ME:  do a multiplot of pHSC > LSC and LSC > pHSC  show all combos
   ###FIX ME ::  N(pHSC>LSC) + N(LSC>pHSC ) = N_total
 } #{{{main
