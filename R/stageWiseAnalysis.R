@@ -10,6 +10,7 @@
 #' @param fold.cutoff floor for logFC 
 #' @import limma
 #' @import arkas
+#' @import beeswarm
 #' @export
 stageWiseAnalysis<-function(kexp,stage1="pHSC",stage2="LSC",stage3="Blast",read.cutoff=1, byLevel=c("transcript","tx_biotype","gene_biotype"),p.value=0.05,fold.cutoff=0.4 ) {
   ##TMM Normalization
@@ -77,11 +78,11 @@ stageWiseAnalysis<-function(kexp,stage1="pHSC",stage2="LSC",stage3="Blast",read.
   readkey() 
  
   ###plot the frequency
-  plotFrequency(LSC.v.pHSC,topNames=rownames(top.stage1.PVal),topDE=top.stage1.PVal,whichDelta="delta1",p.cutoff=p.value)
-  plotFrequency(LSC.v.pHSC,topNames=rownames(top.stage1.adj),topDE=top.stage1.adj,whichDelta="delta1",p.cutoff=p.value)
+  plotFrequency(LSC.v.pHSC,topNames=rownames(top.stage1.PVal),topDE=top.stage1.PVal,whichDelta="delta1",p.cutoff=p.value,isAdjusted=FALSE)
+  plotFrequency(LSC.v.pHSC,topNames=rownames(top.stage1.adj),topDE=top.stage1.adj,whichDelta="delta1",p.cutoff=p.value,isAdjusted=TRUE)
   ###delta2 PVal and adj.P.Val
  plotFrequency(Blast.v.LSC,topNames=rownames(top.stage2.PVal),topDE=top.stage2.PVal,whichDelta="delta2",p.cutoff=p.value)
-  plotFrequency(Blast.v.LSC,topNames=rownames(top.stage2.adj),topDE=top.stage2.adj,whichDelta="delta2",p.cutoff=p.value)
+  plotFrequency(Blast.v.LSC,topNames=rownames(top.stage2.adj),topDE=top.stage2.adj,whichDelta="delta2",p.cutoff=p.value,isAdjusted=TRUE)
   } else if(byLevel=="tx_biotype") {
   #find DE of Tx Dbiotypes for each stage
      delta1_tx_fit<-fitTxBiotypes(LSC.v.pHSC,design=metadata(LSC.v.pHSC)$design)
