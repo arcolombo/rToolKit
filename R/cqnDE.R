@@ -16,7 +16,7 @@
 #' @import ComplexHeatmap
 #' @export
 #' @return returns 
-cqnDE<-function(kexp,contrastMatrix=NULL,design=NULL,patientID=NULL, comparison=comparison,control=control,group3=group3,cutoff=2){
+cqnDE<-function(kexp,contrastMatrix=NULL,design=NULL,patientID=NULL, comparison=comparison,control=control,group3=NULL,cutoff=2){
 
    readkey<-function()
 {
@@ -25,15 +25,14 @@ cqnDE<-function(kexp,contrastMatrix=NULL,design=NULL,patientID=NULL, comparison=
 }
 
 
-  stopifnot(is.null(design)==FALSE) 
-  #FIX ME: currently only supports 2 group comparisons
-  #FIX ME: test this out across groups Blast vs LSC,  Blast vs pHSC.   
-  if(is.null(design)==TRUE){
-  stopifnot(is.null(metadata(kexp)$design)==FALSE)
-  design<-metadata(kexp)$design
-  } 
+  if(is.null(design)==TRUE || is.null(metadata(kexp)$design)==TRUE ) {
+  kexp<-kexp2Group(kexp,comparison=comparison,control=control)
+   design<-metadata(kexp)$design
+   } 
+    
+ 
   message("note the kexp must not be TMM normalized")
-  cnts<-collapseBundles(kexp,read.cutoff=cutoff) 
+  cnts<-collapseBundles(kexp,bundleID="tx_id",read.cutoff=cutoff) 
   dge<-DGEList(counts=cnts)
   #assays(kexp)$rpkm<-rpkm(dge,log=FALSE,gene.length=eff_length(kexp))
   #passing in rpkm does worse
@@ -50,8 +49,8 @@ cqnDE<-function(kexp,contrastMatrix=NULL,design=NULL,patientID=NULL, comparison=
 
 
   par(mfrow=c(1,2))
- cqnplot(cqn.subset, n = 1, xlab = paste0("GC content Samples RPKM ",comparison," ",control," ",group3), lty = 1)
- cqnplot(cqn.subset, n = 2, xlab =paste0("length Samples RPKM ",comparison," ",control," ",group3), lty = 1)
+ cqnplot(cqn.subset, n = 1,lty=1,xlab=(paste0("GC content Samples RPKM ",comparison," ",control)))
+ cqnplot(cqn.subset, n = 2, xlab =paste0("length Samples RPKM ",comparison," ",control), lty = 1)
   readkey()
   RPKM.cqn<-cqn.subset$y + cqn.subset$offset #on log2 scale
 
@@ -108,6 +107,28 @@ d.mont <- DGEList(counts = cnts, lib.size = sizeFactors.subset, group = sapply(s
   #####heatmap ###########
   drawHeatmap(kexp,tags=tagd,byType="counts",cutoff=2)
  
-  return(list(fitted=elrt.cqn,topTags=tagd))
+
+  ###heatmap of repeats
+  cnts<-cnts[!grepl("^ERCC",rownames(cnts)),]
+  cnts<-cnts[!grepl("^ENST",rownames(cnts)),]
+  d.mont <- DGEList(counts = cnts, lib.size = sizeFactors.subset, group = sapply(strsplit(pData(kexp)$ID,"_"),function(x) x[1])
+, genes = uCovar[rownames(uCovar)%in%rownames(cnts),])
+
+  ##FIX ME add multi group
+  d.mont$offset<-cqn.subset$glm.offset[rownames(cqn.subset$glm.offset)%in%rownames(cnts),]
+  d.mont.cqn<-estimateGLMCommonDisp(d.mont,design=design)
+
+  efit.cqn<-glmFit(d.mont.cqn,design=design)
+  elrt.cqn<-glmLRT(efit.cqn,coef=2)
+  tagd<-topTags(elrt.cqn,n=100,adjust="BH",p=0.05)
+
+  #####heatmap ###########
+  drawHeatmap(kexp,tags=tagd,byType="counts",cutoff=2)
+
+
+
+
+
+  return(list(fitted=elrt.cqn,topTags=tagd,RPKM.cqn.log2=RPKM.cqn))
 
 } #{{{ main

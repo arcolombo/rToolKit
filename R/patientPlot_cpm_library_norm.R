@@ -17,7 +17,9 @@ patientPlot_cpm_library_norm<-function(kexp,patientID=NULL,repeatType=NULL,normT
     line <- readline()
 }
   how<-match.arg(normType,c("TMM","CQN","none"))
-  stopifnot(is.null(assays(kexp)$cpm_library_normalized)==FALSE)
+  if(is.null(assays(kexp)$cpm_library_normalized)==TRUE){
+    kexp<-tmmNorm(kexp)
+   }
   #subset repeats
   repKexp<-findRepeats(kexp)
   ##grab patient
@@ -79,14 +81,7 @@ patient.type<-kexpByType(patient.kexp,biotype=repeatType)
   ##calculate pearson coef   cor() 
   #FIX ME: add mutation annotations plotRLE(counts(SU583.ltr))
   
-
    ##FIX ME ::  run CQN   
-
-
-
-}
-
-
-
+ }
 
 } #{{{ main

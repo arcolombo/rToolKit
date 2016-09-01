@@ -2,14 +2,13 @@
 #' @param kexp a kallisto Experiment
 #' @param patientID a patient id to split a kexp by
 #' @param repeatType a repeat biotype of interest, 'LTR', 'SINE', 'element', etc
-#' @param normType   either TMM CQN or none
 #' @importFrom ComplexHeatmap Heatmap draw
 #' @importFrom graphics grid
 #' @import beeswarm
 #' @importFrom EDASeq plotPCA plotRLE
 #' @export
 #' @return returns NULL but plots cool stuff
-patientPlot<-function(kexp,patientID=NULL,repeatType=NULL, normType=c("TMM","CQN","none")){
+patientPlot<-function(kexp,patientID=NULL,repeatType=NULL ){
 
  readkey<-function()
 {
