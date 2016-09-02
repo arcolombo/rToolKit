@@ -60,7 +60,7 @@ patient.type<-kexpByType(patient.kexp,biotype=repeatType)
   #plots top 20 byMAD individual repeats across clonal evolution
   beePatient(patient.ltr,patientID=patientID,repeat_biotype="LTR",selected=20, how)
   beePatient(patient.sine,patientID=patientID,repeat_biotype="SINE",selected=20,how)
-  
+  plot.new()  
   #now plot all repeats together
   plotRLE(assays(patient.ltr)$cpm_library_normalized)
   title("All LTR CPM TMM Normalized")

@@ -2,19 +2,16 @@
 % Please edit documentation in R/patientPlot.R
 \name{patientPlot}
 \alias{patientPlot}
-\title{plots a heatmap of patient specific information using a heatmap and beeswarm for the scatter.  each plot shows fixed patient and fixed repeat biotype}
+\title{raw patient plot showing stage wise analysis of individual patient}
 \usage{
-patientPlot(kexp, patientID = NULL, repeatType = NULL, normType = c("TMM",
-  "CQN", "none"))
+patientPlot(kexp, patientID = NULL, repeatType = NULL, how = "none")
 }
 \arguments{
-\item{kexp}{a kallisto Experiment}
+\item{kexp}{a kallisto Experiment should be stage level kexp, at the transcript level,  also accepts repeat stage kexp.}
 
 \item{patientID}{a patient id to split a kexp by}
 
 \item{repeatType}{a repeat biotype of interest, 'LTR', 'SINE', 'element', etc}
-
-\item{normType}{either TMM CQN or none}
 }
 \value{
 returns NULL but plots cool stuff

@@ -4,6 +4,8 @@
 #' @param cqnRepeat  a data matrix of cqnDE result initially from a full expression log2 scale of all transcripts, a full normalization
 #' @param inversion  boolean , if true then the log2 inverse is performed
 #' @import ComplexHeatmap
+#' @importFrom quantreg rq
+#' @import cqn
 #' @export
 #' @return  returns some images on comparing repeat CQN method
 cqnRepeatAnalysis<-function(fullKexp,cqnRepeat=NULL,inversion=TRUE,comparison=comparison,control=control){

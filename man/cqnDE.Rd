@@ -5,8 +5,7 @@
 \title{CQN and edgeR analysis}
 \usage{
 cqnDE(kexp, contrastMatrix = NULL, design = NULL, patientID = NULL,
-  comparison = comparison, control = control, group3 = group3,
-  cutoff = 2)
+  comparison = comparison, control = control, group3 = NULL, cutoff = 2)
 }
 \arguments{
 \item{kexp}{a kallistoExperiment preferably only repeats, also the repeat kexp must not be TMM Normalized}

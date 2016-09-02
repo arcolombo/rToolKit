@@ -1,5 +1,6 @@
-#' plots a heatmap of patient specific information using a heatmap and beeswarm for the scatter.  each plot shows fixed patient and fixed repeat biotype
-#' @param kexp a kallisto Experiment
+#' @title raw patient plot showing stage wise analysis of individual patient
+#' @description plots a heatmap of patient specific information using a heatmap and beeswarm for the scatter.  each plot shows fixed patient and fixed repeat biotype
+#' @param kexp a kallisto Experiment should be stage level kexp, at the transcript level,  also accepts repeat stage kexp.
 #' @param patientID a patient id to split a kexp by
 #' @param repeatType a repeat biotype of interest, 'LTR', 'SINE', 'element', etc
 #' @importFrom ComplexHeatmap Heatmap draw
@@ -8,7 +9,7 @@
 #' @importFrom EDASeq plotPCA plotRLE
 #' @export
 #' @return returns NULL but plots cool stuff
-patientPlot<-function(kexp,patientID=NULL,repeatType=NULL ){
+patientPlot<-function(kexp,patientID=NULL,repeatType=NULL,how="none" ){
 
  readkey<-function()
 {
@@ -16,7 +17,7 @@ patientPlot<-function(kexp,patientID=NULL,repeatType=NULL ){
     line <- readline()
 }
 
-  how<-match.arg(normType,c("TMM","CQN","none"))
+
   #subset repeats
   repKexp<-findRepeats(kexp)
   ##grab patient

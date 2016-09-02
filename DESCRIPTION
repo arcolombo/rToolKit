@@ -11,7 +11,10 @@ Imports:
     ComplexHeatmap,
     beeswarm,
     EDASeq,
-    cqn
+    cqn,
+    edgeR,
+    sva,
+    graphics
 Author: Sarah Connor
 Maintainer: Anthony R. Colombo <anthonycolombo60@gmail.com>
 Description: This will split the kallisto experiment by patient id, and use
