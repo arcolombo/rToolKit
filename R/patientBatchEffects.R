@@ -3,12 +3,12 @@
 #' @import sva
 #' @import edgeR
 #' @import limma
+#' @import arkas
 #' @param kexp a full kexp of every sample, not just a stage kexp
 #' @param byWhat how to collapse 
-#' @param cqnLevel  character either stage or repeats
 #' @export
 #' @return returns images and a patient batch corrected data set
-patientBatchEffects<-function(kexp,byWhat=c("counts","tpm"), cqnLevel=c("stage","repeats"),stage1="pHSC",stage2="LSC",stage3="Blast",p.value=0.05){
+patientBatchEffects<-function(kexp,byWhat=c("counts","tpm"),stage1="pHSC",stage2="LSC",stage3="Blast",p.value=0.05){
   message("the kexp should not be stage level and not just be repeats , use the entire kexp")
  byWhat<-match.arg(byWhat,c("counts","tpm"))
  batchvec<-matrix(nrow=ncol(aml),ncol=1)
@@ -36,16 +36,21 @@ patientBatchEffects<-function(kexp,byWhat=c("counts","tpm"), cqnLevel=c("stage",
   batchvec[grep(as.character(batch[i]),rownames(batchvec)),]<-as.character(batch[i])
  }
   pData(kexp)$patient.batch<-as.factor(batchvec)
-  psva_patient<-psva(asinh(inputs),pData(kexp)$patient.batch)
-  psva_patient_repeats<-psva_patient[!grepl("^ENSG",rownames(psva_patient)),]
+  #psva_patient<-psva(asinh(inputs),pData(kexp)$patient.batch) ##ASINH XR ####
+  psva_patient<-psva(log(1+inputs),pData(kexp)$patient.batch) 
+ psva_patient_repeats<-psva_patient[!grepl("^ENSG",rownames(psva_patient)),]
   psva_patient_repeats<-psva_patient_repeats[!grepl("^ERCC",rownames(psva_patient_repeats)),]
   colnames(psva_patient_repeats)<-colnames(inputs)
   stageKexp<-kexpByStage(kexp)
   psva_stage<-psva_patient_repeats[,colnames(psva_patient_repeats)%in%colnames(stageKexp)]
-  psva_stage<-psva_stage^2
+ # psva_stage<-sinh(psva_stage) ###TPM #########
+  psva_stage<-exp(psva_stage)
+  if(any(psva_stage<0)==TRUE){
+  message("warning: detected negative values")
+ }
  te2<-HeatmapAnnotation(as.data.frame(pData(kexp)$patient.batch))
- patient_repeat_SVA<-Heatmap(psva_stage,top_annotation=te2,
-             name="cpm")
+ patient_repeat_SVA<-Heatmap(log(1+psva_stage),top_annotation=te2,column_title="All Donors Batch Correction",
+             name=paste0("log(1+",byWhat,")"))
  patient_repeat_SVA2<-Heatmap(rowRanges(kexp)[rownames(psva_stage)]$tx_biotype,
               name="tx_biotype",
               width=unit(5,"mm"))
@@ -53,11 +58,10 @@ patientBatchEffects<-function(kexp,byWhat=c("counts","tpm"), cqnLevel=c("stage",
               name="gene_biotype",
               width=unit(5,"mm"))
  draw(patient_repeat_SVA+patient_repeat_SVA2+patient_repeat_SVA3)
- title(sub="Full Repeat Patient Batch Crctn")
  readkey()
 
 ###heatmap expression byMad 
- heatmapByMad(psva_stage,kexp,topAnnoFactors=pData(kexp)$patient.batch,selectK=100,byWhat=byWhat)
+ heatmapByMad(log(1+psva_stage),kexp,topAnnoFactors=pData(kexp)$patient.batch,selectK=100,byWhat=byWhat)
  readkey()
 
 
@@ -68,8 +72,9 @@ patientBatchEffects<-function(kexp,byWhat=c("counts","tpm"), cqnLevel=c("stage",
   repStage<-kexpByStage(reps)
   LSC.v.pHSC<-kexp2Group(repStage,comparison="LSC",control="pHSC")
   design<-metadata(LSC.v.pHSC)$design
-  psva_patient_repeats_cnts<-psva_patient_repeats^2
-  dge<-DGEList(counts=psva_patient_repeats_cnts[,colnames(psva_patient_repeats_cnts)%in%rownames(design)]  )
+  #psva_patient_repeats_cnts<-sinh(psva_patient_repeats) ###TPM/CPM###
+  psva_patient_repeats_cnts<-psva_stage
+ dge<-DGEList(counts=psva_patient_repeats_cnts[,colnames(psva_patient_repeats_cnts)%in%rownames(design)]  )
   dge<-calcNormFactors(dge)
   res$design<-design
   res$voomed<-voom(dge,res$design)
@@ -80,7 +85,7 @@ patientBatchEffects<-function(kexp,byWhat=c("counts","tpm"), cqnLevel=c("stage",
    plotBatchFrequency(dge$counts,topNames=rownames(topTags.none),topDE=topTags.none,whichDelta="delta1",isAdjusted=FALSE,kexp=repStage)
    plotBatchFrequency(dge$counts,topNames=rownames(topTags.bh),topDE=topTags.bh,whichDelta="delta1",isAdjusted=TRUE,kexp=repStage)
 
-drawBatchHeatmap(repStage,tags=topTags.bh,batchData=dge$counts)
+drawBatchHeatmap(repStage,tags=topTags.bh,batchData=dge$counts,byWhat=byWhat)
 
 ##delta2
  res<-list()
@@ -98,7 +103,7 @@ drawBatchHeatmap(repStage,tags=topTags.bh,batchData=dge$counts)
    plotBatchFrequency(dge2$counts,topNames=rownames(topTags.none2),topDE=topTags.none2,whichDelta="delta2",isAdjusted=FALSE,kexp=repStage)
    plotBatchFrequency(dge2$counts,topNames=rownames(topTags.bh2),topDE=topTags.bh2,whichDelta="delta2",isAdjusted=TRUE,kexp=repStage)
 
-drawBatchHeatmap(repStage,tags=topTags.bh2,batchData=dge2$counts)
+drawBatchHeatmap(repStage,tags=topTags.bh2,batchData=dge2$counts,byWhat=byWhat)
 
 
 ### Stage Beeswarm with boxplot

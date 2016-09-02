@@ -1,5 +1,5 @@
-#' @title Draws a heatmap with annotations for batch data 
-#' @description draws a heatmap with annotations useful for batch analysis normalization
+#' @title Draws a heatmap with annotations for batch data  
+#' @description draws a heatmap with annotations useful for batch analysis normalization. plots the batch normalized data values, and not the raw kallisto data.
 #' @param kexp  a kallistoExperiment repeat stage level
 #' @param tags  character of top tags from DE list
 #' @param annotations boolean  to include annotation side bar, or mutation type
@@ -10,9 +10,9 @@
 #' @importFrom dendsort dendsort
 #' @importFrom pvclust pvclust
 #' @export
-drawBatchHeatmap<-function(kexp,tags=NULL,annotations=TRUE,batchData=NULL,cutoff=0.05){
+drawBatchHeatmap<-function(kexp,tags=NULL,annotations=TRUE,batchData=NULL,cutoff=0.05,byWhat=c("counts","tpm")){
     stopifnot(is.null(tags)==FALSE)
-  
+    byWhat<-match.arg(byWhat,c("counts","tpm"))
    df.rpt<-as.data.frame(batchData,stringsAsFactors=FALSE)
    rpt.targets<-rownames(tags)
 
@@ -24,10 +24,10 @@ drawBatchHeatmap<-function(kexp,tags=NULL,annotations=TRUE,batchData=NULL,cutoff
   rpt.pv<-pvclust(log(1+rpt.mt),nboot=100)
   rpt.dend<-dendsort(hclust(dist(log(1+rpt.mt))),isReverse=TRUE)
   rh.rpt<-Heatmap(rpt.mt,
-                  name="cpm",
+                  name=paste0("asinh(",byWhat,")"),
                   cluster_rows=rpt.dend,
                   cluster_columns=rpt.pv$hclust,
-                  column_title=paste0("Top Limma P.Val cut ",cutoff),
+                  column_title=paste0("Top Batch Value Limma P.Val cut ",cutoff),
                  row_names_gp=gpar(fontsize=6),
                  column_names_gp=gpar(fontsize=8))
  rh.rpt2<-Heatmap(rowRanges(kexp)[rownames(rpt.mt)]$tx_biotype,
