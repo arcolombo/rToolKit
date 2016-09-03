@@ -9,7 +9,7 @@
 #' @param cutoff   integer  a minimum cutoff threshold
 #' @import cqn
 #' @import edgeR 
-#' @importFrom quantreg rq
+#' @import quantreg 
 #' @importFrom scales alpha
 #' @importFrom graphics par grid
 #' @importFrom grid unit gpar
@@ -17,13 +17,6 @@
 #' @export
 #' @return returns 
 cqnDE<-function(kexp,contrastMatrix=NULL,design=NULL,patientID=NULL, comparison=comparison,control=control,group3=NULL,cutoff=2){
-
-   readkey<-function()
-{
-    cat ("Press [enter] to continue")
-    line <- readline()
-}
-
 
   if(is.null(design)==TRUE || is.null(metadata(kexp)$design)==TRUE ) {
   kexp<-kexp2Group(kexp,comparison=comparison,control=control)
@@ -34,18 +27,16 @@ cqnDE<-function(kexp,contrastMatrix=NULL,design=NULL,patientID=NULL, comparison=
   message("note the kexp must not be TMM normalized")
   cnts<-collapseBundles(kexp,bundleID="tx_id",read.cutoff=cutoff) 
   dge<-DGEList(counts=cnts)
-  #assays(kexp)$rpkm<-rpkm(dge,log=FALSE,gene.length=eff_length(kexp))
-  #passing in rpkm does worse
   sizeFactors.subset<-dge$samples$lib.size #grabs sequence depth
   names(sizeFactors.subset)<-rownames(dge$samples)
   uCovar<-data.frame(length=rowRanges(kexp)[rownames(cnts)]$tx_length,gccontent=rowRanges(kexp)[rownames(cnts)]$gc_content)
   rownames(uCovar)<-rownames(cnts)
   
-  
+
   stopifnot(all(rownames(cnts)==rownames(uCovar)))
   stopifnot(all(colnames(cnts)==names(sizeFactors.subset)))
-
-  cqn.subset<-cqn(round(cnts),lengths=uCovar$length,x=uCovar$gccontent,sizeFactors=sizeFactors.subset,verbose=TRUE)
+  ##FIX ME: use CPM values and not RPKM??
+  cqn.subset<-cqn(round(cnts),lengths=uCovar$length,x=uCovar$gccontent,sizeFactors=sizeFactors.subset,verbose=TRUE,eff_len=eff_len,byWhat="tpm")
 
 
   par(mfrow=c(1,2))
@@ -56,7 +47,8 @@ cqnDE<-function(kexp,contrastMatrix=NULL,design=NULL,patientID=NULL, comparison=
 
   RPM <- sweep(log2(cnts + 1), 2, log2(sizeFactors.subset/10^6)) #CPM
   RPKM.std <- sweep(RPM, 1, log2(uCovar$length / 10^3)) #standard RPKM
-
+  
+  
   #need to identify groups
   grp1<-pData(kexp)[grepl(comparison,pData(kexp)$ID),]
   grp2<-pData(kexp)[!grepl(comparison,pData(kexp)$ID), ]
@@ -92,7 +84,7 @@ par(mfrow = c(1,2))
  readkey()
 
 ########edgeR differential expression analysis
-
+ 
 d.mont <- DGEList(counts = cnts, lib.size = sizeFactors.subset, group = sapply(strsplit(pData(kexp)$ID,"_"),function(x) x[1])
 , genes = uCovar)
 

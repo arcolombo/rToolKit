@@ -3,6 +3,7 @@
 #' @import sva
 #' @import edgeR
 #' @import limma
+#' @importFrom limma lmFit
 #' @import arkas
 #' @param kexp a full kexp of every sample, not just a stage kexp
 #' @param byWhat how to collapse 
@@ -123,7 +124,7 @@ drawBatchHeatmap(repStage,tags=topTags.bh2,batchData=dge2$counts,byWhat=byWhat)
   par(new=TRUE)
   boxplot(asinh(topTags.bh$logFC),medcol="red",boxcol="red",whiskcol="red")
   axis(side=4)
-  beeswarm(asinh(topTags.bh2$logFC),main=expression(paste(Delta,"(LSC,Blast) DE Tx Biotype")),xlab=paste0("Blast-LSC p.val",p.value),ylab="SVA Norm TMM BH")
+  beeswarm(asinh(topTags.bh2$logFC),main=expression(paste(Delta,"(LSC,Blast) DE Tx Biotype")),xlab=paste0("Blast-LSC adj.p.val",p.value),ylab="SVA Norm TMM BH")
   par(new=TRUE)
   boxplot(asinh(topTags.bh2$logFC),medcol="red",boxcol="red",whiskcol="red")
   readkey()

@@ -4,16 +4,13 @@
 \alias{patientBatchEffects}
 \title{this analyzes the batch effects from specific patients, where each patient ID is considered a batch}
 \usage{
-patientBatchEffects(kexp, byWhat = c("counts", "tpm"), cqnLevel = c("stage",
-  "repeats"), stage1 = "pHSC", stage2 = "LSC", stage3 = "Blast",
-  p.value = 0.05)
+patientBatchEffects(kexp, byWhat = c("counts", "tpm"), stage1 = "pHSC",
+  stage2 = "LSC", stage3 = "Blast", p.value = 0.05)
 }
 \arguments{
 \item{kexp}{a full kexp of every sample, not just a stage kexp}
 
 \item{byWhat}{how to collapse}
-
-\item{cqnLevel}{character either stage or repeats}
 }
 \value{
 returns images and a patient batch corrected data set

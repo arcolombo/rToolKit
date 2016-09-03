@@ -14,7 +14,9 @@ Imports:
     cqn,
     edgeR,
     sva,
-    graphics
+    graphics,
+    limma,
+    quantreg
 Author: Sarah Connor
 Maintainer: Anthony R. Colombo <anthonycolombo60@gmail.com>
 Description: This will split the kallisto experiment by patient id, and use

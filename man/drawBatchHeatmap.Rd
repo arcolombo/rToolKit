@@ -5,7 +5,7 @@
 \title{Draws a heatmap with annotations for batch data}
 \usage{
 drawBatchHeatmap(kexp, tags = NULL, annotations = TRUE, batchData = NULL,
-  cutoff = 0.05)
+  cutoff = 0.05, byWhat = c("counts", "tpm"))
 }
 \arguments{
 \item{kexp}{a kallistoExperiment repeat stage level}
@@ -17,6 +17,6 @@ drawBatchHeatmap(kexp, tags = NULL, annotations = TRUE, batchData = NULL,
 \item{batchData}{this is patient specific batch corrections}
 }
 \description{
-draws a heatmap with annotations useful for batch analysis normalization
+draws a heatmap with annotations useful for batch analysis normalization. plots the batch normalized data values, and not the raw kallisto data.
 }
 
