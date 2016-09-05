@@ -11,13 +11,6 @@
 #' @return returns NULL but plots cool stuff
 patientPlot<-function(kexp,patientID=NULL,repeatType=NULL,how="none" ){
 
- readkey<-function()
-{
-    cat ("Press [enter] to continue")
-    line <- readline()
-}
-
-
   #subset repeats
   repKexp<-findRepeats(kexp)
   ##grab patient

@@ -1,5 +1,5 @@
 #' @title find the repeats falling into orders
-#' @description  find the repeats fallingo into clonal ordering with the alternative model and hypothesis model input for element selection.  
+#' @description  find the repeats fallingo into clonal ordering with the alternative model and hypothesis model input for element selection. this has no p value association but expression pattern overview 
 #' @param kexp a kallistoExperiment of a clonal patient kexp repeat
 #' @param hypothesis  an ordering character
 #' @param alternative an alternative ordering character

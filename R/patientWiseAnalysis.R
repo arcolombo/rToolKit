@@ -4,8 +4,8 @@
 #' @import dendsort
 #' @import arkas
 #' @import ComplexHeatmap
-patientWiseAnalysis<-function(kexp,topNames=NULL,topDE=NULL,whichDE=c("cqn","poissonSeq","limma"),comparison="LSC",control="pHSC",whichDelta=c("delta1","delta2"),patientID="SU353"){
-stopifnot(is.null(topDE)==FALSE) ##must have DE called
+patientWiseAnalysis<-function(kexp,topNames=NULL,topDE=NULL,whichDE=c("cqn","poissonSeq","limma"),comparison="LSC",control="pHSC",whichDelta=c("delta1","delta2"),patientID="SU353", orderDE=TRUE){
+
 whichDE<-match.arg(whichDE,c("cqn","poissonSeq","limma"))
   whichDelta<-match.arg(whichDelta,c("delta1","delta2"))
   if(whichDE=="poissonSeq"){
@@ -16,12 +16,114 @@ whichDE<-match.arg(whichDE,c("cqn","poissonSeq","limma"))
    message("heatmap for patient: ",patientID)
    drawDF(patient,res=pf, fromList=TRUE) 
    message("DE composition for patient: ",patientID)
-   plotFrequency(patient,topDE=pf,whichDelta="delta1",isAdjusted=TRUE)
+   #plotFrequency(patient,topDE=pf,whichDelta="delta1",isAdjusted=TRUE)
    plot.new()
    hist(pf$fdr,main=paste0("FDR values for patient: ",patientID),xlab="FDR")    
  ## ordinal grouping of topNames @pvalue
-    
-   ##  delta plots
+   ####call plotMonotonicity
+   stageId1<-grep("pHSC",colnames(patient))
+   stageId2<-grep("LSC",colnames(patient))
+   stageId3<-grep("Blast",colnames(patient))
+   mt<-collapseTpm(patient,"tx_id") 
+   if(orderDE==TRUE){
+   message("subsetting repeat tpm ",patientID," by DE selection")
+   mt<-mt[rownames(mt)%in%pf$names,]
+   }
+    message("pHSC>Blast>LSC at pvalue: 0.05")
+   
+   pHSC.max.min.LSC<-orderMonotonicity(mt,globalMax=stageId1,globalMin=stageId2,globalMid=stageId3)
+   plotMonotonicity(patient,
+                    nominalGroup=pHSC.max.min.LSC,
+                    stageId1=stageId1,
+                    stageId2=stageId2,
+                    stageId3=stageId3,
+                    mt, 
+                    read.cutoff=1,
+                    stage3="Blast", 
+                    Max=colnames(patient)[stageId1],
+                    Mid=colnames(patient)[stageId3],
+                    Min=colnames(patient)[stageId2] )
+   ## patient delta plots
+  blast.max.min.LSC<-orderMonotonicity(mt,globalMax=stageId3,
+                     globalMin=stageId2,
+                     globalMid=stageId1)
+   plotMonotonicity(patient,
+                    nominalGroup=blast.max.min.LSC,
+                    stageId1=stageId1,
+                    stageId2=stageId2,
+                    stageId3=stageId3,
+                    mt,
+                    read.cutoff=1,
+                    stage3=stage3, 
+                    Max=colnames(patient)[stageId3],
+                    Mid=colnames(patient)[stageId1],
+                    Min=colnames(patient)[stageId2])
+
+ LSC.max.min.pHSC<-orderMonotonicity(mt,globalMax=stageId2,globalMin=stageId1,globalMid=stageId3)
+ plotMonotonicity(patient,
+                 nominalGroup=LSC.max.min.pHSC,
+                 stageId1=stageId1,
+                 stageId2=stageId2,
+                 stageId3=stageId3,
+                 mt,
+                 read.cutoff=1,
+                 stage3=stage3,
+                 Max=colnames(patient)[stageId2],
+                 Mid=colnames(patient)[stageId3], 
+                 Min=colnames(patient)[stageId1] )
+
+  ### 2>1>3
+  LSC.max.min.blast<-orderMonotonicity(mt,globalMax=stageId2,globalMin=stageId3,globalMid=stageId1)
+ plotMonotonicity(patient,
+                  nominalGroup=LSC.max.min.blast,
+                  stageId1=stageId1,
+                  stageId2=stageId2,
+                  stageId3=stageId3,
+                  mt,
+                  read.cutoff=1,
+                  stage3=stage3, 
+                  Max=colnames(patient)[stageId2], 
+                  Mid=colnames(patient)[stageId1],
+                  Min=colnames(patient)[stageId3])
+
+
+   pHSC.to.blast<-orderMonotonicity(mt,globalMax=stageId3,globalMin=stageId1,globalMid=stageId2)
+  if(nrow(pHSC.to.blast)>3){
+  plotMonotonicity(patient,
+                  nominalGroup=pHSC.to.blast,
+                  stageId1=stageId1,
+                  stageId2=stageId2,
+                  stageId3=stageId3,
+                  mt,
+                  read.cutoff=1,
+                  stage3=stage3, 
+                  Max=colnames(patient)[stageId3],
+                  Mid=colnames(patient)[stageId2],
+                  Min=colnames(patient)[stageId1])
+   } else {
+    print(pHSC.to.blast)
+   }
+  ## 1>2>3
+  
+  blast.to.pHSC<-orderMonotonicity(mt,globalMax=stageId1,globalMin=stageId3,globalMid=stageId2)
+  if(nrow(blast.to.pHSC)>3) {
+  plotMonotonicity(patient,
+                  nominalGroup=blast.to.pHSC,
+                  stageId1=stageId1,
+                  stageId2=stageId2,
+                  stageId3=stageId3,
+                  mt,
+                  read.cutoff=1, 
+                  stage3=stage3, 
+                  Max=colnames(patient)[stageId1],
+                  Mid=colnames(patient)[stageId2],
+                  Min=colnames(patient)[stageId3])
+
+   } else {
+   print(blast.to.pHSC)
+   }
+
+
 
   } else if(whichDE=="cqn"){
 ### cqn list names = "fitted","topTags", "RPKM.cqn.log2"
@@ -31,5 +133,21 @@ whichDE<-match.arg(whichDE,c("cqn","poissonSeq","limma"))
 
 
   }
+ 
+ message(paste0("the ordinal group elements for ",nrow(mt)," ",
+         nrow(pHSC.max.min.LSC),"+",
+         nrow(blast.max.min.LSC),"+",
+         nrow(LSC.max.min.pHSC),"+",
+         nrow(pHSC.to.blast),"+",
+         nrow(blast.to.pHSC), " =",
+         sum(nrow(pHSC.max.min.LSC),nrow(blast.max.min.LSC),nrow(LSC.max.min.pHSC),nrow(pHSC.to.blast), nrow(blast.to.pHSC))))
+
+
+ return(list(A= pHSC.max.min.LSC,
+              B= blast.max.min.LSC,
+              C= LSC.max.min.pHSC,
+              D= pHSC.to.blast,
+              E =  blast.to.pHSC))
+ 
 } ##{{main
 

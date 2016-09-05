@@ -10,9 +10,13 @@ orderMonotonicity<-function(mt,globalMax=stageId1,globalMin=stageId2,globalMid=s
   
   id1<- which(mt[,globalMin]<mt[,globalMid])
   tt<-mt[id1,]
+  
   stopifnot(all(tt[,globalMin]<tt[,globalMid])==TRUE)
   id2<-which(tt[,globalMid]<tt[,globalMax])
   t2<-tt[id2,]
+  if(is.null(dim(t2))==TRUE){
+  t2<-t(as.data.frame(t2))
+  }
   stopifnot(all(t2[,globalMax]>t2[,globalMid]))
   
   stopifnot(all(t2[,globalMid]>t2[,globalMin])==TRUE)

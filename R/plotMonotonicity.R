@@ -1,5 +1,5 @@
 #' @title plots the monotonic order
-#' @description plots the monotonic ordering
+#' @description plots the monotonic ordering first users must call orderMonotonicty and the nominalGroup is the results from orderMontonicity
 #' @param kexp a kallisto Experiment patient repeat level
 #' @param nominalGroup a monotonic order
 #' @param stageId1  the first clone stage
@@ -15,7 +15,7 @@
 #' @import beeswarm
 #' @export
 #' @return some plots 
-plotMonotonicity<-function(kexp,nominalGroup=NULL,stageId1=stageId1,stageId2=stageId2,stageId3=stageId3,mt,read.cutoff=read.cutoff, stage3=stage3,Max=globalMax,Mid=globalMid,Min=globalMin){
+plotMonotonicity<-function(kexp,nominalGroup=NULL,stageId1=stageId1,stageId2=stageId2,stageId3=stageId3,mt,read.cutoff=1, stage3=stage3,Max=globalMax,Mid=globalMid,Min=globalMin){
 
 hypothesis<-nominalGroup
   ##find annotations
