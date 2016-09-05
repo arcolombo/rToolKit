@@ -16,7 +16,8 @@ Imports:
     sva,
     graphics,
     limma,
-    quantreg
+    quantreg,
+    tseries
 Author: Sarah Connor
 Maintainer: Anthony R. Colombo <anthonycolombo60@gmail.com>
 Description: This will split the kallisto experiment by patient id, and use

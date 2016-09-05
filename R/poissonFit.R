@@ -12,6 +12,7 @@ poissonFit<-function(kexp, bundleID="tx_id",cutoff=1,comparison="LSC",control="p
   whichDelta<-match.arg(whichDelta,c("delta1","delta2"))
 ##uses poissonSeq to fit the data. 
   kexp<-kexp2Group(kexp,comparison=comparison,control=control)
+  kexp<-omitSU583(kexp)
   cnts<-collapseBundles(kexp,"tx_id",read.cutoff=cutoff)
   seq.depth<-PS.Est.Depth(cnts)
   inDat<-list()
@@ -19,18 +20,18 @@ poissonFit<-function(kexp, bundleID="tx_id",cutoff=1,comparison="LSC",control="p
   y<-matrix(nrow=ncol(kexp))
   rownames(y)<-colnames(kexp)
   compID<-grep(comparison,colnames(kexp))
-  y[compID,]<-1
+  y[compID,]<-2
   contID<-grep(control,colnames(kexp))
-  y[contID,]<-2
+  y[contID,]<-1
   y<-as.vector(y)
   inDat$y<-y
   inDat$type<-"twoclass"
   inDat$pair<-FALSE
   inDat$gname<-rownames(cnts)
   res<-PS.Main(inDat) 
- 
+###it does class 2 vs class 1 2/1 ########### 
 
-drawDF(kexp,res=res,cutoff=cutoff)
+drawDF(kexp,res=res,cutoff=cutoff,fromList=FALSE)
  readkey()
 ###composition of global identities delta1 LSC-pHSC
   topNames<-as.character(res$gname[which(res$fdr<=0.05)])
@@ -59,8 +60,29 @@ drawDF(kexp,res=res,cutoff=cutoff)
   axis(side=4)
    }
 
-####
+####beeswarm by transcript biotypes
+biotype_fc<-split(tt,rowRanges(kexp)[rownames(tt)]$tx_biotype)
 
+for(i in 1:length(biotype_fc)){
+  yyz<-biotype_fc[[i]]
+  familyName<-unique(rowRanges(kexp)[yyz$names]$gene_biotype)
+  if(nrow(yyz)>2){
+  drawDF(kexp,res=yyz,fromList=TRUE)
+  }
+  plot.new()
+  layout(mat=matrix(c(1,2),ncol=2,byrow=TRUE))
+  if(whichDelta=="delta1"){
+  beeswarm(yyz$logfc, main=expression(paste(Delta,"(pHSC,LSC) PoissonSeq")),xlab=paste0("LSC-pHSC p.val",p.value," ",familyName) )
+  } else {
+    beeswarm(yyz$logfc, main=expression(paste(Delta,"(LSC,Blast) PoissonSeq")),xlab=paste0("Blast-LSC p.val",p.value," ",familyName) )
+  }
+  par(new=TRUE)
+  boxplot(yyz$logfc,medcol="red",boxcol="red",whiskcol="red")
+  axis(side=4)
+  readkey()
+  
+
+  }
 
 
 }
