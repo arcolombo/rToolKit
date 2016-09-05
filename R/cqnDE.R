@@ -18,6 +18,8 @@
 #' @return returns 
 cqnDE<-function(kexp,contrastMatrix=NULL,design=NULL,patientID=NULL, comparison=comparison,control=control,group3=NULL,cutoff=2){
 
+  require(quantreg)
+  library(mclust)
   if(is.null(design)==TRUE || is.null(metadata(kexp)$design)==TRUE ) {
   kexp<-kexp2Group(kexp,comparison=comparison,control=control)
    design<-metadata(kexp)$design
@@ -36,7 +38,7 @@ cqnDE<-function(kexp,contrastMatrix=NULL,design=NULL,patientID=NULL, comparison=
   stopifnot(all(rownames(cnts)==rownames(uCovar)))
   stopifnot(all(colnames(cnts)==names(sizeFactors.subset)))
   ##FIX ME: use CPM values and not RPKM??
-  cqn.subset<-cqn(round(cnts),lengths=uCovar$length,x=uCovar$gccontent,sizeFactors=sizeFactors.subset,verbose=TRUE,eff_len=eff_len,byWhat="tpm")
+  cqn.subset<-cqn(round(cnts),lengths=uCovar$length,x=uCovar$gccontent,sizeFactors=sizeFactors.subset,verbose=TRUE)
 
 
   par(mfrow=c(1,2))
@@ -54,6 +56,7 @@ cqnDE<-function(kexp,contrastMatrix=NULL,design=NULL,patientID=NULL, comparison=
   grp2<-pData(kexp)[!grepl(comparison,pData(kexp)$ID), ]
   
   whGenes <- which(rowMeans(RPKM.std) >= 2 & uCovar$length >= 100)
+  ###comparison/control  
   M.std <- rowMeans(as.data.frame(RPKM.std[whGenes, grp1])) - rowMeans(as.data.frame(RPKM.std[whGenes, grp2])) 
   A.std <- rowMeans(RPKM.std[whGenes,])
   M.cqn <- rowMeans(as.data.frame(RPKM.cqn[whGenes, grp1])) - rowMeans(as.data.frame(RPKM.cqn[whGenes, grp2])) 

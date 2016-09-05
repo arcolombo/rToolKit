@@ -5,7 +5,8 @@
 \title{cqnDE analysis on repeats, major differences in performance when CQN is called on transcripts and/or called on repeat elements. ALUs have higher GC conetnet and may have bias}
 \usage{
 cqnRepeatAnalysis(fullKexp, cqnRepeat = NULL, inversion = TRUE,
-  comparison = comparison, control = control)
+  comparison = comparison, control = control, whichDelta = c("delta1",
+  "delta2"))
 }
 \arguments{
 \item{fullKexp}{a full kallistoExperiment, by Stage is ok}
