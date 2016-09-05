@@ -61,6 +61,7 @@ if(whichDelta=="delta1"){ #must keep
   plot.new()
   layout(mat=matrix(c(1,2),ncol=1,byrow=TRUE))
  barplot(dTab,las=2,cex.names=0.6,main=expression(paste(Delta,"(pHSC,LSC) Top DE Tx Biotype BH")),ylab=paste0(" Freq N=",nrow(topDE),"/",nrow(kexp)  ),xlab=paste0("adj.p.value=",p.cutoff)  )
+  readkey()
   #########pie chart 
   plot.new()
   layout(mat=matrix(c(1,2),ncol=2,byrow=TRUE))

@@ -17,7 +17,7 @@
 #' @export
 #' @return returns 
 cqnDE<-function(kexp,contrastMatrix=NULL,design=NULL,patientID=NULL, comparison=comparison,control=control,group3=NULL,cutoff=2){
-
+  require(scales)
   require(quantreg)
   library(mclust)
   if(is.null(design)==TRUE || is.null(metadata(kexp)$design)==TRUE ) {

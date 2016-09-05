@@ -2,12 +2,13 @@
 #' @description determines if the fit is poisson distributed and fits a poisson regression model
 #' @param kexp kallisto experiment at repeat stage level
 #' @import PoissonSeq
+#' @import arkas
 #' @import pvclust
 #' @import dendsort
 #' @import ComplexHeatmap
 #' @import grid
 #' @export 
-#' @return data and some images fit to poisson log linear model
+#' @return poissonSeq data with fdr less than an input p.value threshold and some images fit to poisson log linear model
 poissonFit<-function(kexp, bundleID="tx_id",cutoff=1,comparison="LSC",control="pHSC",p.value=0.05,whichDelta=c("delta1","delta2")){
   whichDelta<-match.arg(whichDelta,c("delta1","delta2"))
 ##uses poissonSeq to fit the data. 
@@ -32,17 +33,19 @@ poissonFit<-function(kexp, bundleID="tx_id",cutoff=1,comparison="LSC",control="p
 ###it does class 2 vs class 1 2/1 ########### 
 
 drawDF(kexp,res=res,cutoff=cutoff,fromList=FALSE)
- readkey()
+ 
 ###composition of global identities delta1 LSC-pHSC
-  topNames<-as.character(res$gname[which(res$fdr<=0.05)])
-  topDE<-res$log.fc[which(res$fdr<=0.05)]
+  topNames<-as.character(res$gname[which(res$fdr<=p.value)])
+  topDE<-res$log.fc[which(res$fdr<=p.value)]
+  topFDR<-res$fdr[which(res$fdr<=p.value)]
   tt<-data.frame(names=topNames,
                logfc=topDE,
+               fdr=topFDR,
                stringsAsFactors=FALSE)
   rownames(tt)<-topNames
   tt<- tt[!is.infinite(tt$logfc),]
   plotFrequency(kexp,topNames=topNames,topDE=tt,whichDelta=whichDelta)
-
+  readkey()
 #### beeswarm and boxplot of global stage
   if(whichDelta=="delta1"){
   plot.new()
@@ -51,6 +54,7 @@ drawDF(kexp,res=res,cutoff=cutoff,fromList=FALSE)
   par(new=TRUE)
   boxplot(tt$logfc,medcol="red",boxcol="red",whiskcol="red")
   axis(side=4)
+  readkey()
  } else {
   plot.new()
   layout(mat=matrix(c(1,2),ncol=2,byrow=TRUE))
@@ -58,6 +62,7 @@ drawDF(kexp,res=res,cutoff=cutoff,fromList=FALSE)
   par(new=TRUE)
   boxplot(tt$logfc,medcol="red",boxcol="red",whiskcol="red")
   axis(side=4)
+  readkey()
    }
 
 ####beeswarm by transcript biotypes
@@ -84,5 +89,5 @@ for(i in 1:length(biotype_fc)){
 
   }
 
-
+ return(tt)
 }
