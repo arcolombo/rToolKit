@@ -41,8 +41,8 @@ hypothesis<-nominalGroup
 
 
   #########pie chart 
-  pie(dTab[which(dTab>read.cutoff)] )
-  dTabFreq <- prop.table(dTab[which(dTab>read.cutoff)] )
+  pie(dTab[which(dTab>=read.cutoff)] )
+  dTabFreq <- prop.table(dTab[which(dTab>=read.cutoff)] )
   textRad  <- 0.5
   angles   <- dTabFreq * 2 * pi
   csAngles <- cumsum(angles)

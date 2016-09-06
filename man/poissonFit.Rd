@@ -11,7 +11,7 @@ poissonFit(kexp, bundleID = "tx_id", cutoff = 1, comparison = "LSC",
 \item{kexp}{kallisto experiment at repeat stage level}
 }
 \value{
-data and some images fit to poisson log linear model
+poissonSeq data with fdr less than an input p.value threshold and some images fit to poisson log linear model
 }
 \description{
 determines if the fit is poisson distributed and fits a poisson regression model

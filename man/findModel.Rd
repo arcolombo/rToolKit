@@ -29,6 +29,6 @@ findModel(kexp, stage1 = "pHSC", stage2 = "LSC", stage3 = "Blast",
 a repeat listing for each hypothesis
 }
 \description{
-find the repeats fallingo into clonal ordering with the alternative model and hypothesis model input for element selection.
+find the repeats fallingo into clonal ordering with the alternative model and hypothesis model input for element selection. this has no p value association but expression pattern overview
 }
 

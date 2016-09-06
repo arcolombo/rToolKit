@@ -5,7 +5,7 @@
 \title{plots the monotonic order}
 \usage{
 plotMonotonicity(kexp, nominalGroup = NULL, stageId1 = stageId1,
-  stageId2 = stageId2, stageId3 = stageId3, mt, read.cutoff = read.cutoff,
+  stageId2 = stageId2, stageId3 = stageId3, mt, read.cutoff = 1,
   stage3 = stage3, Max = globalMax, Mid = globalMid, Min = globalMin)
 }
 \arguments{
@@ -33,6 +33,6 @@ plotMonotonicity(kexp, nominalGroup = NULL, stageId1 = stageId1,
 some plots
 }
 \description{
-plots the monotonic ordering
+plots the monotonic ordering first users must call orderMonotonicty and the nominalGroup is the results from orderMontonicity
 }
 
