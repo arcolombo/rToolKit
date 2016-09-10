@@ -1,10 +1,20 @@
 #' @title map ensembl id to hugo via biomaRt
-#' @description sometimes you just want gene names
+#' @description sometimes you just want gene names from a TPM list.  this uses a collapseTPM call to map to HUGO to allow for exploration
 #' @import biomaRt
-ensmblToHUGO<-function(kexp,commonNomen=c("human","mouse") ){
+#' @param kexp a grimes kexp at the gene or repeat level
+#' @param commonNomen character moues or human
+#' @export
+#' @return a list with the meta data added
+ensmblToHUGO<-function(kexp,commonNomen=c("human","mouse"),byWhich=c("gene","repeat") ){
   commenNomen<-match.arg(commonNomen,c("human","mouse"))
- tpm<-collapseTpm(kexp,"gene_id")
- resValues<-rownames(tpm)
+   if(byWhich=="gene"){
+   tpm<-collapseTpm(kexp,"gene_id")
+   } else {
+   kexp<-findRepeats(kexp)
+   tpm<-collapseTpm(kexp,"tx_id")
+    }
+   
+   resValues<-rownames(tpm)
  
  if (commonNomen=="human") {
    speciesMart<-.findMart(commonNomen)
@@ -29,7 +39,7 @@ ensmblToHUGO<-function(kexp,commonNomen=c("human","mouse") ){
    converted<-convertedEntrezID
   
  mapped<-.formatWithMeta(tpm,converted,kexp)
-
+ return(mapped)
 } ##main
 .findMart<-function(commonName=c("human","mouse"),host="www.ensembl.org"){#{{{
 
