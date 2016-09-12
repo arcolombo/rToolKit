@@ -14,7 +14,7 @@ require(biomaRt)
   datExpr<-as.data.frame(datExpr,stringsAsFactors=FALSE)
   }
  convertedEntrezID<-getBM(filters="ensembl_gene_id",
- attributes=c("ensembl_gene_id",speciesSymbol="mgi_symbol",
+ attributes=c("ensembl_gene_id","entrezgene",speciesSymbol="mgi_symbol",
  "description"),
  values=names(datExpr),
  mart=speciesMart)

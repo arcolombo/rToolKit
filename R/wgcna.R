@@ -111,15 +111,25 @@ net = blockwiseModules(datExpr, power = selectedPower,
 # Convert labels to colors for plotting
 mergedColors = labels2colors(net$colors)
 # Plot the dendrogram and the module colors underneath
-
+bwLabes<-net$colors ###for saving
 moduleLabels = net$colors
 moduleColors = labels2colors(net$colors)
+bwModuleColors<-moduleColors ##for saving
 MEs = net$MEs;
 geneTree = net$dendrograms[[1]];
 singleBlockMEs = moduleEigengenes(datExpr, moduleColors)$eigengenes;
-}
+
 ####compare auto to block
-##FIX ME: add hist plot of the many many blocks and colors.
+##FIX M
+lnames<-list(datExpr=datExpr,
+            datTraits=datTraits,
+            medianCor=colorDF,
+            annot=annot,
+            MEs=MEs,
+            moduleLabels=bwLabels,
+            moduleColors=bwModuleColors,
+            geneTree=geneTree)
+}
 if(whichWGCNA=="block"){
 ##############BLOCK LEVEL ###################
 
@@ -145,8 +155,8 @@ bwnet = blockwiseModules(datExpr, maxBlockSize = 2000,
 bwLabels = matchLabels(bwnet$colors,bwnet$colors)
 # Convert labels to colors for plotting
 bwModuleColors = labels2colors(bwLabels)
-
-
+geneTree<-bwnet$dendrograms
+moduleColors<-bwModuleColors
 
 # open a graphics window
 sizeGrWindow(6,6)
@@ -167,20 +177,20 @@ blockwiseMEs = moduleEigengenes(datExpr, bwModuleColors)$eigengenes;
 
 sizeGrWindow(10,6)
 # Will display correlations and their p-values
-textMatrix =  paste(signif(moduleTraitCor, 2), "\n(",
-                           signif(moduleTraitPvalue, 1), ")", sep = "");
-dim(textMatrix) = dim(moduleTraitCor)
-par(mar = c(6, 11.5, 3, 3));
-# Display the correlation values within a heatmap plot
 
 # Define numbers of genes and samples
 nGenes = ncol(datExpr);
 nSamples = nrow(datExpr);
 # Recalculate MEs with color labels
-MEs0 = moduleEigengenes(datExpr, moduleColors)$eigengenes
+MEs0 = moduleEigengenes(datExpr, bwModuleColors)$eigengenes
 MEs = orderMEs(MEs0)
 moduleTraitCor = cor(MEs, datTraits, use = "p");
 moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples);
+textMatrix =  paste(signif(moduleTraitCor, 2), "\n(",
+                           signif(moduleTraitPvalue, 1), ")", sep = "");
+dim(textMatrix) = dim(moduleTraitCor)
+par(mar = c(6, 11.5, 3, 3));
+# Display the correlation values within a heatmap plot
 
 labeledHeatmap(Matrix = moduleTraitCor,
                xLabels = names(datTraits),
@@ -201,10 +211,22 @@ par(mar = c(11.5, 6, 3, 3));
 plot(colorDF,main="Median Correlation Per Module")
 axis(1,at=1:length(colorDF),labels=names(colorDF),las=2)
 readkey()
-
+lnames<-list(datExpr=datExpr,
+            datTraits=datTraits,
+            medianCor=colorDF,
+            annot=annot,
+            MEs=MEs,
+            moduleLabels=bwLabels,
+            moduleColors=bwModuleColors,
+            geneTree=geneTree )
+  save(lnames,file="wgcna.dataInput.RData",compress=TRUE)
 return(list(datExpr=datExpr,
             datTraits=datTraits,
             medianCor=colorDF,
-            annot=annot ))
+            annot=annot,
+            MEs=MEs,
+            moduleLabels=bwLabels,
+            moduleColors=bwModuleColors,
+            geneTree=geneTree ))
  
 }#main

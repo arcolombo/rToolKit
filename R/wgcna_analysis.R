@@ -5,6 +5,16 @@
 #' @param biotype   names of datTraits
 wgcna_analysis<-function(datExpr,datTraits,biotype=c("ERV1","ERV2","Endogenous Retrovirus", "ERV3","ERVL", "L1","L2","LTR Retrotransposon"),biocolor="blue",whichWGCNA=c("single","block")){
   ##fix me: allow for multi color and biotype plots
+
+load("wgcna.dataInput.RData")
+###declare needed objects from load
+message(paste0("found: ",names(lnames)))
+bwModuleColors<-lnames["moduleColors"]
+MEs<-lnames["MEs"]
+datExpr<-lnames["datExpr"]
+datTraits<-lnames["datTraits"]
+annot<-lnames["annot"]
+
 whichWGCNA<-match.arg(whichWGCNA,c("single","block"))
 biotype<-match.arg(biotype,c("ERV1","ERV2","Endogenous Retrovirus", "ERV3","ERVL", "L1","L2","LTR Retrotransposon"))
 nGenes<-ncol(datExpr)
