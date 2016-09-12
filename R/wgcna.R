@@ -3,7 +3,7 @@
 #' @import WGCNA
 #' @export
 #' @return images and cluster at the gene and repeat level
-wgcna<-function(kexp,read.cutoff=2,cutHeight=540000,minBranch=2,whichWGCNA=c("single","block")){
+wgcna<-function(kexp,read.cutoff=2,cutHeight=540000,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE){
   #FIX ME: cluster a TOM for repeats and coding genes to determine modules.  
   #FIX ME: run enrichment for each module.
   ##prepare data
@@ -70,7 +70,7 @@ plotDendroAndColors(sampleTree2, traitColors,
                     groupLabels = names(datTraits), 
                     marAll=c(1,11,3,3),
                     main="TxBiotype Correlation Samples") 
-    
+readkey()    
 # Choose a set of soft-thresholding powers
 powers = c(c(1:10), seq(from = 12, to=20, by=2))
 # Call the network topology analysis function
@@ -137,10 +137,17 @@ if(whichWGCNA=="block"){
 message("annotating...")
 datExpr<-as.data.frame(datExpr,stringsAsFactors=FALSE)
 annot<-geneAnnotation(datExpr,datTraits)
+
+if(entrezOnly==TRUE){
+id<-!is.na(annot$entrezgene)
+datExpr<-datExpr[,names(datExpr)%in%annot$ensembl_gene_id[id]]
+probes2annot<-match(names(datExpr),annot$ensembl_gene_id)
+stopifnot(sum(is.na(probes2annot))==0) ##no NA 
+} else{
 datExpr<-datExpr[,names(datExpr)%in%annot$ensembl_gene_id]
 probes2annot<-match(names(datExpr),annot$ensembl_gene_id)
 stopifnot(sum(is.na(probes2annot))==0) ##no NA 
-
+}
 ##############################################
 
 bwnet = blockwiseModules(datExpr, maxBlockSize = 2000,
