@@ -3,17 +3,27 @@
 #' @param datExpr list entry from wgcna part 1 method [[1]]
 #' @param datTraits list entry from wgcna part 1 method [[[2]]
 #' @param biotype   names of datTraits
-wgcna_analysis<-function(datExpr,datTraits,biotype=c("ERV1","ERV2","Endogenous Retrovirus", "ERV3","ERVL", "L1","L2","LTR Retrotransposon"),biocolor="blue",whichWGCNA=c("single","block"),intColors=c("blue","brown")){
+wgcna_analysis<-function(lnames,biotype=c("ERV1","ERV2","Endogenous Retrovirus", "ERV3","ERVL", "L1","L2","LTR Retrotransposon"),biocolor="blue",whichWGCNA=c("single","block"),intColors=c("blue","brown")){
   ##fix me: allow for multi color and biotype plots
 
+if(is.null(lnames)==TRUE){
 load("wgcna.dataInput.RData")
-###declare needed objects from load
-message(paste0("found: ",names(lnames)))
 bwModuleColors<-lnames[["moduleColors"]]
 MEs<-lnames[["MEs"]]
 datExpr<-lnames[["datExpr"]]
 datTraits<-lnames[["datTraits"]]
 annot<-lnames[["annot"]]
+} else if(is.null(lnames)==FALSE){
+message("found wgcna.dataInput")
+bwModuleColors<-lnames[["moduleColors"]]
+MEs<-lnames[["MEs"]]
+datExpr<-lnames[["datExpr"]]
+datTraits<-lnames[["datTraits"]]
+annot<-lnames[["annot"]]
+} else {
+stop("please run wgcna, need the output before analyzing.")
+}
+
 
 whichWGCNA<-match.arg(whichWGCNA,c("single","block"))
 biotype<-match.arg(biotype,c("ERV1","ERV2","Endogenous Retrovirus", "ERV3","ERVL", "L1","L2","LTR Retrotransposon"))
@@ -65,12 +75,9 @@ verboseScatterplot(abs(geneModuleMembership[moduleGenes, column]),
                    ylab = paste0("Gene significance for ",biotype),
                    main = paste("Module membership vs. gene significance\n"),
                    cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
+readkey()
 
-##map these to gene IDs
-names(datExpr)[moduleColors==module]  
 ##need to form geneInfo0 using converted
-  
-  
 stopifnot(nrow(geneTraitSignificance)==ncol(datExpr))
 stopifnot(nrow(GSPvalue)==ncol(datExpr))
 # Create the starting data frame
@@ -125,18 +132,14 @@ intModules<-intColors
 for (module in intModules)
 {
   # Select module probes
-  modGenes = (moduleColors==module)
-  # Get their entrez ID codes
-  modLLIDs = allEntrezID[modGenes];
+  t<-showModuleMembers(lnames,biocolor=module)
+ 
   # Write them into a file
   fileName = paste("EntrezIDs-", module, ".txt", sep="");
-  write.table(as.data.frame(modLLIDs), file = fileName,
+  write.table(as.data.frame(t), file = fileName,
               row.names = FALSE, col.names = FALSE)
 }
 # As background in the enrichment analysis, we will use all probes in the analysis.
-fileName = paste("EntrezIDs-all.txt", sep="");
-write.table(as.data.frame(allEntrezID), file = fileName,
-            row.names = FALSE, col.names = FALSE)
 
 ############GO
 ##FIX ME:::: add qusage here , this method is not recommended
@@ -147,7 +150,6 @@ tab = GOenr$bestPTerms[[4]]$enrichment
 ###QUSAGE HERE
 
 ################
-
 
 write.table(tab, file = "GOEnrichmentTable.csv", sep = ",", quote = TRUE, row.names = FALSE)
 

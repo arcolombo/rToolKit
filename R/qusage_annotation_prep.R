@@ -1,17 +1,13 @@
-#' @title creates a geneInfo0 data frame which has gene symbol and module color
-#' @description used mainly for WGCNA which returns a data frame of geneSym locus link ID module colr and correlations
+#' @title creates a kexp data frame which has gene symbol rownames
+#' @description used mainly for qusage calls which returns a data frame of gene counts with rownames as gene HUGO names
 #' @import biomaRt
 #' @import arkas
 #' @export
-#' @return geneInof0 data frame
-geneAnnotation<-function(datExpr,datTraits,species=c("Homo.sapiens","Mus.musculus")){
+#' @return gene name data frame
+qusage_annotation_prep<-function(kexp,species=c("Homo.sapiens","Mus.musculus")){
 
-  stopifnot(any(grepl("ERCC",names(datExpr))==TRUE)==FALSE)
-
-   if(class(datExpr)=="matrix"){
-  datExpr<-as.data.frame(datExpr,stringsAsFactors=FALSE)
-  }
-  resValues<-names(datExpr)
+  datExpr<-collapseBundles(kexp,"gene_id")
+  resValues<-rownames(datExpr)
 
 
 require(biomaRt)
@@ -39,9 +35,14 @@ require(biomaRt)
                     mart=speciesMart)
  }
 
-
-  return(convertedEntrezID)
-}
+ ###annotate rowRanges with gene name then collapse by gene_name
+   ######add gene names
+  id<-which(convertedEntrezID$hgnc_symbol!="")
+  conv<-convertedEntrezID[id,]
+  id2<-match(conv$ensembl_gene_id,rowRanges(kexp)$gene_id)
+  rowRanges(kexp)$gene_name[id2]<-convertedEntrezID$hgnc_symbol
+ return(kexp)
+} # main 
 
 
 .findMart <- function(commonName=c("human","mouse"),host="www.ensembl.org"){#{{{

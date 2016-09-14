@@ -6,7 +6,8 @@
 \usage{
 wgcna_analysis(datExpr, datTraits, biotype = c("ERV1", "ERV2",
   "Endogenous Retrovirus", "ERV3", "ERVL", "L1", "L2", "LTR Retrotransposon"),
-  biocolor = "blue", whichWGCNA = c("single", "block"))
+  biocolor = "blue", whichWGCNA = c("single", "block"),
+  intColors = c("blue", "brown"))
 }
 \arguments{
 \item{datExpr}{list entry from wgcna part 1 method [[1]]}

@@ -3,11 +3,13 @@
 #' @import WGCNA
 #' @export
 #' @return images and cluster at the gene and repeat level
-wgcna<-function(kexp,read.cutoff=2,cutHeight=540000,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE){
-  #FIX ME: cluster a TOM for repeats and coding genes to determine modules.  
-  #FIX ME: run enrichment for each module.
+wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE,species=c("Homo.sapiens","Mus.musculus")){
+  ##FIX ME: use TPMs instead of CPM???
+  
   ##prepare data
   whichWGCNA<-match.arg(whichWGCNA,c("single","block"))
+  species<-match.arg(species,c("Homo.sapiens","Mus.musculus"))
+
   ###rows must be SAMPLES columns genes
   cpm<-collapseBundles(kexp,"gene_id",read.cutoff=read.cutoff)
   cpm<-cpm[!grepl("^ERCC",rownames(cpm)),]
@@ -48,11 +50,14 @@ plot(sampleTree, main = "Sample clustering to detect outliers", sub="", xlab="",
 cutHeight<-readHeight()
 # Plot a line to show the cut
 abline(h = cutHeight, col = "red");
+readkey()
 # Determine cluster under the line
 clust = cutreeStatic(sampleTree, cutHeight = cutHeight, minSize = minBranch)
-table(clust)
+print(table(clust))
+
 # clust 1 contains the samples we want to keep.
 keepSamples = (clust!=0)
+print(paste0("samples to omit ",colnames(kexp)[which(keepSamples==FALSE)]))
 datExpr = datExpr0[keepSamples, ]
 nGenes = ncol(datExpr)
 nSamples = nrow(datExpr)
@@ -91,13 +96,43 @@ abline(h=0.90,col="red")
 plot(sft$fitIndices[,1], sft$fitIndices[,5],
      xlab="Soft Threshold (power)",ylab="Mean Connectivity", type="n",
      main = paste("Mean connectivity"))
-text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
+sage("annotating...")
+datExpr<-as.data.frame(datExpr,stringsAsFactors=FALSE)
+annot<-geneAnnotation(datExpr,datTraits,species=species)
+
+if(entrezOnly==TRUE){
+id<-!is.na(annot$entrezgene)
+datExpr<-datExpr[,names(datExpr)%in%annot$ensembl_gene_id[id]]
+probes2annot<-match(names(datExpr),annot$ensembl_gene_id)
+stopifnot(sum(is.na(probes2annot))==0) ##no NA 
+} else{
+datExpr<-datExpr[,names(datExpr)%in%annot$ensembl_gene_id]
+probes2annot<-match(names(datExpr),annot$ensembl_gene_id)
+stopifnot(sum(is.na(probes2annot))==0) ##no NA 
+}
+ext(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
 
 selectedPower<-readPower()
 ##FIX ME:  add path controls
 
 if(whichWGCNA=="single"){
  ##auto####################################################
+message("annotating...")
+datExpr<-as.data.frame(datExpr,stringsAsFactors=FALSE)
+annot<-geneAnnotation(datExpr,datTraits,species=species)
+
+if(entrezOnly==TRUE){
+id<-!is.na(annot$entrezgene)
+datExpr<-datExpr[,names(datExpr)%in%annot$ensembl_gene_id[id]]
+probes2annot<-match(names(datExpr),annot$ensembl_gene_id)
+stopifnot(sum(is.na(probes2annot))==0) ##no NA 
+} else{
+datExpr<-datExpr[,names(datExpr)%in%annot$ensembl_gene_id]
+probes2annot<-match(names(datExpr),annot$ensembl_gene_id)
+stopifnot(sum(is.na(probes2annot))==0) ##no NA 
+}
+
+
 net = blockwiseModules(datExpr, power = selectedPower,
                        TOMType = "unsigned", minModuleSize = 30,
                        reassignThreshold = 0, mergeCutHeight = 0.25,
@@ -136,7 +171,7 @@ if(whichWGCNA=="block"){
 ###first annotate and take out non-annotated first run BWA on datExpr that has annotations, no NAs
 message("annotating...")
 datExpr<-as.data.frame(datExpr,stringsAsFactors=FALSE)
-annot<-geneAnnotation(datExpr,datTraits)
+annot<-geneAnnotation(datExpr,datTraits,species=species)
 
 if(entrezOnly==TRUE){
 id<-!is.na(annot$entrezgene)

@@ -5,7 +5,7 @@
 \title{runs a network analysis at the gene level to investigate repeat initiating pathways}
 \usage{
 wgcna(kexp, read.cutoff = 2, cutHeight = 540000, minBranch = 2,
-  whichWGCNA = c("single", "block"))
+  whichWGCNA = c("single", "block"), entrezOnly = FALSE)
 }
 \value{
 images and cluster at the gene and repeat level

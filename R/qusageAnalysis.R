@@ -10,7 +10,7 @@ qusageAnalysis<-function(annotatedKexp,byLevel=c("transcript","gene"),reactomeSp
 reactomeSpecies<-match.arg(reactomeSpecies,c("Mus musculus","Homo sapiens"))
 design<-metadata(annotatedKexp)$design
 comparisonSamples<-rownames(design)[which(design[,2]>0)]
-controlSamples<-rownames(design)[which(design[,2]==0)]
+controlSamples<-rownames(design)[which(design[,2]<1)]
 
 #Run enrichment analysis
 if(byLevel=="transcript"){
@@ -30,8 +30,7 @@ tL<-log2(filteredTrnx+0.001)
 
 
  for(i in 1:length(comparisonSamples) ) {
- idx<-which(colnames(tL)==comparisonSampcontrolSamples<-rownames(design)[which(design[,2]==0)]
-les[i])
+ idx<-which(colnames(tL)==comparisonSamples[i])
  colnames(tL)[idx]<-paste0("COMP_0")
  }
 
