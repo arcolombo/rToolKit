@@ -4,7 +4,7 @@
 #' @import WGCNA
 #' @export
 #' @return images of eigengenes
-wgcna_Cormap<-function(lnames,read.cutoff=2){
+wgcna_Cormap<-function(lnames,read.cutoff=2,plotDot=FALSE){
 
 if(is.null(lnames)==TRUE){
 load("wgcna.dataInput.RData")
@@ -56,10 +56,10 @@ labeledHeatmap(Matrix = moduleTraitCor,
 readkey()
 colorDF<-sapply(MEs,function(x) median(x))
 colorDF<-colorDF[order(colorDF,decreasing=TRUE)]
-
-par(mar = c(11.5, 6, 3, 3));
-plot(colorDF,main="Median Correlation Per Module")
-axis(1,at=1:length(colorDF),labels=names(colorDF),las=2)
-readkey()
-
+  if(plotDot==TRUE){
+  par(mar = c(11.5, 6, 3, 3));
+  plot(colorDF,main="Median Correlation Per Module")
+  axis(1,at=1:length(colorDF),labels=names(colorDF),las=2)
+  readkey()
+  }
 }

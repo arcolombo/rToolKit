@@ -93,10 +93,12 @@ text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
 # this line corresponds to using an R^2 cut-off of h
 abline(h=0.90,col="red")
 # Mean connectivity as a function of the soft-thresholding power
+readkey()
 plot(sft$fitIndices[,1], sft$fitIndices[,5],
      xlab="Soft Threshold (power)",ylab="Mean Connectivity", type="n",
      main = paste("Mean connectivity"))
-sage("annotating...")
+selectedPower<-readPower()
+message("annotating...")
 datExpr<-as.data.frame(datExpr,stringsAsFactors=FALSE)
 annot<-geneAnnotation(datExpr,datTraits,species=species)
 
@@ -110,9 +112,8 @@ datExpr<-datExpr[,names(datExpr)%in%annot$ensembl_gene_id]
 probes2annot<-match(names(datExpr),annot$ensembl_gene_id)
 stopifnot(sum(is.na(probes2annot))==0) ##no NA 
 }
-ext(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
 
-selectedPower<-readPower()
+
 ##FIX ME:  add path controls
 
 if(whichWGCNA=="single"){

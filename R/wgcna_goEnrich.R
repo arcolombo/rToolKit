@@ -27,13 +27,14 @@ if(entrezOnly==FALSE){
 probes = names(datExpr)
 probes2annot<-match(probes,annot$ensembl_gene_id)
 allEntrezID<-annot$entrezgene[probes2annot]
-intModules<-intColors
+
 } else{
 probes = names(datExpr)
 id<-!is.na(annot$entrezgene)
 probes2annot<-match(probes,annot$ensembl_gene_id)
+stopifnot(annot$esembl_gene_id[probes2annot]==probes)
 allEntrezID<-annot$entrezgene[probes2annot]
-intModules<-intColors
+
 }
 
 
@@ -50,8 +51,8 @@ for (module in intModules)
 # As background in the enrichment analysis, we will use all probes in the analysis.
 
 ###FIX ME:  does bwModuleColors need to match allEntrez Id?
-allEntrez<-annot$entrezgene
-GOenr = GOenrichmentAnalysis(bwModuleColors, allEntrez, organism = species, nBestP = 15);
+#allEntrez<-annot$entrezgene
+GOenr = GOenrichmentAnalysis(bwModuleColors, allEntrezID, organism = species, nBestP = 15);
 
 tab = GOenr$bestPTerms[[4]]$enrichment
 
