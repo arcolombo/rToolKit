@@ -40,7 +40,7 @@ require(biomaRt)
   id<-which(convertedEntrezID$hgnc_symbol!="")
   conv<-convertedEntrezID[id,]
   id2<-match(conv$ensembl_gene_id,rowRanges(kexp)$gene_id)
-  rowRanges(kexp)$gene_name[id2]<-convertedEntrezID$hgnc_symbol
+  rowRanges(kexp)$gene_name[id2]<-conv$hgnc_symbol
  return(kexp)
 } # main 
 
