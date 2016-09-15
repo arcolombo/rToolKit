@@ -59,7 +59,7 @@ verboseScatterplot(abs(geneModuleMembership[moduleGenes, column]),
                    xlab = paste("Module Membership in", module, "module"),
                    ylab = paste0("Gene significance for ",biotype),
                    main = paste("Module membership vs. gene significance\n"),
-                   cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
+                   cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2)
 readkey()
 
 

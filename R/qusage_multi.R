@@ -1,5 +1,15 @@
 #' @title run qusage over multiple gene sets
 #' @description since the WGCNA enrichment algorithm is 'experimental' it can only provide preliminary analyses; additionally it returns warnings regarding pvalue calculations on correlations.  qusage can be run to verify using KEGG, GO, and immuneSignatures.  Note that WGCNA:Go enrichment inputs Entrez IDs which is gene specific, so in this function we collapse by gene ids, and run qusage 
+#' @param kexp a 2 stage level kexp
+#' @param dbDir path to MSIGDB
+#' @param db  char name of db
+#' @param comparison character of Numerator
+#' @param control  denominator
+#' @param points.max  number of values to distribute into tdist
+#' @param table.number number to report
+#' @import qusage
+#' @export
+#' @return qusage table 
 qusage_multi<-function(kexp,dbDir="~/Documents/Arkas-Paper-Data/MSigDB/",db="c2.cp.kegg.v5.1.symbols.gmt",comparison="LSC",control="pHSC",points.max=2^12,table.number=15){
 
 ####FIX ME : add patient specific effects
@@ -25,5 +35,5 @@ qsTable(qs.results.msig, number=table.number)
 readkey()
 plot(qs.results.msig)
 readkey()
-
+return(qs.results.msig)
 } #Main

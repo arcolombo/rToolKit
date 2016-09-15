@@ -31,7 +31,7 @@ nSamples = nrow(datExpr);
 # Recalculate MEs with color labels
 MEs0 = moduleEigengenes(datExpr, bwModuleColors)$eigengenes
 MEs = orderMEs(MEs0)
-message(paste0("ordered correlation colors: ",colnames(MEs)))
+
 moduleTraitCor = cor(MEs, datTraits, use = "p");
 moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples);
 textMatrix =  paste(signif(moduleTraitCor, 2), "\n(",
@@ -50,6 +50,9 @@ labeledHeatmap(Matrix = moduleTraitCor,
                setStdMargins = FALSE,
                cex.text = 0.3,
                zlim = c(-1,1),
+               yColorWidth=0.07,
+               cex.lab.y=.7,
+               colors.lab.y=1.3,
                main = paste("Module-Repeat Biotype relationships"))
 
 

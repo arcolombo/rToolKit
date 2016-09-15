@@ -4,7 +4,8 @@
 \alias{geneAnnotation}
 \title{creates a geneInfo0 data frame which has gene symbol and module color}
 \usage{
-geneAnnotation(datExpr, datTraits, species = "Mus.musculus")
+geneAnnotation(datExpr, datTraits, species = c("Homo.sapiens",
+  "Mus.musculus"))
 }
 \value{
 geneInof0 data frame

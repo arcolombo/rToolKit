@@ -4,8 +4,24 @@
 \alias{wgcna}
 \title{runs a network analysis at the gene level to investigate repeat initiating pathways}
 \usage{
-wgcna(kexp, read.cutoff = 2, cutHeight = 540000, minBranch = 2,
-  whichWGCNA = c("single", "block"), entrezOnly = FALSE)
+wgcna(kexp, read.cutoff = 2, minBranch = 2, whichWGCNA = c("single",
+  "block"), entrezOnly = FALSE, species = c("Homo.sapiens", "Mus.musculus"),
+  selectedPower = 6)
+}
+\arguments{
+\item{kexp}{a kexp 2 group stage is preferred}
+
+\item{read.cutoff}{integer floor filter}
+
+\item{minBranch}{integer for cluter min}
+
+\item{whichWGCNA}{character single or block analysis, block is more sensitive}
+
+\item{entrezOnly}{boolean, soon to be deprecated because entrez is auto filtered when enrichment testing}
+
+\item{species}{char, mouse or humans}
+
+\item{selectedPower}{6 usually is good. can rerun if NULL}
 }
 \value{
 images and cluster at the gene and repeat level

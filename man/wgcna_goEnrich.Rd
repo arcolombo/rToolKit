@@ -4,8 +4,20 @@
 \alias{wgcna_goEnrich}
 \title{GO enrichment for wgcna_analysis modules}
 \usage{
-wgcna_goEnrich(datExpr, datTraits, annot, intModules = c("blue", "steelblue",
-  "darkturquoise"))
+wgcna_goEnrich(lnames, intModules = c("blue", "steelblue", "darkturquoise"),
+  species = c("human", "mouse"), entrezOnly = FALSE)
+}
+\arguments{
+\item{lnames}{this is the main method from wgcna, this is a slow calculation which sucks, but you call it once, and save it, so you can do downstream analysis with one painful object creation call}
+
+\item{intModules}{colors of interesting modules}
+
+\item{species}{human or mouse for annotatin}
+
+\item{entrezOnly}{boolean, I am not sure if you should use all entries for goEnrichment, with and without entrez.  so keeping a flag for now.  it seems as though the GoEnirch call filters NA entrez automatically.}
+}
+\value{
+images and go enrichment object
 }
 \description{
 downstream from wgcna_analysis we can investigate enrichment

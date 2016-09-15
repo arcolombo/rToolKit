@@ -4,7 +4,7 @@
 \alias{wgcna_Cormap}
 \title{produces a correlation map given wgcna network data}
 \usage{
-wgcna_Cormap(lnames, read.cutoff = 2)
+wgcna_Cormap(lnames, read.cutoff = 2, plotDot = FALSE)
 }
 \arguments{
 \item{read.cutoff}{integer for min cutoff}
