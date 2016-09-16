@@ -7,6 +7,7 @@
 #' @export
 #' @return images of plot
 wgcna_scatterMod<-function(lnames,biocolor="blue",biotype="ERVL"){
+  #FIX ME: the scatter correlation is not matching correlation from Cormap
 
 if(is.null(lnames)==FALSE){
 message("found wgcna data")

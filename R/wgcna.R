@@ -7,10 +7,12 @@
 #' @param entrezOnly boolean, soon to be deprecated because entrez is auto filtered when enrichment testing
 #' @param species char, mouse or humans
 #' @param selectedPower  6 usually is good. can rerun if NULL
+#' @param intBiotypes character the tx_biotypes of interest
+#' @param useAllBiotypes boolean if false then intBiotypes are used, if true than the correlations are checked against all tx_biotypes
 #' @import WGCNA
 #' @export
 #' @return images and cluster at the gene and repeat level
-wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE,species=c("Homo.sapiens","Mus.musculus"),selectedPower=6){
+wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE,species=c("Homo.sapiens","Mus.musculus"),selectedPower=NULL,intBiotypes=c("Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","L1","L2","LTR Retrotransposon","Satellite"),useAllBiotypes=FALSE){
   ##FIX ME: use TPMs instead of CPM???
   
   ##prepare data
@@ -26,6 +28,12 @@ wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),en
   rexp<-findRepeats(kexp)
   rpm<-collapseBundles(rexp,"tx_biotype",read.cutoff=read.cutoff)
   rpm<-rpm[!grepl("^ERCC",rownames(rpm)),]
+   
+  if(useAllBiotypes==FALSE){
+  #select columns of intBiotypes
+   stopifnot(is.null(intBiotypes)==FALSE)
+   rpm<-rpm[rownames(rpm)%in%intBiotypes,]
+   }
   datTraits<-t(rpm)
   datTraits<-as.data.frame(datTraits)
   stopifnot(nrow(datExpr0)==nrow(datTraits))
@@ -129,49 +137,43 @@ readkey()
 if(whichWGCNA=="single"){
  ##auto####################################################
 datExpr<-as.data.frame(datExpr,stringsAsFactors=FALSE)
-
-
-
+#############################
 net = blockwiseModules(datExpr, power = selectedPower,
                        TOMType = "unsigned", minModuleSize = 30,
                        reassignThreshold = 0, mergeCutHeight = 0.25,
                        numericLabels = TRUE, pamRespectsDendro = FALSE,
                        saveTOMs = TRUE,
-                       saveTOMFileBase = "rwaMouseTOM", 
+                       saveTOMFileBase = "rwasingleTOM", 
                        verbose = 3)
 
-
-
 # Convert labels to colors for plotting
-mergedColors = labels2colors(net$colors)
 # Plot the dendrogram and the module colors underneath
-bwLabes<-net$colors ###for saving
-moduleLabels = net$colors
-moduleColors = labels2colors(net$colors)
-bwModuleColors<-moduleColors ##for saving
-MEs = net$MEs;
-geneTree = net$dendrograms[[1]];
-singleBlockMEs = moduleEigengenes(datExpr, moduleColors)$eigengenes;
+  bwLabels<-net$colors ###for saving
+  bwModuleColors = labels2colors(net$colors)
+  MEs = net$MEs; ##use the module network calculation, do not recalculate 2nd time
+  nGenes = ncol(datExpr);
+  nSamples = nrow(datExpr);
+  geneTree = net$dendrograms;
+  moduleTraitCor = cor(MEs, datTraits, use = "p");
+  moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples);
 
-####compare auto to block
-##FIX M
-lnames<-list(datExpr=datExpr,
+ lnames <-list(datExpr=datExpr,
             datTraits=datTraits,
-            medianCor=colorDF,
             annot=annot,
             MEs=MEs,
             moduleLabels=bwLabels,
             moduleColors=bwModuleColors,
-            geneTree=geneTree)
-}
+            geneTree=geneTree,
+            moduleTraitCor=moduleTraitCor,
+            moduleTraitPvalue=moduleTraitPvalue)
+} ##single block should have 1 module per datTraits column
   if(whichWGCNA=="block"){
 ##############BLOCK LEVEL ###################
   message("networking...")
   datExpr<-as.data.frame(datExpr,stringsAsFactors=FALSE)
   ##############################################
-
   bwnet = blockwiseModules(datExpr, 
-                       maxBlockSize = 2000,
+                       maxBlockSize = 4000,
                        power = selectedPower, 
                        TOMType = "unsigned", 
                        minModuleSize = 30,
@@ -182,13 +184,10 @@ lnames<-list(datExpr=datExpr,
                        saveTOMFileBase = "rwaTOM-blockwise",
                        verbose = 3)
 # Load the results of single-block analysis
-
   bwLabels = matchLabels(bwnet$colors,bwnet$colors)
   # Convert labels to colors for plotting
   bwModuleColors = labels2colors(bwLabels)
   geneTree<-bwnet$dendrograms
-  moduleColors<-bwModuleColors
-
   # open a graphics window
   sizeGrWindow(6,6)
   # Plot the dendrogram and the module colors underneath for block 1
@@ -198,6 +197,7 @@ lnames<-list(datExpr=datExpr,
                      main = "Gene dendrogram and module colors in block 1", 
                     dendroLabels = FALSE, hang = 0.03,
                     addGuide = TRUE, guideHang = 0.05)
+   readkey()
 # Plot the dendrogram and the module colors underneath for block 2
   plotDendroAndColors(bwnet$dendrograms[[2]], 
                       bwModuleColors[bwnet$blockGenes[[2]]],
@@ -205,27 +205,39 @@ lnames<-list(datExpr=datExpr,
                       main = "Gene dendrogram and module colors in block 2", 
                     dendroLabels = FALSE, hang = 0.03,
                     addGuide = TRUE, guideHang = 0.05)
-
+    readkey()
 # this line corresponds to using an R^2 cut-off of h
-  blockwiseMEs = moduleEigengenes(datExpr, bwModuleColors)$eigengenes;
-  } ##by block
-
-  sizeGrWindow(10,6)
-# Will display correlations and their p-values
-  # Define numbers of genes and samples
+  # Recalculate MEs with color labels
   nGenes = ncol(datExpr);
   nSamples = nrow(datExpr);
-# Recalculate MEs with color labels
   MEs0 = moduleEigengenes(datExpr, bwModuleColors)$eigengenes
   MEs = orderMEs(MEs0)
   moduleTraitCor = cor(MEs, datTraits, use = "p");
   moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples);
+  lnames<-list(datExpr=datExpr,
+            datTraits=datTraits,
+            annot=annot,
+            MEs=MEs,
+            moduleLabels=bwLabels,
+            moduleColors=bwModuleColors,
+            geneTree=geneTree,
+            moduleTraitCor=moduleTraitCor,
+            moduleTraitPvalue=moduleTraitPvalue)
+
+
+  } ##by block
+
+  # Define numbers of genes and samples
+ # nGenes = ncol(datExpr);
+ # nSamples = nrow(datExpr);
+ # moduleTraitCor = cor(MEs, datTraits, use = "p");
+ # moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples);
   textMatrix =  paste(signif(moduleTraitCor, 2), "\n(",
                            signif(moduleTraitPvalue, 1), ")", sep = "");
   dim(textMatrix) = dim(moduleTraitCor)
   par(mar = c(6, 11.5, 3, 3));
 # Display the correlation values within a heatmap plot
-
+  sizeGrWindow(10,6)
   labeledHeatmap(Matrix = moduleTraitCor,
                xLabels = names(datTraits),
                yLabels = names(MEs),
@@ -245,22 +257,9 @@ lnames<-list(datExpr=datExpr,
   plot(colorDF,main="Median Correlation Per Module")
   axis(1,at=1:length(colorDF),labels=names(colorDF),las=2)
   readkey()
-  lnames<-list(datExpr=datExpr,
-            datTraits=datTraits,
-            medianCor=colorDF,
-            annot=annot,
-            MEs=MEs,
-            moduleLabels=bwLabels,
-            moduleColors=bwModuleColors,
-            geneTree=geneTree )
+  
   save(lnames,file="wgcna.dataInput.RData",compress=TRUE)
-  return(list(datExpr=datExpr,
-            datTraits=datTraits,
-            medianCor=colorDF,
-            annot=annot,
-            MEs=MEs,
-            moduleLabels=bwLabels,
-            moduleColors=bwModuleColors,
-            geneTree=geneTree ))
+  
+  return(lnames)
  
 }#main
