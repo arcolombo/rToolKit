@@ -6,7 +6,9 @@
 \usage{
 wgcna(kexp, read.cutoff = 2, minBranch = 2, whichWGCNA = c("single",
   "block"), entrezOnly = FALSE, species = c("Homo.sapiens", "Mus.musculus"),
-  selectedPower = 6)
+  selectedPower = NULL, intBiotypes = c("Alu", "DNA transposon",
+  "Endogenous Retrovirus", "ERV1", "ERV3", "ERVK", "ERVL", "L1", "L2",
+  "LTR Retrotransposon", "Satellite"), useAllBiotypes = FALSE)
 }
 \arguments{
 \item{kexp}{a kexp 2 group stage is preferred}
@@ -22,6 +24,10 @@ wgcna(kexp, read.cutoff = 2, minBranch = 2, whichWGCNA = c("single",
 \item{species}{char, mouse or humans}
 
 \item{selectedPower}{6 usually is good. can rerun if NULL}
+
+\item{intBiotypes}{character the tx_biotypes of interest}
+
+\item{useAllBiotypes}{boolean if false then intBiotypes are used, if true than the correlations are checked against all tx_biotypes}
 }
 \value{
 images and cluster at the gene and repeat level
