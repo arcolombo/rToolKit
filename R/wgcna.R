@@ -1,5 +1,5 @@
 #' @title runs a network analysis at the gene level to investigate repeat initiating pathways 
-#' @description running WGNCA could find the gene correlation patterns to infer a relationship behind repeat activation.  what causes repeat activation ?  is it a single mutation?  or protein ?  chromatin accessibility?.  This will create the blockwise/single module data frame and run the soft-thresholding and create a correlation heatmap.  the downstream method is wgcna_analsyis which investigates specific module color and specific biotype.
+#' @description running WGNCA could find the gene correlation patterns to infer a relationship behind repeat activation. This uses the recommended 'biocor' function which is a bi-weight mid-correlation calculation. For normalization, the default uses tmm normalization and a log2 transformation for each cpm for genes, and repeat txBiotypes in the *same* way but on separate calls (this seems ok intuitively).  We use 'signed' networks based on the FAQ.  This will create the blockwise/single module data frame and run the soft-thresholding and create a correlation heatmap.  the downstream method is wgcna_analsyis which investigates specific module color and specific biotype.
 #' @param kexp a kexp 2 group stage is preferred
 #' @param read.cutoff integer floor filter
 #' @param minBranch integer for cluter min
@@ -10,29 +10,44 @@
 #' @param intBiotypes character the tx_biotypes of interest
 #' @param useAllBiotypes boolean if false then intBiotypes are used, if true than the correlations are checked against all tx_biotypes
 #' @import WGCNA
+#' @import edgeR
 #' @export
 #' @return images and cluster at the gene and repeat level
-wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE,species=c("Homo.sapiens","Mus.musculus"),selectedPower=NULL,intBiotypes=c("Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","L1","L2","LTR Retrotransposon","Satellite"),useAllBiotypes=FALSE){
+wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE,species=c("Homo.sapiens","Mus.musculus"),selectedPower=NULL,intBiotypes=c("Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","L1","L2","LTR Retrotransposon","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE){
   ##FIX ME: use TPMs instead of CPM???
   
   ##prepare data
   whichWGCNA<-match.arg(whichWGCNA,c("single","block"))
   species<-match.arg(species,c("Homo.sapiens","Mus.musculus"))
-
+  
   ###rows must be SAMPLES columns genes
   cpm<-collapseBundles(kexp,"gene_id",read.cutoff=read.cutoff)
   cpm<-cpm[!grepl("^ERCC",rownames(cpm)),]
+  rexp<-findRepeats(kexp)
+  rpm<-collapseBundles(rexp,"tx_biotype",read.cutoff=read.cutoff) 
+  rpm<-rpm[!grepl("^ERCC",rownames(rpm)),]
+ if(tmm.norm==TRUE){
+  d<-DGEList(counts=cpm)
+  cpm.norm<-cpm(d,normalized.lib.sizes=TRUE)
+  cpm<-cpm.norm
+  cpm.norm<-NULL
+  rd<-DGEList(counts=rpm)
+  rdm.norm<-cpm(rd,normalized.lib.sizes=TRUE)
+  rpm<-rdm.norm
+  rdm.norm<-NULL
+  }#tmm norm
+  cpm<-log2(1+cpm) ##log2 transform recommended
+  rpm<-log2(1+rpm) 
+  #split out repeats
   datExpr0<-t(cpm)
   gsg<-goodSamplesGenes(datExpr0,verbose=3)
   ##rows must be SAMPLES columns repeats
-  rexp<-findRepeats(kexp)
-  rpm<-collapseBundles(rexp,"tx_biotype",read.cutoff=read.cutoff)
-  rpm<-rpm[!grepl("^ERCC",rownames(rpm)),]
-   
+ 
   if(useAllBiotypes==FALSE){
   #select columns of intBiotypes
    stopifnot(is.null(intBiotypes)==FALSE)
    rpm<-rpm[rownames(rpm)%in%intBiotypes,]
+   
    }
   datTraits<-t(rpm)
   datTraits<-as.data.frame(datTraits)
@@ -83,15 +98,15 @@ if (!gsg$allOK)
  datTraits<-datTraits[keepSamples,]
   }
 # Re-cluster samples
-sampleTree2 = hclust(dist(datExpr), method = "average")
-# Convert traits to a color representation: white means low, red means high, grey means missing entry
-traitColors = numbers2colors(datTraits, signed = FALSE);
+  sampleTree2 = hclust(dist(datExpr), method = "average")
+  # Convert traits to a color representation: white means low, red means high, grey means missing entry
+  traitColors = numbers2colors(datTraits, signed = FALSE);
 # Plot the sample dendrogram and the colors underneath.
-plotDendroAndColors(sampleTree2, traitColors,
+  plotDendroAndColors(sampleTree2, traitColors,
                     groupLabels = names(datTraits), 
                     marAll=c(1,11,3,3),
                     main="TxBiotype Correlation Samples") 
-readkey()    
+  readkey()    
 # Choose a set of soft-thresholding powers
   if(is.null(selectedPower)==TRUE){
   powers = c(c(1:10), seq(from = 12, to=20, by=2))
@@ -139,7 +154,9 @@ if(whichWGCNA=="single"){
 datExpr<-as.data.frame(datExpr,stringsAsFactors=FALSE)
 #############################
 net = blockwiseModules(datExpr, power = selectedPower,
-                       TOMType = "unsigned", minModuleSize = 30,
+                       networkType="signed",
+                       corType="bicor",
+                       TOMType = "signed", minModuleSize = 30,
                        reassignThreshold = 0, mergeCutHeight = 0.25,
                        numericLabels = TRUE, pamRespectsDendro = FALSE,
                        saveTOMs = TRUE,
@@ -151,12 +168,20 @@ net = blockwiseModules(datExpr, power = selectedPower,
   bwLabels<-net$colors ###for saving
   bwModuleColors = labels2colors(net$colors)
   MEs = net$MEs; ##use the module network calculation, do not recalculate 2nd time
+  #plots each gene tree one by one
+  wgcna_plotAll_dendrograms(net,whichWGCNA="single")
+  
   nGenes = ncol(datExpr);
   nSamples = nrow(datExpr);
   geneTree = net$dendrograms;
+  if(useBiCor==TRUE){
+  moduleTraitCor<-bicor(MEs,datTraits)
+  moduleTraitPvalue = bicorAndPvalue(MEs,datTraits,use="pairwise.complete.obs",alternative="two.sided")[["p"]]
+  } else {
   moduleTraitCor = cor(MEs, datTraits, use = "p");
   moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples);
-
+  }
+ 
  lnames <-list(datExpr=datExpr,
             datTraits=datTraits,
             annot=annot,
@@ -165,7 +190,8 @@ net = blockwiseModules(datExpr, power = selectedPower,
             moduleColors=bwModuleColors,
             geneTree=geneTree,
             moduleTraitCor=moduleTraitCor,
-            moduleTraitPvalue=moduleTraitPvalue)
+            moduleTraitPvalue=moduleTraitPvalue,
+            usedbiCor=useBiCor)
 } ##single block should have 1 module per datTraits column
   if(whichWGCNA=="block"){
 ##############BLOCK LEVEL ###################
@@ -175,7 +201,9 @@ net = blockwiseModules(datExpr, power = selectedPower,
   bwnet = blockwiseModules(datExpr, 
                        maxBlockSize = 4000,
                        power = selectedPower, 
-                       TOMType = "unsigned", 
+                       networkType="signed",
+                       TOMType = "signed", 
+                       corType="bicor",
                        minModuleSize = 30,
                        reassignThreshold = 0, 
                        mergeCutHeight = 0.25,
@@ -190,30 +218,22 @@ net = blockwiseModules(datExpr, power = selectedPower,
   geneTree<-bwnet$dendrograms
   # open a graphics window
   sizeGrWindow(6,6)
-  # Plot the dendrogram and the module colors underneath for block 1
-  plotDendroAndColors(bwnet$dendrograms[[1]], 
-                      bwModuleColors[bwnet$blockGenes[[1]]],
-                    "Module colors", 
-                     main = "Gene dendrogram and module colors in block 1", 
-                    dendroLabels = FALSE, hang = 0.03,
-                    addGuide = TRUE, guideHang = 0.05)
-   readkey()
-# Plot the dendrogram and the module colors underneath for block 2
-  plotDendroAndColors(bwnet$dendrograms[[2]], 
-                      bwModuleColors[bwnet$blockGenes[[2]]],
-                      "Module colors", 
-                      main = "Gene dendrogram and module colors in block 2", 
-                    dendroLabels = FALSE, hang = 0.03,
-                    addGuide = TRUE, guideHang = 0.05)
-    readkey()
+ ########################################################################
+  ##plot gene tree one by one 
+  wgcna_plotAll_dendrograms(bwnet,whichWGCNA="block")
 # this line corresponds to using an R^2 cut-off of h
   # Recalculate MEs with color labels
   nGenes = ncol(datExpr);
   nSamples = nrow(datExpr);
   MEs0 = moduleEigengenes(datExpr, bwModuleColors)$eigengenes
   MEs = orderMEs(MEs0)
-  moduleTraitCor = cor(MEs, datTraits, use = "p");
+  if(useBiCor==TRUE){
+  moduleTraitCor<-bicor(MEs,datTraits)
+  moduleTraitPvalue = bicorAndPvalue(MEs,datTraits,use="pairwise.complete.obs",alternative="two.sided")[["p"]]
+  } else {
+   moduleTraitCor = cor(MEs, datTraits, use = "p");
   moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples);
+  }
   lnames<-list(datExpr=datExpr,
             datTraits=datTraits,
             annot=annot,
@@ -222,42 +242,17 @@ net = blockwiseModules(datExpr, power = selectedPower,
             moduleColors=bwModuleColors,
             geneTree=geneTree,
             moduleTraitCor=moduleTraitCor,
-            moduleTraitPvalue=moduleTraitPvalue)
-
-
+            moduleTraitPvalue=moduleTraitPvalue,
+            biCor=useBiCor)
   } ##by block
 
-  # Define numbers of genes and samples
- # nGenes = ncol(datExpr);
- # nSamples = nrow(datExpr);
- # moduleTraitCor = cor(MEs, datTraits, use = "p");
- # moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples);
+  # Define nmbers of genes and samp
   textMatrix =  paste(signif(moduleTraitCor, 2), "\n(",
                            signif(moduleTraitPvalue, 1), ")", sep = "");
   dim(textMatrix) = dim(moduleTraitCor)
-  par(mar = c(6, 11.5, 3, 3));
 # Display the correlation values within a heatmap plot
-  sizeGrWindow(10,6)
-  labeledHeatmap(Matrix = moduleTraitCor,
-               xLabels = names(datTraits),
-               yLabels = names(MEs),
-               ySymbols = names(MEs),
-               colorLabels = FALSE,
-               colors = greenWhiteRed(50),
-               textMatrix = textMatrix,
-               setStdMargins = FALSE,
-               cex.text = 0.3,
-               zlim = c(-1,1),
-               main = paste("Module-Repeat Biotype relationships"))
-  readkey()
-  colorDF<-sapply(MEs,function(x) median(x))
-  colorDF<-colorDF[order(colorDF,decreasing=TRUE)]
 
-  par(mar = c(11.5, 6, 3, 3));
-  plot(colorDF,main="Median Correlation Per Module")
-  axis(1,at=1:length(colorDF),labels=names(colorDF),las=2)
-  readkey()
-  
+  wgcna_Cormap(lnames,read.cutoff=read.cutoff,plotDot=FALSE) 
   save(lnames,file="wgcna.dataInput.RData",compress=TRUE)
   
   return(lnames)

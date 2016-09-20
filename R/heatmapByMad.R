@@ -19,6 +19,7 @@ heatmapByMad<-function(data,kexp,topAnnoFactors=NULL,selectK=NULL,byWhat=byWhat)
   inputMad<-byMad(data,k=selectK)
   typed<-Heatmap(inputMad,column_title=paste0("byMad Top ",selectK," ",byWhat), top_annotation=te)
   } else {
+  inputMad<-byMad(data,k=selectK)
   typed<-Heatmap(inputMad,column_title=paste0("byMad Top ",selectK," ",byWhat))
   }
   typed2<-Heatmap(rowRanges(kexp)[rownames(inputMad)]$tx_biotype,name="tx_biotype",width=unit(5,"mm")) 

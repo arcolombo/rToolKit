@@ -21,10 +21,7 @@ datExpr<-lnames[["datExpr"]]
 datTraits<-lnames[["datTraits"]]
 annot<-lnames[["annot"]]
 
-
-sizeGrWindow(10,6)
 # Will display correlations and their p-values
-
 # Define numbers of genes and samples
 nGenes = ncol(datExpr);
 nSamples = nrow(datExpr);
@@ -39,7 +36,7 @@ textMatrix =  paste(signif(moduleTraitCor, 2), "\n(",
 dim(textMatrix) = dim(moduleTraitCor)
 par(mar = c(6, 11.5, 3, 3));
 # Display the correlation values within a heatmap plot
-
+plot.new()
 labeledHeatmap(Matrix = moduleTraitCor,
                xLabels = names(datTraits),
                yLabels = names(MEs),
@@ -53,7 +50,7 @@ labeledHeatmap(Matrix = moduleTraitCor,
                yColorWidth=0.07,
                cex.lab.y=.7,
                colors.lab.y=1.3,
-               main = paste("Module-Repeat Biotype relationships"))
+               main = paste0("Module-Repeat Biotype TMM cut:",read.cutoff))
 
 
 readkey()
@@ -64,5 +61,25 @@ colorDF<-colorDF[order(colorDF,decreasing=TRUE)]
   plot(colorDF,main="Median Correlation Per Module")
   axis(1,at=1:length(colorDF),labels=names(colorDF),las=2)
   readkey()
-  }
+  } else {
+  pdf("correlation_plots.pdf")
+    par(mar = c(11.5, 6, 3, 3));
+    labeledHeatmap(Matrix = moduleTraitCor,
+               xLabels = names(datTraits),
+               yLabels = names(MEs),
+               ySymbols = names(MEs),
+               colorLabels = FALSE,
+               colors = greenWhiteRed(50),
+               textMatrix = textMatrix,
+               setStdMargins = FALSE,
+               cex.text = 0.3,
+               zlim = c(-1,1),
+               yColorWidth=0.07,
+               cex.lab.y=.7,
+               colors.lab.y=1.3,
+               main = paste("Module-Repeat Biotype relationships"))
+  plot(colorDF,main="Median Correlation Per Module")
+  axis(1,at=1:length(colorDF),labels=names(colorDF),las=2)
+  dev.off()
+ }
 }
