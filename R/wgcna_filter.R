@@ -5,7 +5,20 @@
 #' @export
 #' @import WGCNA
 #' @return a data frame with p adjusted q value genes
-wgcna_filter<-function(datExpr,annot){
+wgcna_filter<-function(geneTraitModuleDF,datExpr,annot){
+
+
+##the geneTraitModuleDF has pValues, there are not Fisher pvalues....  maybe add ?
+##has a qvalue for each module color
+q.list<-lapply(geneTraitModuleDF[,grepl("p.MM",colnames(geneTraitModuleDF))],
+                function(x) qvalue(x)$qvalues)
+names(q.list)<-sub("^p.","q.",names(q.list))
+
+###module list p and q value
+colors<-sub("^MM","",colnames(geneTraitModuleDF)[grepl("^MM",colnames(geneTraitModuleDF))])
+###need to subset each individual module color genes,corrl,p.value,fisherp,qvalue  in a list.  filter and then write out to text files each module
+
+#######################################
 
 
 meanExpressionByArray=apply( datExpr,1,mean, na.rm=T)  

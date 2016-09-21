@@ -42,13 +42,31 @@ wgcna_analysis<-function(lnames,biotype=c("ERV1","ERV2","Endogenous Retrovirus",
 
 # names (colors) of the modules
   modNames = substring(names(MEs), 3)
-  wgcna_scatterMod(lnames) ##plots all colors across all biotypes...  
+geneTraitModuleDF<-wgcna_scatterMod(lnames) ##plots all colors across all biotypes...  
+##from examining scatter mod we have abs correlations with at least 0.50
+## brown: Alu
+## magenta: ERV1,ERVK,L1,End.Retr
+## blue : ERVK, ERVL, L1
+## salmon: ERV3, ERVK,ERVL, L1
+## tan: End.Retro, ERV1,ERV3,ERVL
+## grey60: End.Ret, ERVL
+## black: Alu
+## darkgrey: L2
+## steelblue: ERVK, L1
 
+##TO DO:
+##screen and filter the geneTraitDF
+##perhaps short list
+##chooseTopHub
+## fdr filter
+##permutation test (screen)
+## enrich using qusage
+## call annotations to get top genes
+## regression methods: cox regression, votingLinearPredictions  the verboseScatter returns Lm with really small pvalues...cant interpret.
 
+#####
   probes<-names(datExpr)
   probes2annot<-match(probes,annot$ensembl_gene_id)
-
-
   if(whichWGCNA=="single"){
   geneInfo0 = data.frame(substanceBXH = names(datExpr),
                       geneSymbol = annot[probes2annot,]$mgi_symbol,

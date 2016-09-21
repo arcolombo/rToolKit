@@ -49,8 +49,8 @@ if(is.null(lnames)==FALSE){
   ##gene pvale per trait
   geneTraitCor = as.data.frame(bicor(datExpr, weight, use = "all.obs"));
   geneTraitPvalue = as.data.frame(corPvalueStudent(as.matrix(geneTraitCor), nSamples));
-  # names(geneTraitSignificance) = paste("GS.", names(weight), sep="");
-  #names(GSPvalue) = paste("p.GS.", names(weight), sep="");
+   colnames(geneTraitCor) = paste("GCor.", colnames(weight), sep="");
+  colnames(geneTraitPvalue) = paste("p.GCor.", colnames(weight), sep="");
   }
 
   moduleColors<-bwModuleColors
@@ -96,6 +96,12 @@ if(is.null(lnames)==FALSE){
    } #verbose all types
  }##across all colors
 
-
-
+  stopifnot(all(rownames(geneModuleMembership)==rownames(MMPvalue))==TRUE)
+  geneModuleDF<-cbind(geneModuleMembership,MMPvalue)
+  stopifnot(all(rownames(geneModuleDF)==rownames(geneTraitCor))==TRUE)
+  geneModuleDF<-cbind(geneModuleDF,geneTraitCor)
+  stopifnot(all(rownames(geneModuleDF)==rownames(geneTraitPvalue))==TRUE)
+  geneModuleDF<-cbind(geneModuleDF,geneTraitPvalue)
+  
+  return(geneModuleDF)
 }
