@@ -1,85 +1,77 @@
 #' @title this analyzes downstream of wgcna
-#' @description this can investigate annotations of the datTraits object plots individual color modules and an individual biotype correlation and pvalue significance 
+#' @description this can investigate annotations of the datTraits object plots individual color modules and an individual biotype correlation and pvalue significance. the scatter plot returned is produced by the correlation value, p.value and regression line; it uses the base function lm to fit a linear model.
 #' @param datExpr list entry from wgcna part 1 method [[1]]
 #' @param datTraits list entry from wgcna part 1 method [[[2]]
 #' @param biotype   names of datTraits
-wgcna_analysis<-function(lnames,biotype=c("ERV1","ERV2","Endogenous Retrovirus", "ERV3","ERVL", "L1","L2","LTR Retrotransposon"),biocolor="blue",whichWGCNA=c("single","block"),intColors=c("blue","brown")){
+wgcna_analysis<-function(lnames,biotype=c("ERV1","ERV2","Endogenous Retrovirus", "ERV3","ERVL", "L1","L2","LTR Retrotransposon"),biocolor="blue",whichWGCNA=c("single","block"),intColors=c("blue","brown"),useBiCor=TRUE){
   ##fix me: allow for multi color and biotype plots
+  ##FIX ME: load the MEs don't recalculate.  whichWGCNA shouldnt be used???
+  if(is.null(lnames)==TRUE){
+  load("wgcna.dataInput.RData")
+  bwModuleColors<-lnames[["moduleColors"]]
+  MEs<-lnames[["MEs"]]
+  datExpr<-lnames[["datExpr"]]
+  datTraits<-lnames[["datTraits"]]
+  annot<-lnames[["annot"]]
+  MEs<-lnames[["MEs"]]
+  moduleTraitCor<-lnames[["moduleTraitCor"]]
+  moduleTraitPvalue<-lnames[["moduleTraitPvalue"]]
+  } else if(is.null(lnames)==FALSE){
+  message("found wgcna.dataInput")
+  bwModuleColors<-lnames[["moduleColors"]]
+  MEs<-lnames[["MEs"]]
+  datExpr<-lnames[["datExpr"]]
+  datTraits<-lnames[["datTraits"]]
+  annot<-lnames[["annot"]]
+   MEs<-lnames[["MEs"]]
+  moduleTraitCor<-lnames[["moduleTraitCor"]]
+  moduleTraitPvalue<-lnames[["moduleTraitPvalue"]]
 
-if(is.null(lnames)==TRUE){
-load("wgcna.dataInput.RData")
-bwModuleColors<-lnames[["moduleColors"]]
-MEs<-lnames[["MEs"]]
-datExpr<-lnames[["datExpr"]]
-datTraits<-lnames[["datTraits"]]
-annot<-lnames[["annot"]]
-} else if(is.null(lnames)==FALSE){
-message("found wgcna.dataInput")
-bwModuleColors<-lnames[["moduleColors"]]
-MEs<-lnames[["MEs"]]
-datExpr<-lnames[["datExpr"]]
-datTraits<-lnames[["datTraits"]]
-annot<-lnames[["annot"]]
-} else {
-stop("please run wgcna, need the output before analyzing.")
-}
+  } else {
+  stop("please run wgcna, need the output before analyzing.")
+  }
 
 
-whichWGCNA<-match.arg(whichWGCNA,c("single","block"))
-biotype<-match.arg(biotype,c("ERV1","ERV2","Endogenous Retrovirus", "ERV3","ERVL", "L1","L2","LTR Retrotransposon"))
-nGenes<-ncol(datExpr)
-nSamples = nrow(datExpr);
-# Recalculate MEs with color labels
-if(whichWGCNA=="single"){
-MEs0 = moduleEigengenes(datExpr, moduleColors)$eigengenes
-} else {
-MEs0 = moduleEigengenes(datExpr, bwModuleColors)$eigengenes
-}
-MEs = orderMEs(MEs0)
-moduleTraitCor = cor(MEs, datTraits, use = "p");
-moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples);
+  whichWGCNA<-match.arg(whichWGCNA,c("single","block"))
+  biotype<-match.arg(biotype,c("ERV1","ERV2","Endogenous Retrovirus", "ERV3","ERVL", "L1","L2","LTR Retrotransposon"))
+  nGenes<-ncol(datExpr)
+  nSamples = nrow(datExpr);
+ #plot adjacency heatmap of each biotype 
+  wgcna_adjacencyHeatmap(MEs,datTraits)
 
-####
 
-weight<-as.data.frame(datTraits[,grep(biotype,colnames(datTraits))])
-names(weight) = "weight"
 # names (colors) of the modules
-modNames = substring(names(MEs), 3)
-
-
-
-geneModuleMembership = as.data.frame(cor(datExpr, MEs, use = "p"));
-MMPvalue = as.data.frame(corPvalueStudent(as.matrix(geneModuleMembership), nSamples));
-
-names(geneModuleMembership) = paste("MM", modNames, sep="");
-names(MMPvalue) = paste("p.MM", modNames, sep="");
-
-geneTraitSignificance = as.data.frame(cor(datExpr, weight, use = "p"));
-GSPvalue = as.data.frame(corPvalueStudent(as.matrix(geneTraitSignificance), nSamples));
-
-names(geneTraitSignificance) = paste("GS.", names(weight), sep="");
-names(GSPvalue) = paste("p.GS.", names(weight), sep="");
-
+  modNames = substring(names(MEs), 3)
+#  if(useBiCor==FALSE){
+#  geneModuleMembership = as.data.frame(cor(datExpr, MEs, use = "p"));
+#  MMPvalue = as.data.frame(corPvalueStudent(as.matrix(geneModuleMembership), nSamples));
+#  names(geneModuleMembership) = paste("MM", modNames, sep="");
+#  names(MMPvalue) = paste("p.MM", modNames, sep="");
+#  geneTraitSignificance = as.data.frame(cor(datExpr, weight, use = "p"));
+#  GSPvalue = as.data.frame(corPvalueStudent(as.matrix(geneTraitSignificance), nSamples));
+#   names(geneTraitSignificance) = paste("GS.", names(weight), sep="");
+#  names(GSPvalue) = paste("p.GS.", names(weight), sep="");
+#}
 ###
-moduleColors<-bwModuleColors
-module<-biocolor
-column<-match(module,modNames)
-column = match(module, modNames);
-moduleGenes = moduleColors==module;
+#  moduleColors<-bwModuleColors
+#  module<-biocolor
+#  column<-match(module,modNames)
+#  column = match(module, modNames);
+#  moduleGenes = moduleColors==module;
 
-sizeGrWindow(7, 7);
-par(mfrow = c(1,1));
-verboseScatterplot(abs(geneModuleMembership[moduleGenes, column]),
-                   abs(geneTraitSignificance[moduleGenes, 1]),
-                   xlab = paste("Module Membership in", module, "module"),
-                   ylab = paste0("Gene significance for ",biotype),
-                   main = paste("Module membership vs. gene significance\n"),
-                   cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
-readkey()
+#  sizeGrWindow(7, 7);
+#  par(mfrow = c(1,1));
+#  verboseScatterplot(abs(geneModuleMembership[moduleGenes, column]),
+ #                  abs(geneTraitSignificance[moduleGenes, 1]),
+  #                 xlab = paste("Module Membership in", module, "module"),
+   #                ylab = paste0("Gene significance for ",biotype),
+    #               main = paste("Module membership vs. gene significance\n"),
+     #              cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
+#readkey()
 
 ##need to form geneInfo0 using converted
-stopifnot(nrow(geneTraitSignificance)==ncol(datExpr))
-stopifnot(nrow(GSPvalue)==ncol(datExpr))
+#stopifnot(nrow(geneTraitSignificance)==ncol(datExpr))
+#stopifnot(nrow(GSPvalue)==ncol(datExpr))
 # Create the starting data frame
 
 probes<-names(datExpr)

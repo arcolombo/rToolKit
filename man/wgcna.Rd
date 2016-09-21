@@ -8,7 +8,8 @@ wgcna(kexp, read.cutoff = 2, minBranch = 2, whichWGCNA = c("single",
   "block"), entrezOnly = FALSE, species = c("Homo.sapiens", "Mus.musculus"),
   selectedPower = NULL, intBiotypes = c("Alu", "DNA transposon",
   "Endogenous Retrovirus", "ERV1", "ERV3", "ERVK", "ERVL", "L1", "L2",
-  "LTR Retrotransposon", "Satellite"), useAllBiotypes = FALSE)
+  "LTR Retrotransposon", "Satellite"), useAllBiotypes = FALSE,
+  tmm.norm = TRUE, useBiCor = TRUE)
 }
 \arguments{
 \item{kexp}{a kexp 2 group stage is preferred}
@@ -33,6 +34,6 @@ wgcna(kexp, read.cutoff = 2, minBranch = 2, whichWGCNA = c("single",
 images and cluster at the gene and repeat level
 }
 \description{
-running WGNCA could find the gene correlation patterns to infer a relationship behind repeat activation.  what causes repeat activation ?  is it a single mutation?  or protein ?  chromatin accessibility?.  This will create the blockwise/single module data frame and run the soft-thresholding and create a correlation heatmap.  the downstream method is wgcna_analsyis which investigates specific module color and specific biotype.
+running WGNCA could find the gene correlation patterns to infer a relationship behind repeat activation. This uses the recommended 'biocor' function which is a bi-weight mid-correlation calculation. For normalization, the default uses tmm normalization and a log2 transformation for each cpm for genes, and repeat txBiotypes in the *same* way but on separate calls (this seems ok intuitively).  We use 'signed' networks based on the FAQ.  This will create the blockwise/single module data frame and run the soft-thresholding and create a correlation heatmap.  the downstream method is wgcna_analsyis which investigates specific module color and specific biotype.
 }
 
