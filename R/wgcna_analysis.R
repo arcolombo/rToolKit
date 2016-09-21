@@ -42,44 +42,15 @@ wgcna_analysis<-function(lnames,biotype=c("ERV1","ERV2","Endogenous Retrovirus",
 
 # names (colors) of the modules
   modNames = substring(names(MEs), 3)
-#  if(useBiCor==FALSE){
-#  geneModuleMembership = as.data.frame(cor(datExpr, MEs, use = "p"));
-#  MMPvalue = as.data.frame(corPvalueStudent(as.matrix(geneModuleMembership), nSamples));
-#  names(geneModuleMembership) = paste("MM", modNames, sep="");
-#  names(MMPvalue) = paste("p.MM", modNames, sep="");
-#  geneTraitSignificance = as.data.frame(cor(datExpr, weight, use = "p"));
-#  GSPvalue = as.data.frame(corPvalueStudent(as.matrix(geneTraitSignificance), nSamples));
-#   names(geneTraitSignificance) = paste("GS.", names(weight), sep="");
-#  names(GSPvalue) = paste("p.GS.", names(weight), sep="");
-#}
-###
-#  moduleColors<-bwModuleColors
-#  module<-biocolor
-#  column<-match(module,modNames)
-#  column = match(module, modNames);
-#  moduleGenes = moduleColors==module;
-
-#  sizeGrWindow(7, 7);
-#  par(mfrow = c(1,1));
-#  verboseScatterplot(abs(geneModuleMembership[moduleGenes, column]),
- #                  abs(geneTraitSignificance[moduleGenes, 1]),
-  #                 xlab = paste("Module Membership in", module, "module"),
-   #                ylab = paste0("Gene significance for ",biotype),
-    #               main = paste("Module membership vs. gene significance\n"),
-     #              cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
-#readkey()
-
-##need to form geneInfo0 using converted
-#stopifnot(nrow(geneTraitSignificance)==ncol(datExpr))
-#stopifnot(nrow(GSPvalue)==ncol(datExpr))
-# Create the starting data frame
-
-probes<-names(datExpr)
-probes2annot<-match(probes,annot$ensembl_gene_id)
+  wgcna_scatterMod(lnames) ##plots all colors across all biotypes...  
 
 
-if(whichWGCNA=="single"){
-geneInfo0 = data.frame(substanceBXH = names(datExpr),
+  probes<-names(datExpr)
+  probes2annot<-match(probes,annot$ensembl_gene_id)
+
+
+  if(whichWGCNA=="single"){
+  geneInfo0 = data.frame(substanceBXH = names(datExpr),
                       geneSymbol = annot[probes2annot,]$mgi_symbol,
                       entrez = annot[probes2annot,]$entrezgene,
                       moduleColor = moduleColors,

@@ -22,8 +22,8 @@ if(is.null(lnames)==FALSE){
   MEs<-lnames[["MEs"]]
   moduleTraitCor<-lnames[["moduleTraitCor"]]
   moduleTraitPvalue<-lnames[["moduleTraitPvalue"]]
-    modNames = substring(names(MEs), 3)
-   nGenes<-ncol(datExpr)
+  modNames = substring(names(MEs), 3)
+  nGenes<-ncol(datExpr)
   nSamples = nrow(datExpr);
 
 ###using all biotypes
@@ -37,7 +37,7 @@ if(is.null(lnames)==FALSE){
   names(geneModuleMembership) = paste("MM", modNames, sep="");
   names(MMPvalue) = paste("p.MM", modNames, sep="");
   geneTraitCor = as.data.frame(cor(datExpr, weight, use = "p"));
-  geneTraitPvalue = as.data.frame(corPvalueStudent(as.matrix(geneTraitSignificance), nSamples));
+  geneTraitPvalue = as.data.frame(corPvalueStudent(as.matrix(geneTraitCor), nSamples));
  #  names(geneTraitPvalue) = paste("GS.", names(weight), sep="");
  # names(GSPvalue) = paste("p.GS.", names(weight), sep="");
  } else {
@@ -52,9 +52,11 @@ if(is.null(lnames)==FALSE){
   # names(geneTraitSignificance) = paste("GS.", names(weight), sep="");
   #names(GSPvalue) = paste("p.GS.", names(weight), sep="");
   }
-###FIX ME::: loop through biotypes per fix color.  hell add a double for loop
+
   moduleColors<-bwModuleColors
-  module<-biocolor
+  for(j in 1:length(as.vector(unique(moduleColors)))){
+
+  module<-as.vector(unique(moduleColors))[j]
   column<-match(module,modNames)
   moduleGenes = moduleColors==module;
 
@@ -64,60 +66,36 @@ if(is.null(lnames)==FALSE){
   verboseScatterplot(abs(geneModuleMembership[moduleGenes, column]),
                    abs(geneTraitCor[moduleGenes, i]),
                    xlab = paste("Module Membership in", module, "module"),
-                   ylab = paste0("Gene significance for ",biotype[i]),
+                   ylab = paste0("Gene significance for ",colnames(geneTraitCor)[i]),
                    main = paste("Module membership vs. gene significance\n"),
                    cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
   readkey()
- }
-stopifnot(nrow(geneTraitSignificance)==ncol(datExpr))
-stopifnot(nrow(GSPvalue)==ncol(datExpr))
+   } #verbose all types
+ }##across all colors
 
 
 
 
+######FIX ME add a MSE plot
+ for(j in 1:length(as.vector(unique(moduleColors)))){
 
-######
-
-
-#biotype<-match.arg(biotype,c("ERV1","ERV2","Endogenous Retrovirus", "ERV3","ERVL", "L1","L2","LTR Retrotransposon"))
-  nGenes<-ncol(datExpr)
-  nSamples = nrow(datExpr);
-  weight<-as.data.frame(datTraits[,grep(biotype,colnames(datTraits))])
-  names(weight) = as.character(biotype)
-
-  MEs0 = moduleEigengenes(datExpr, bwModuleColors)$eigengenes
-  MEs = orderMEs(MEs0)
-  moduleTraitCor = cor(MEs, datTraits, use = "p");
-  moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples);
-
-  modNames = substring(names(MEs), 3)
-
-  geneModuleMembership = as.data.frame(cor(datExpr, MEs, use = "p"));
-  MMPvalue = as.data.frame(corPvalueStudent(as.matrix(geneModuleMembership), nSamples));
-  names(geneModuleMembership) = paste("MM", modNames, sep="");
-  names(MMPvalue) = paste("p.MM", modNames, sep="");
-
-  geneTraitSignificance = as.data.frame(cor(datExpr, weight, use = "p"));
-  GSPvalue = as.data.frame(corPvalueStudent(as.matrix(geneTraitSignificance), nSamples));
-
-  names(geneTraitSignificance) = paste("GS.", names(weight), sep="");
-  names(GSPvalue) = paste("p.GS.", names(weight), sep="");
-
-# names (colors) of the modules
-###
-  moduleColors<-bwModuleColors
-  module<-biocolor
+  module<-as.vector(unique(moduleColors))[j]
   column<-match(module,modNames)
-  column = match(module, modNames);
   moduleGenes = moduleColors==module;
 
+  for(i in 1:ncol(geneTraitCor)){
   sizeGrWindow(7, 7);
   par(mfrow = c(1,1));
-  verboseScatterplot(abs(geneModuleMembership[moduleGenes, column]),
-                   abs(geneTraitSignificance[moduleGenes, 1]),
+  verboseIplot(abs(geneModuleMembership[moduleGenes, column]),
+                   abs(geneTraitCor[moduleGenes, i]),
                    xlab = paste("Module Membership in", module, "module"),
-                   ylab = paste0("Gene significance for ",biotype),
+                   ylab = paste0("Gene significance for ",colnames(geneTraitCor)[i]),
                    main = paste("Module membership vs. gene significance\n"),
-                   cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2)
+                   cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
   readkey()
+   } #verbose all types
+ }##across all colors
+
+
+
 }
