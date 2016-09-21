@@ -22,8 +22,8 @@ if(is.null(lnames)==FALSE){
   MEs<-lnames[["MEs"]]
   moduleTraitCor<-lnames[["moduleTraitCor"]]
   moduleTraitPvalue<-lnames[["moduleTraitPvalue"]]
-
- nGenes<-ncol(datExpr)
+    modNames = substring(names(MEs), 3)
+   nGenes<-ncol(datExpr)
   nSamples = nrow(datExpr);
 
 ###using all biotypes
@@ -48,7 +48,7 @@ if(is.null(lnames)==FALSE){
   names(MMPvalue) = paste("p.MM", modNames, sep="");
   ##gene pvale per trait
   geneTraitCor = as.data.frame(bicor(datExpr, weight, use = "all.obs"));
-  geneTraitPvalue = as.data.frame(corPvalueStudent(as.matrix(geneTraitSignificance), nSamples));
+  geneTraitPvalue = as.data.frame(corPvalueStudent(as.matrix(geneTraitCor), nSamples));
   # names(geneTraitSignificance) = paste("GS.", names(weight), sep="");
   #names(GSPvalue) = paste("p.GS.", names(weight), sep="");
   }
@@ -56,18 +56,19 @@ if(is.null(lnames)==FALSE){
   moduleColors<-bwModuleColors
   module<-biocolor
   column<-match(module,modNames)
-  column = match(module, modNames);
   moduleGenes = moduleColors==module;
 
+  for(i in 1:ncol(geneTraitCor)){
   sizeGrWindow(7, 7);
   par(mfrow = c(1,1));
   verboseScatterplot(abs(geneModuleMembership[moduleGenes, column]),
-                   abs(geneTraitSignificance[moduleGenes, 1]),
+                   abs(geneTraitCor[moduleGenes, i]),
                    xlab = paste("Module Membership in", module, "module"),
-                   ylab = paste0("Gene significance for ",biotype),
+                   ylab = paste0("Gene significance for ",biotype[i]),
                    main = paste("Module membership vs. gene significance\n"),
                    cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
-readkey()
+  readkey()
+ }
 stopifnot(nrow(geneTraitSignificance)==ncol(datExpr))
 stopifnot(nrow(GSPvalue)==ncol(datExpr))
 
