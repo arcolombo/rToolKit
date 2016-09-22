@@ -4,7 +4,7 @@
 #' @import WGCNA
 #' @export
 #' @return images of eigengenes
-wgcna_Cormap<-function(lnames,read.cutoff=2,plotDot=FALSE){
+wgcna_Cormap<-function(lnames,read.cutoff=2,plotDot=FALSE,recalc=FALSE){
 
 if(is.null(lnames)==TRUE){
 load("wgcna.dataInput.RData")
@@ -28,9 +28,13 @@ nSamples = nrow(datExpr);
 # Recalculate MEs with color labels
 MEs0 = moduleEigengenes(datExpr, bwModuleColors)$eigengenes
 MEs = orderMEs(MEs0)
-
-moduleTraitCor = cor(MEs, datTraits, use = "p");
+if(recalc==TRUE){
+moduleTraitCor = bicor(MEs, datTraits, use = "all.obs");
 moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples);
+} else{
+moduleTraitCor<-lnames[["moduleTraitCor"]]
+moduleTraitPvale<-lnames[["moduleTraitPvalue"]]
+}
 textMatrix =  paste(signif(moduleTraitCor, 2), "\n(",
                            signif(moduleTraitPvalue, 1), ")", sep = "");
 dim(textMatrix) = dim(moduleTraitCor)

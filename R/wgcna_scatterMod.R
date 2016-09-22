@@ -38,6 +38,8 @@ if(is.null(lnames)==FALSE){
   names(MMPvalue) = paste("p.MM", modNames, sep="");
   geneTraitCor = as.data.frame(cor(datExpr, weight, use = "p"));
   geneTraitPvalue = as.data.frame(corPvalueStudent(as.matrix(geneTraitCor), nSamples));
+   geneTraitFisherPvalue = as.data.frame(corPvalueFisher(as.matrix(geneTraitCor), nSamples));
+ 
  #  names(geneTraitPvalue) = paste("GS.", names(weight), sep="");
  # names(GSPvalue) = paste("p.GS.", names(weight), sep="");
  } else {

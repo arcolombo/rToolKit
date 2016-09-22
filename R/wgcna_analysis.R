@@ -16,17 +16,18 @@ wgcna_analysis<-function(lnames,biotype=c("ERV1","ERV2","Endogenous Retrovirus",
   MEs<-lnames[["MEs"]]
   moduleTraitCor<-lnames[["moduleTraitCor"]]
   moduleTraitPvalue<-lnames[["moduleTraitPvalue"]]
-  } else if(is.null(lnames)==FALSE){
+  modulePvalFisher<-lnames[["modulePvalFisher"]] 
+ } else if(is.null(lnames)==FALSE){
   message("found wgcna.dataInput")
   bwModuleColors<-lnames[["moduleColors"]]
   MEs<-lnames[["MEs"]]
   datExpr<-lnames[["datExpr"]]
   datTraits<-lnames[["datTraits"]]
   annot<-lnames[["annot"]]
-   MEs<-lnames[["MEs"]]
+  MEs<-lnames[["MEs"]]
   moduleTraitCor<-lnames[["moduleTraitCor"]]
   moduleTraitPvalue<-lnames[["moduleTraitPvalue"]]
-
+  modulePvalFisher<-lnames[["modulePvalFisher"]]
   } else {
   stop("please run wgcna, need the output before analyzing.")
   }
