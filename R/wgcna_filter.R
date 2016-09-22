@@ -17,6 +17,16 @@ names(q.list)<-sub("^p.","q.",names(q.list))
 ###module list p and q value
 colors<-sub("^MM","",colnames(geneTraitModuleDF)[grepl("^MM",colnames(geneTraitModuleDF))])
 ###need to subset each individual module color genes,corrl,p.value,fisherp,qvalue  in a list.  filter and then write out to text files each module
+moduleSig<-list()
+  for(i in 1:length(colors)){
+  modID<-which(colors[i]==substring(colnames(geneTraitModuleDF),3) )
+  pID<-which(colors[i]==substring(colnames(geneTraitModuleDF),5))
+  #print(colnames(geneTraitModuleDF)[c(modID,pID)])
+  moduleSig[[i]]<-geneTraitModuleDF[,c(modID,pID)]
+  qvalu<-qvalue(moduleSig[[i]][,2])$qvalues
+  moduleSig[[i]]<-cbind(moduleSig[[i]],qvalu)
+  names(moduleSig)[i]<-colors[i]
+}
 
 #######################################
 

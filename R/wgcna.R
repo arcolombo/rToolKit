@@ -177,9 +177,11 @@ net = blockwiseModules(datExpr, power = selectedPower,
   if(useBiCor==TRUE){
   moduleTraitCor<-bicor(MEs,datTraits)
   moduleTraitPvalue = bicorAndPvalue(MEs,datTraits,use="pairwise.complete.obs",alternative="two.sided")[["p"]]
+   modulePvalFisher<-corPvalueFisher(moduleTraitCor,nSamples)
   } else {
   moduleTraitCor = cor(MEs, datTraits, use = "p");
   moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples);
+  modulePvalFisher<-corPvalueFisher(moduleTraitCor,nSamples)
   }
  
  lnames <-list(datExpr=datExpr,
@@ -191,6 +193,7 @@ net = blockwiseModules(datExpr, power = selectedPower,
             geneTree=geneTree,
             moduleTraitCor=moduleTraitCor,
             moduleTraitPvalue=moduleTraitPvalue,
+            modulePvalFisher=modulePvalFisher,
             usedbiCor=useBiCor)
 } ##single block should have 1 module per datTraits column
   if(whichWGCNA=="block"){
@@ -229,11 +232,14 @@ net = blockwiseModules(datExpr, power = selectedPower,
   MEs = orderMEs(MEs0)
   if(useBiCor==TRUE){
   moduleTraitCor<-bicor(MEs,datTraits)
-  moduleTraitPvalue = bicorAndPvalue(MEs,datTraits,use="pairwise.complete.obs",alternative="two.sided")[["p"]]
+  moduleTraitPvalue = bicorAndPvalue(MEs,datTraits,use="all.obs",alternative="two.sided")[["p"]]
+  modulePvalFisher<-corPvalueFisher(moduleTraitCor,nSamples)
+
   } else {
    moduleTraitCor = cor(MEs, datTraits, use = "p");
   moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples);
-  }
+  modulePvalFisher<-corPvalueFisher(moduleTraitCor,nSamples)
+   }
   lnames<-list(datExpr=datExpr,
             datTraits=datTraits,
             annot=annot,
@@ -243,6 +249,7 @@ net = blockwiseModules(datExpr, power = selectedPower,
             geneTree=geneTree,
             moduleTraitCor=moduleTraitCor,
             moduleTraitPvalue=moduleTraitPvalue,
+            modulePvalFisher=modulePvalFisher,
             biCor=useBiCor)
   } ##by block
 
