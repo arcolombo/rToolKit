@@ -6,7 +6,8 @@
 \usage{
 wgcna_analysis(lnames, biotype = c("ERV1", "ERV2", "Endogenous Retrovirus",
   "ERV3", "ERVL", "L1", "L2", "LTR Retrotransposon"), biocolor = "blue",
-  whichWGCNA = c("single", "block"), intColors = c("blue", "brown"))
+  whichWGCNA = c("single", "block"), intColors = c("blue", "brown"),
+  useBiCor = TRUE)
 }
 \arguments{
 \item{biotype}{names of datTraits}
@@ -16,6 +17,6 @@ wgcna_analysis(lnames, biotype = c("ERV1", "ERV2", "Endogenous Retrovirus",
 \item{datTraits}{list entry from wgcna part 1 method [[[2]]}
 }
 \description{
-this can investigate annotations of the datTraits object plots individual color modules and an individual biotype correlation and pvalue significance
+this can investigate annotations of the datTraits object plots individual color modules and an individual biotype correlation and pvalue significance. the scatter plot returned is produced by the correlation value, p.value and regression line; it uses the base function lm to fit a linear model.
 }
 

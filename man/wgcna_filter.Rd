@@ -4,7 +4,7 @@
 \alias{wgcna_filter}
 \title{filters low mean counts}
 \usage{
-wgcna_filter(datExpr, annot)
+wgcna_filter(lnames, geneTraitModuleDF, datExpr, annot, qvalCut = 0.1)
 }
 \arguments{
 \item{datExpr}{from the wgcna object lnames}

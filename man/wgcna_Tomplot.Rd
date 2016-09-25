@@ -4,12 +4,12 @@
 \alias{wgcna_Tomplot}
 \title{plots topological overlap matrices}
 \usage{
-wgcna_Tomplot(lnames, softPower = 10)
+wgcna_Tomplot(lnames, softPower = 6)
 }
 \arguments{
 \item{lnames}{an object from wgcna method call}
 
-\item{softPower}{integer 6 or 7 does nice}
+\item{softPower}{integer 6 or 7 does nice for log2 XR data.}
 }
 \value{
 images of TOM

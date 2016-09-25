@@ -4,7 +4,9 @@
 \alias{wgcna_scatterMod}
 \title{plots a scatter correlation image of a fixed biotype and fixed eigengene module color}
 \usage{
-wgcna_scatterMod(lnames, biocolor = "blue", biotype = "ERVL")
+wgcna_scatterMod(lnames, biocolor = "blue", biotype = c("ERV1", "ERV2",
+  "Endogenous Retrovirus", "ERV3", "ERVL", "L1", "L2", "LTR Retrotransposon"),
+  useBiCor = TRUE)
 }
 \arguments{
 \item{lnames}{a list of the results from the call wgcna method}
