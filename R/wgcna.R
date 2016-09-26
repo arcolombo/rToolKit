@@ -208,6 +208,7 @@ net = blockwiseModules(datExpr, power = selectedPower,
   message("networking...")
   datExpr<-as.data.frame(datExpr,stringsAsFactors=FALSE)
   ##############################################
+  
   enableWGCNAThreads()
   bwnet = blockwiseModules(datExpr, 
                        maxBlockSize = 4000,
@@ -267,7 +268,7 @@ net = blockwiseModules(datExpr, power = selectedPower,
                            signif(moduleTraitPvalue, 1), ")", sep = "");
   dim(textMatrix) = dim(moduleTraitCor)
 # Display the correlation values within a heatmap plot
-
+  dev.off()
   wgcna_Cormap(lnames,read.cutoff=read.cutoff,plotDot=FALSE) 
   save(lnames,file="wgcna.dataInput.RData",compress=TRUE)
   

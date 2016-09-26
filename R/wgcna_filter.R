@@ -86,7 +86,7 @@ save(module.qFilter,file="module.qFilter.RData",compress=TRUE)
 ## print to csv?  some have 14,000 entries .... too many to print to csv
 
 
-  StandardGeneScreeningResults=list(trait.qFilter,module.qFilter)
+  StandardGeneScreeningResults=list(trait.qFilter=trait.qFilter,module.qFilter=module.qFilter)
 
 return(StandardGeneScreeningResults)
 } 

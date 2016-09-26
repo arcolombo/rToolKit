@@ -1,9 +1,12 @@
 #' @title this analyzes downstream of wgcna
 #' @description this can investigate annotations of the datTraits object plots individual color modules and an individual biotype correlation and pvalue significance. the scatter plot returned is produced by the correlation value, p.value and regression line; it uses the base function lm to fit a linear model.
-#' @param datExpr list entry from wgcna part 1 method [[1]]
-#' @param datTraits list entry from wgcna part 1 method [[[2]]
+#' @param lnames the output from the wgcna.R call
 #' @param biotype   names of datTraits
-wgcna_analysis<-function(lnames,biotype=c("ERV1","ERV2","Endogenous Retrovirus", "ERV3","ERVL", "L1","L2","LTR Retrotransposon"),whichWGCNA=c("single","block"),intColors=c("blue","brown"),useBiCor=TRUE){
+#' @param whichWGCNA single or block called
+#' @param useBiCor boolean to use the mid-corrleation weighted robust to outliers
+#' @export
+#' @import WGCNA
+wgcna_analysis<-function(lnames,biotype=c("ERV1","ERV2","Endogenous Retrovirus", "ERV3","ERVL", "L1","L2","LTR Retrotransposon"),whichWGCNA=c("single","block"),useBiCor=TRUE){
   ##fix me: allow for multi color and biotype plots
   ##FIX ME: load the MEs don't recalculate.  whichWGCNA shouldnt be used???
   if(is.null(lnames)==TRUE){
@@ -44,25 +47,18 @@ wgcna_analysis<-function(lnames,biotype=c("ERV1","ERV2","Endogenous Retrovirus",
 # names (colors) of the modules
   modNames = substring(names(MEs), 3)
 geneTraitModuleDF<-wgcna_scatterMod(lnames,plotAll=FALSE) ##plots all colors across all biotypes...  
-##from examining scatter mod we have abs correlations with at least 0.50
-## brown: Alu
-## magenta: ERV1,ERVK,L1,End.Retr
-## blue : ERVK, ERVL, L1
-## salmon: ERV3, ERVK,ERVL, L1
-## tan: End.Retro, ERV1,ERV3,ERVL
-## grey60: End.Ret, ERVL
-## black: Alu
-## darkgrey: L2
-## steelblue: ERVK, L1
 
 ##TO DO:
 ##screen and filter the geneTraitDF
 filteredCorSet<-wgcna_filter(lnames,geneTraitModuleDF,qvalCut=0.14)
 
 ##chooseTopGenes in Module Hub and Trait Hub
+##manual query of interesting MM
 
 ##permutation test (screen)
 ## enrich using qusage
+
+
 ## regression methods: cox regression, votingLinearPredictions  the verboseScatter returns Lm with really small pvalues...cant interpret.
 
 #####

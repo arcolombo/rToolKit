@@ -3,11 +3,10 @@
 #' @param lnames a list of the results from the call wgcna method
 #' @param biotype   the tx biotype of interest
 #' @param useBiCor bicor is a WGCNA functoin that uses biweight midcorrelations and is robust against outliers
-#' @param plotAll boolean, if true this will plot all the biotypes individually against all modules one by one. useful for identifying correlated modules to trait in terms of genes
 #' @import WGCNA
 #' @export
 #' @return prints images and returns module significance using student t test and fisher exact test
-wgcna_scatterMod<-function(lnames,biotype=c("ERV1","ERV2","Endogenous Retrovirus", "ERV3","ERVL", "L1","L2","LTR Retrotransposon"), useBiCor=TRUE, plotAll=FALSE){
+wgcna_scatterMod<-function(lnames,biotype=c("ERV1","ERV2","Endogenous Retrovirus", "ERV3","ERVL", "L1","L2","LTR Retrotransposon"), useBiCor=TRUE){
   #FIX ME: the scatter correlation is not matching correlation from Cormap
 
 if(is.null(lnames)==FALSE){
@@ -58,10 +57,9 @@ if(is.null(lnames)==FALSE){
   colnames(geneTraitFisherPvalue)<-paste("pf.GCr.",colnames(weight),sep="");
   }
 
-
- if(plotAll==TRUE){
   cat("Plotting module and gene correlations...\n")
   moduleColors<-bwModuleColors
+  pdf("scatterModulePlots.pdf")
   for(j in 1:length(as.vector(unique(moduleColors)))){
 
   module<-as.vector(unique(moduleColors))[j]
@@ -71,13 +69,13 @@ if(is.null(lnames)==FALSE){
   for(i in 1:ncol(geneTraitCor)){
   sizeGrWindow(7, 7);
   par(mfrow = c(1,1));
-  verboseScatterplot(abs(geneModuleMembership[moduleGenes, column]),
-                   abs(geneTraitCor[moduleGenes, i]),
+  verboseScatterplot((geneModuleMembership[moduleGenes, column]),
+                   (geneTraitCor[moduleGenes, i]),
                    xlab = paste("Module Membership in", module, "module"),
                    ylab = paste0("Gene significance for ",colnames(geneTraitCor)[i]),
                    main = paste("Module membership vs. gene significance\n"),
                    cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
-  readkey()
+  #readkey()
    } #verbose all types
  }##across all colors
 
@@ -97,11 +95,10 @@ if(is.null(lnames)==FALSE){
                    ylab = paste0("Gene significance for ",colnames(geneTraitCor)[i]),
                    main = paste("Module membership vs. gene significance\n"),
                    cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
-  readkey()
+ # readkey()
    } #verbose all types
  }##across all colors
-
-}#plotAll TRUE
+dev.off()
   stopifnot(all(rownames(geneModuleMembership)==rownames(MMPvalue))==TRUE)
   geneModuleDF<-cbind(geneModuleMembership,MMPvalue)
   stopifnot(all(rownames(geneModuleDF)==rownames(geneTraitCor))==TRUE)

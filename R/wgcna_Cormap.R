@@ -41,7 +41,8 @@ textMatrix =  paste(signif(moduleTraitCor, 2), "\n(",
                            signif(moduleTraitPvalue, 1), ")", sep = "");
 
 dim(textMatrix) = dim(moduleTraitCor)
-par(mar = c(6, 11.5, 3, 3));
+ 
+par(mar = c(6, 10, 3, 3));
 # Display the correlation values within a heatmap plot
 plot.new()
 labeledHeatmap(Matrix = moduleTraitCor,
@@ -64,6 +65,7 @@ readkey()
 colorDF<-sapply(MEs,function(x) median(x))
 colorDF<-colorDF[order(colorDF,decreasing=TRUE)]
   if(plotDot==TRUE){
+  plot.new()
   par(mar = c(11.5, 6, 3, 3));
   plot(colorDF,main="Median Correlation Per Module")
   axis(1,at=1:length(colorDF),labels=names(colorDF),las=2)
