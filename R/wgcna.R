@@ -106,7 +106,13 @@ if (!gsg$allOK)
                     groupLabels = names(datTraits), 
                     marAll=c(1,11,3,3),
                     main="TxBiotype Correlation Samples") 
-  readkey()    
+  readkey()   
+  pdf("TxBiotype_Correlation_Samples.pdf")
+  plotDendroAndColors(sampleTree2, traitColors,
+                    groupLabels = names(datTraits),
+                    marAll=c(1,11,3,3),
+                    main="TxBiotype Correlation Samples") 
+  dev.off() 
 # Choose a set of soft-thresholding powers
   if(is.null(selectedPower)==TRUE){
   powers = c(c(1:10), seq(from = 12, to=20, by=2))
@@ -153,6 +159,7 @@ if(whichWGCNA=="single"){
  ##auto####################################################
 datExpr<-as.data.frame(datExpr,stringsAsFactors=FALSE)
 #############################
+ enableWGCNAThreads()
 net = blockwiseModules(datExpr, power = selectedPower,
                        networkType="signed",
                        corType="bicor",
@@ -201,6 +208,7 @@ net = blockwiseModules(datExpr, power = selectedPower,
   message("networking...")
   datExpr<-as.data.frame(datExpr,stringsAsFactors=FALSE)
   ##############################################
+  enableWGCNAThreads()
   bwnet = blockwiseModules(datExpr, 
                        maxBlockSize = 4000,
                        power = selectedPower, 
@@ -219,11 +227,12 @@ net = blockwiseModules(datExpr, power = selectedPower,
   # Convert labels to colors for plotting
   bwModuleColors = labels2colors(bwLabels)
   geneTree<-bwnet$dendrograms
+  save(bwnet,file="bwnet.RData",compress=TRUE)
   # open a graphics window
   sizeGrWindow(6,6)
  ########################################################################
   ##plot gene tree one by one 
-  wgcna_plotAll_dendrograms(bwnet,whichWGCNA="block")
+  wgcna_plotAll_dendrograms(bwnet=bwnet,whichWGCNA="block",bwModuleColors=bwModuleColors)
 # this line corresponds to using an R^2 cut-off of h
   # Recalculate MEs with color labels
   nGenes = ncol(datExpr);

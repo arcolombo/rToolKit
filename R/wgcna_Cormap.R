@@ -20,10 +20,10 @@ MEs<-lnames[["MEs"]]
 datExpr<-lnames[["datExpr"]]
 datTraits<-lnames[["datTraits"]]
 annot<-lnames[["annot"]]
-
+moduleTraitPvalue<-lnames[["moduleTraitPvalue"]]
 # Will display correlations and their p-values
 # Define numbers of genes and samples
-nGenes = ncol(datExpr);
+nGenes= ncol(datExpr);
 nSamples = nrow(datExpr);
 # Recalculate MEs with color labels
 MEs0 = moduleEigengenes(datExpr, bwModuleColors)$eigengenes
@@ -35,8 +35,11 @@ moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples);
 moduleTraitCor<-lnames[["moduleTraitCor"]]
 moduleTraitPvale<-lnames[["moduleTraitPvalue"]]
 }
+
+
 textMatrix =  paste(signif(moduleTraitCor, 2), "\n(",
                            signif(moduleTraitPvalue, 1), ")", sep = "");
+
 dim(textMatrix) = dim(moduleTraitCor)
 par(mar = c(6, 11.5, 3, 3));
 # Display the correlation values within a heatmap plot

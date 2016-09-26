@@ -5,7 +5,7 @@
 #' @param whichWGCNA single or block level analysis, block is a bit less rigid
 #' @export
 #' @return cool network images and stuff
-wgcna_plotAll_dendrograms<-function(bwnet=NULL,net=NULL,whichWGCNA=c("single","block")){
+wgcna_plotAll_dendrograms<-function(bwnet=bwnet,net=NULL,whichWGCNA=c("single","block"),bwModuleColors=bwModuleColors){
   whichWGCNA<-match.arg(whichWGCNA,c("single","block"))
   if(whichWGCNA=="block") {
    for(i in 1:length(bwnet$dendrograms)){

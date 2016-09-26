@@ -1,12 +1,13 @@
 #' @title plots a scatter correlation image of a fixed biotype and fixed eigengene module color
-#' @description allows for exploration of data presented in wgcna_Cormap
+#' @description allows for exploration of data presented in wgcna_Cormap of individual modules plotted by individual traits and shows their absolute correlation.  also returns a data frame of modules' correlation and student and fisher pvalues in terms of ENSG id.  wgcna_filter is downstream of this analysis. note: you only want to call this function with plotALL=TRUE once, this will identify modules that have high absolute correlation. 
 #' @param lnames a list of the results from the call wgcna method
-#' @param biocolor  the color of eigengene module
 #' @param biotype   the tx biotype of interest
+#' @param useBiCor bicor is a WGCNA functoin that uses biweight midcorrelations and is robust against outliers
+#' @param plotAll boolean, if true this will plot all the biotypes individually against all modules one by one. useful for identifying correlated modules to trait in terms of genes
 #' @import WGCNA
 #' @export
-#' @return images of plot
-wgcna_scatterMod<-function(lnames,biocolor="blue",biotype=c("ERV1","ERV2","Endogenous Retrovirus", "ERV3","ERVL", "L1","L2","LTR Retrotransposon"), useBiCor=TRUE){
+#' @return prints images and returns module significance using student t test and fisher exact test
+wgcna_scatterMod<-function(lnames,biotype=c("ERV1","ERV2","Endogenous Retrovirus", "ERV3","ERVL", "L1","L2","LTR Retrotransposon"), useBiCor=TRUE, plotAll=FALSE){
   #FIX ME: the scatter correlation is not matching correlation from Cormap
 
 if(is.null(lnames)==FALSE){
@@ -39,10 +40,10 @@ if(is.null(lnames)==FALSE){
   geneTraitCor = as.data.frame(cor(datExpr, weight, use = "p"));
   geneTraitPvalue = as.data.frame(corPvalueStudent(as.matrix(geneTraitCor), nSamples));
    geneTraitFisherPvalue = as.data.frame(corPvalueFisher(as.matrix(geneTraitCor), nSamples));
- 
- #  names(geneTraitPvalue) = paste("GS.", names(weight), sep="");
- # names(GSPvalue) = paste("p.GS.", names(weight), sep="");
- } else {
+  colnames(geneTraitCor)<-paste("GCor.",colnames(weight),sep="");
+  colnames(geneTraitPvalue)<-paste("p.GCor.",colnames(weight),sep="");
+  colnames(geneTraitFisherPvalue)<-paste("pf.GCr.",colnames(weight),sep="");
+  } else {
 
  geneModuleMembership = as.data.frame(bicor(datExpr, MEs, use = "all.obs"));
   MMPvalue = as.data.frame(corPvalueStudent(as.matrix(geneModuleMembership), nSamples)); ##pvalue per gene in each module
@@ -51,10 +52,15 @@ if(is.null(lnames)==FALSE){
   ##gene pvale per trait
   geneTraitCor = as.data.frame(bicor(datExpr, weight, use = "all.obs"));
   geneTraitPvalue = as.data.frame(corPvalueStudent(as.matrix(geneTraitCor), nSamples));
+  geneTraitFisherPvalue<-as.data.frame(corPvalueFisher(as.matrix(geneTraitCor),nSamples));
    colnames(geneTraitCor) = paste("GCor.", colnames(weight), sep="");
   colnames(geneTraitPvalue) = paste("p.GCor.", colnames(weight), sep="");
+  colnames(geneTraitFisherPvalue)<-paste("pf.GCr.",colnames(weight),sep="");
   }
 
+
+ if(plotAll==TRUE){
+  cat("Plotting module and gene correlations...\n")
   moduleColors<-bwModuleColors
   for(j in 1:length(as.vector(unique(moduleColors)))){
 
@@ -74,9 +80,6 @@ if(is.null(lnames)==FALSE){
   readkey()
    } #verbose all types
  }##across all colors
-
-
-
 
 ######FIX ME add a MSE plot
  for(j in 1:length(as.vector(unique(moduleColors)))){
@@ -98,12 +101,13 @@ if(is.null(lnames)==FALSE){
    } #verbose all types
  }##across all colors
 
+}#plotAll TRUE
   stopifnot(all(rownames(geneModuleMembership)==rownames(MMPvalue))==TRUE)
   geneModuleDF<-cbind(geneModuleMembership,MMPvalue)
   stopifnot(all(rownames(geneModuleDF)==rownames(geneTraitCor))==TRUE)
   geneModuleDF<-cbind(geneModuleDF,geneTraitCor)
   stopifnot(all(rownames(geneModuleDF)==rownames(geneTraitPvalue))==TRUE)
   geneModuleDF<-cbind(geneModuleDF,geneTraitPvalue)
-  
+  geneModuleDF<-cbind(geneModuleDF,geneTraitFisherPvalue)
   return(geneModuleDF)
 }

@@ -3,7 +3,7 @@
 #' @param datExpr list entry from wgcna part 1 method [[1]]
 #' @param datTraits list entry from wgcna part 1 method [[[2]]
 #' @param biotype   names of datTraits
-wgcna_analysis<-function(lnames,biotype=c("ERV1","ERV2","Endogenous Retrovirus", "ERV3","ERVL", "L1","L2","LTR Retrotransposon"),biocolor="blue",whichWGCNA=c("single","block"),intColors=c("blue","brown"),useBiCor=TRUE){
+wgcna_analysis<-function(lnames,biotype=c("ERV1","ERV2","Endogenous Retrovirus", "ERV3","ERVL", "L1","L2","LTR Retrotransposon"),whichWGCNA=c("single","block"),intColors=c("blue","brown"),useBiCor=TRUE){
   ##fix me: allow for multi color and biotype plots
   ##FIX ME: load the MEs don't recalculate.  whichWGCNA shouldnt be used???
   if(is.null(lnames)==TRUE){
@@ -43,7 +43,7 @@ wgcna_analysis<-function(lnames,biotype=c("ERV1","ERV2","Endogenous Retrovirus",
 
 # names (colors) of the modules
   modNames = substring(names(MEs), 3)
-geneTraitModuleDF<-wgcna_scatterMod(lnames) ##plots all colors across all biotypes...  
+geneTraitModuleDF<-wgcna_scatterMod(lnames,plotAll=FALSE) ##plots all colors across all biotypes...  
 ##from examining scatter mod we have abs correlations with at least 0.50
 ## brown: Alu
 ## magenta: ERV1,ERVK,L1,End.Retr
@@ -57,12 +57,12 @@ geneTraitModuleDF<-wgcna_scatterMod(lnames) ##plots all colors across all biotyp
 
 ##TO DO:
 ##screen and filter the geneTraitDF
-##perhaps short list
-##chooseTopHub
-## fdr filter
+filteredCorSet<-wgcna_filter(lnames,geneTraitModuleDF,qvalCut=0.14)
+
+##chooseTopGenes in Module Hub and Trait Hub
+
 ##permutation test (screen)
 ## enrich using qusage
-## call annotations to get top genes
 ## regression methods: cox regression, votingLinearPredictions  the verboseScatter returns Lm with really small pvalues...cant interpret.
 
 #####
