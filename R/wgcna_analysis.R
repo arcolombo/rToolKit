@@ -46,7 +46,7 @@ wgcna_analysis<-function(lnames,biotype=c("ERV1","ERV2","Endogenous Retrovirus",
 
 # names (colors) of the modules
   modNames = substring(names(MEs), 3)
-geneTraitModuleDF<-wgcna_scatterMod(lnames,plotAll=FALSE) ##plots all colors across all biotypes...  
+geneTraitModuleDF<-wgcna_scatterMod(lnames) ##plots all colors across all biotypes...  
 
 ##TO DO:
 ##screen and filter the geneTraitDF

@@ -30,8 +30,12 @@ for(i in 1:length(trait.qFilter)){
       }
    } #for j
   } #for i 
+#########################################
+###FIX ME: find which modules are associated with ISG or NK
 
-
+### each module gene expression is up or down ?
+### each module gene enrichment positive or negative? this gives direction to the direction of neg. or pos. correlation
+########################################
 
  for(i in 1:length(module.qFilter)){
   traitidx<-vector()

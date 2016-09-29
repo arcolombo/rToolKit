@@ -99,6 +99,11 @@ if(is.null(lnames)==FALSE){
    } #verbose all types
  }##across all colors
 dev.off()
+
+####
+
+
+
   stopifnot(all(rownames(geneModuleMembership)==rownames(MMPvalue))==TRUE)
   geneModuleDF<-cbind(geneModuleMembership,MMPvalue)
   stopifnot(all(rownames(geneModuleDF)==rownames(geneTraitCor))==TRUE)
