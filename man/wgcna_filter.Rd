@@ -4,17 +4,17 @@
 \alias{wgcna_filter}
 \title{filters low mean counts}
 \usage{
-wgcna_filter(lnames, geneTraitModuleDF, datExpr, annot, qvalCut = 0.1)
+wgcna_filter(lnames, geneTraitModuleDF, qvalCut = 0.1)
 }
 \arguments{
-\item{datExpr}{from the wgcna object lnames}
+\item{lnames}{the object called from wgcna.R}
 
-\item{annot}{from the gene annotation call}
+\item{geneTraitModuleDF}{the object called from wgcna_scatterMod.R}
 }
 \value{
 a data frame with p adjusted q value genes
 }
 \description{
-often it is needed to filter counts, this does that
+often it is needed to filter counts, this filters geneIDs from modules based on student-t p values.  we do have fisher pvalues, but not used to filter (yet)
 }
 

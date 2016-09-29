@@ -5,16 +5,17 @@
 \title{this analyzes downstream of wgcna}
 \usage{
 wgcna_analysis(lnames, biotype = c("ERV1", "ERV2", "Endogenous Retrovirus",
-  "ERV3", "ERVL", "L1", "L2", "LTR Retrotransposon"), biocolor = "blue",
-  whichWGCNA = c("single", "block"), intColors = c("blue", "brown"),
-  useBiCor = TRUE)
+  "ERV3", "ERVL", "L1", "L2", "LTR Retrotransposon"), whichWGCNA = c("single",
+  "block"), useBiCor = TRUE)
 }
 \arguments{
+\item{lnames}{the output from the wgcna.R call}
+
 \item{biotype}{names of datTraits}
 
-\item{datExpr}{list entry from wgcna part 1 method [[1]]}
+\item{whichWGCNA}{single or block called}
 
-\item{datTraits}{list entry from wgcna part 1 method [[[2]]}
+\item{useBiCor}{boolean to use the mid-corrleation weighted robust to outliers}
 }
 \description{
 this can investigate annotations of the datTraits object plots individual color modules and an individual biotype correlation and pvalue significance. the scatter plot returned is produced by the correlation value, p.value and regression line; it uses the base function lm to fit a linear model.

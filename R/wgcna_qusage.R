@@ -12,7 +12,7 @@ wgcna_qusage<-function(kexp,lnames,geneModuleDF=NULL,biotype=c("ERV1","ERV2","En
   ## so we look at NK and ISGs and create a subset of the modules for known repeat associations.  then we can look at enrichment and DE on the entire module, or query DEs in each module.  we want to find out which module does the ISGs fall into ? which module does NK fall into?  DE ? 
    geneSet<-match.arg(MsigDB,c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"))
   counts<-collapseBundles(amlX,"gene_id")
-
+  counts<-log2(1+counts) ##enirhcment on log2 is required
   if(is.null(geneModuleDF)==TRUE){
   geneModuleDF<-wgcna_scatterMod(lnames)
  }
@@ -62,7 +62,7 @@ wgcna_qusage<-function(kexp,lnames,geneModuleDF=NULL,biotype=c("ERV1","ERV2","En
   id<-match(rownames(df),annot$ensembl_gene_id)
   df<-cbind(df,annot[id,])
   ##run qusage 
-
+  message(colnames(geneTraitCor)[i])
   ###qusage on non-filter module
   counts_id<-match(rownames(df),rownames(counts))
   counts_filter<-counts[counts_id,]
@@ -91,6 +91,8 @@ wgcna_qusage<-function(kexp,lnames,geneModuleDF=NULL,biotype=c("ERV1","ERV2","En
     df.filtered<-df[which(df$p.value<=0.07),] ##drivers!!! most exterme values in correlations most significantly correlated items.
    
    write.csv(df.filtered,file=paste0(intMods[j],"_drivers_",colnames(geneTraitCor)[i],".csv"))
+
+  if(nrow(df.filtered)>10){
   pdf(paste0("filtered_",p.cutoff,"_drivers_",module,".",colnames(geneTraitCor)[i],".pdf"))
    verboseScatterplot(df[,1],
                    df[, 2],
@@ -106,7 +108,18 @@ verboseScatterplot(df[which(df$p.value<=p.cutoff),1],
                    cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
 
    dev.off()
+  } else{
+   pdf(paste0("filtered_",p.cutoff,"_drivers_",module,".",colnames(geneTraitCor)[i],".pdf"))
+   verboseScatterplot(df[,1],
+                   df[, 2],
+                   xlab = paste("Module Membership in", module, "module"),
+                   ylab = paste0("Gene significance for ",colnames(geneTraitCor)[i]),
+                   main = paste("Module membership vs. gene significance\n"),
+                   cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
 
+    dev.off()
+
+  }
    } #verbose all types
  }##across all colors
 
