@@ -3,7 +3,7 @@
 #' @import qusage
 #' @export
 #' @return enrichment data set
-qusageRun<-function(cnts_mt=NULL,gmt.path="~/Documents/Arkas-Paper-Data/MSigDB/MsigDb_all/",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),comparison="pHSC",control="LSC",module=NULL,tx.biotype=NULL){
+qusageRun<-function(cnts_mt=NULL,gmt.path="~/Documents/Arkas-Paper-Data/MSigDB/MsigDb_all/",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),comparison="pHSC",control="LSC",module=NULL){
 
 ##create labels from colnames
   cN<-colnames(cnts_mt)
@@ -44,12 +44,12 @@ qusageRun<-function(cnts_mt=NULL,gmt.path="~/Documents/Arkas-Paper-Data/MSigDB/M
 
  
   qs.results<-qusage(cnts_pL3,labels,contrast,geneSets,pairVector=pairs.id)
-  print(contrast)
-  print(qsTable(qs.results,number=40 ))
+  #print(contrast)
+  #print(qsTable(qs.results,number=40 ))
   par(mar = c(10, 6, 3, 3));
   plot(qs.results)
-   title(paste0(contrast,".",module,".",tx.biotype))
-  pdf(paste0("qsTable_",geneSet,"_",contrast,".pdf"))
+   title(paste0(contrast,".",module))
+  pdf(paste0("qs_",module,"_",geneSet,"_",contrast,".pdf"))
   plot(qs.results)  
   dev.off()
   return(qsTable(qs.results,number=40))

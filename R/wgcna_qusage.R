@@ -1,18 +1,28 @@
 #' @title this will query specific genes in the filteredCorSet lists
-#' @description this enriches each module to understand the function shown in Cormap creates a cross-corrleation data.frame and annotates it for each tile in teh Cormap. then uses the kexp to run a paired qusage enrichment analysis for each module tile.
+#' @description this enriches each module to understand the function shown in Cormap creates a cross-corrleation data.frame and annotates it for each tile in teh Cormap. then uses the kexp to run a paired qusage enrichment analysis for each module. One should only enrich the genes in Module, irrespective of the tx.biotype, because the genes are fixed across all biotypes, so the enrichment patterns are identical.  so 1 and only 1 biotype needs to be interesting
 #' @import qusage
 #' @import WGCNA
 #' @import arkas
+#' @import edgeR
 #' @export
 #' @return qusage data
-wgcna_qusage<-function(kexp,lnames,geneModuleDF=NULL,biotype=c("ERV1","ERV2","Endogenous Retrovirus", "ERV3","ERVL", "L1","L2","LTR Retrotransposon"),intMods=c("blue","cyan","brown","purple","tan","red","lightyellow","greenyellow","lightgreen","darkturquoise","turquoise"),p.cutoff=0.07,MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),comparison="pHSC",control="LSC" ){
+wgcna_qusage<-function(kexp,lnames,geneModuleDF=NULL,biotype="Alu",intMods=c("blue","cyan","brown","purple","red","lightyellow","greenyellow","lightgreen","turquoise"),p.cutoff=0.07,MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),comparison="pHSC",control="LSC",how=c("cpm","tpm") ){
 
-  ##The purpose of this function is to set up a control in a sense
-  ## we have all of the modules and patterns across biotypes
-  ## so we look at NK and ISGs and create a subset of the modules for known repeat associations.  then we can look at enrichment and DE on the entire module, or query DEs in each module.  we want to find out which module does the ISGs fall into ? which module does NK fall into?  DE ? 
+  ## FIX ME: run for one biotype fixed. (its the same set of genes!!)
+  ##  query DEs in each module.  we want to find out which module does the ISGs fall into ? which module does NK fall into?  DE ? 
+  how<-match.arg(how,c("cpm","tpm"))
    geneSet<-match.arg(MsigDB,c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"))
-  counts<-collapseBundles(amlX,"gene_id")
-  counts<-log2(1+counts) ##enirhcment on log2 is required
+  if(how=="cpm"){
+  ##TMM normalize
+  counts<-collapseBundles(amlX,"gene_id") 
+  dge<-DGEList(counts=counts)
+  dge<-calcNormFactors(dge)
+  expr<-cpm(dge,log=FALSE)
+  counts<-log2(1+expr) ##enirhcment on log2 is required
+  } else{
+  counts<-collapseTpm(amlX,"gene_id")
+  counts<-log2(1+counts)
+  }
   if(is.null(geneModuleDF)==TRUE){
   geneModuleDF<-wgcna_scatterMod(lnames)
  }
@@ -30,10 +40,9 @@ wgcna_qusage<-function(kexp,lnames,geneModuleDF=NULL,biotype=c("ERV1","ERV2","En
   nSamples = nrow(datExpr);
   modNames<-substring(colnames(MEs),3)
  moduleColors<-bwModuleColors
- intMods<-c("blue","cyan","brown","purple","tan","red","lightyellow",
-   "greenyellow","lightgreen","darkturquoise","turquoise")
-
-  weight<-as.data.frame(datTraits[,biotype%in%colnames(datTraits)])
+ 
+  weight<-data.frame(biotype=datTraits[,grep(biotype,colnames(datTraits))])
+  colnames(weight)<-biotype
   geneModuleMembership = as.data.frame(bicor(datExpr, MEs, use = "all.obs"));
   MMPvalue = as.data.frame(corPvalueStudent(as.matrix(geneModuleMembership), nSamples)); ##pvalue per gene in each module
   names(geneModuleMembership) = paste("MM", modNames, sep="");
@@ -81,8 +90,8 @@ wgcna_qusage<-function(kexp,lnames,geneModuleDF=NULL,biotype=c("ERV1","ERV2","En
    stopifnot(all(rownames(cnts_bL)==annot$ensembl_gene_id[annot.bL]))
    rownames(cnts_bL)<-annot$hgnc_symbol[annot.bL]
 
-    qusage_run1<-qusageRun(cnts_mt=cnts_pL,MsigDB=MsigDB,comparison="pHSC",control="LSC",module=module,tx.biotype=colnames(geneTraitCor)[i])
-    qusage_run2<-qusageRun(cnts_mt=cnts_bL,MsigDB=MsigDB,comparison="Blast",control="LSC",module=module,tx.biotype=colnames(geneTraitCor)[i])
+    qusage_run1<-qusageRun(cnts_mt=cnts_pL,MsigDB=MsigDB,comparison="pHSC",control="LSC",module=module)
+    qusage_run2<-qusageRun(cnts_mt=cnts_bL,MsigDB=MsigDB,comparison="Blast",control="LSC",module=module)
     write.csv(qusage_run1,file=paste0("pHSC.v.LSC","_",module,".",colnames(geneTraitCor)[i],"_",MsigDB,".csv"),quote=FALSE,row.names=TRUE)
     write.csv(qusage_run2,file=paste0("Blast.v.LSC","_",module,".",colnames(geneTraitCor)[i],"_",MsigDB,".csv"),quote=FALSE,row.names=TRUE)
 
@@ -105,7 +114,7 @@ verboseScatterplot(df[which(df$p.value<=p.cutoff),1],
                    xlab = paste("Module Drivers in", module, "module"),
                    ylab = paste0("Gene significance ",p.cutoff," ",colnames(geneTraitCor)[i]),
                    main = paste("Module Drivers and Biotype Drivers\n"),
-                   cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
+                   cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module, ylim=c(-1,1))
 
    dev.off()
   } else{
@@ -115,7 +124,7 @@ verboseScatterplot(df[which(df$p.value<=p.cutoff),1],
                    xlab = paste("Module Membership in", module, "module"),
                    ylab = paste0("Gene significance for ",colnames(geneTraitCor)[i]),
                    main = paste("Module membership vs. gene significance\n"),
-                   cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module)
+                   cex.main = 1.2, cex.lab = 1.2, cex.axis = 1.2, col = module,ylim=c(-1,1))
 
     dev.off()
 

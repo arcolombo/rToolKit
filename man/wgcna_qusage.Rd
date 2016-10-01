@@ -4,19 +4,19 @@
 \alias{wgcna_qusage}
 \title{this will query specific genes in the filteredCorSet lists}
 \usage{
-wgcna_qusage(kexp, lnames, geneModuleDF = NULL, biotype = c("ERV1", "ERV2",
-  "Endogenous Retrovirus", "ERV3", "ERVL", "L1", "L2", "LTR Retrotransposon"),
-  intMods = c("blue", "cyan", "brown", "purple", "tan", "red", "lightyellow",
-  "greenyellow", "lightgreen", "darkturquoise", "turquoise"), p.cutoff = 0.07,
+wgcna_qusage(kexp, lnames, geneModuleDF = NULL, biotype = "Alu",
+  intMods = c("blue", "cyan", "brown", "purple", "red", "lightyellow",
+  "greenyellow", "lightgreen", "turquoise"), p.cutoff = 0.07,
   MsigDB = c("c1.all.v5.1.symbols.gmt", "c2.all.v5.1.symbols.gmt",
   "c4.all.v5.1.symbols.gmt", "c5.all.v5.1.symbols.gmt",
   "c6.all.v5.1.symbols.gmt", "c7.all.v5.1.symbols.gmt",
-  "h.all.v5.1.symbols.gmt"), comparison = "pHSC", control = "LSC")
+  "h.all.v5.1.symbols.gmt"), comparison = "pHSC", control = "LSC",
+  how = c("cpm", "tpm"))
 }
 \value{
 qusage data
 }
 \description{
-this enriches each module to understand the function shown in Cormap creates a cross-corrleation data.frame and annotates it for each tile in teh Cormap. then uses the kexp to run a paired qusage enrichment analysis for each module tile.
+this enriches each module to understand the function shown in Cormap creates a cross-corrleation data.frame and annotates it for each tile in teh Cormap. then uses the kexp to run a paired qusage enrichment analysis for each module. One should only enrich the genes in Module, irrespective of the tx.biotype, because the genes are fixed across all biotypes, so the enrichment patterns are identical.  so 1 and only 1 biotype needs to be interesting
 }
 
