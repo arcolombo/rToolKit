@@ -5,6 +5,7 @@ setMethod("dbconn", "wgcnaDbLite", function(x) return(x@con))
 #' @rdname wgcnaDbLite-class
 #' @param object wgcnaDbLite SQL-lite annotation database
 #' @import ensembldb
+#' @export
 setMethod("show", "wgcnaDbLite", function(object) { # {{{
   if(is.null(object@con)) stop(paste("Invalid", class(object), "instance!"))
   info <- metadata(object)
@@ -16,6 +17,7 @@ setMethod("show", "wgcnaDbLite", function(object) { # {{{
 #' @rdname wgcnaDbLite-class
 #' @param x wgcnaDblite SQL-lite database instance
 #' @param ... additional parameters releated to annotation database
+#' @export
 setMethod("metadata", "wgcnaDbLite", function(x, ...) { # {{{
   md <- dbGetQuery(dbconn(x), "select * from metadata")
   rownames(md) <- md$name
@@ -23,17 +25,16 @@ setMethod("metadata", "wgcnaDbLite", function(x, ...) { # {{{
 }) # }}}
 
 
-##FIX ME: add a generic function
 setGeneric("modulesBy",function(x,Module.color=NULL,p.value.type="studentT",trait=NULL,...) standardGeneric("modulesBy")) 
-#FIX ME: add correlation queries of the database
-###for colorname  select from table color where colorKey=color 
-###  
+ 
+  
 #' @rdname wgcnaDbLite-class
 #' @param x this is the SQLite db
 #' @param Module.color this is a selected table in the db, a module color 
 #' @param p.value.type either studentT or fisher, two types of p.value tests were done.
 #' @param trait  this is the trait of interest 
-#' @param x wgcna database
+#' @export
+#' @import TxDbLite
 setMethod("modulesBy", "TxDbLite", function(x,Module.color=NULL,p.value.type="studentT",trait=NULL) {
   p.value.type<-match.arg(p.value.type,c("studentT","fisher"))
   if(p.value.type=="studentT"){
@@ -43,7 +44,7 @@ setMethod("modulesBy", "TxDbLite", function(x,Module.color=NULL,p.value.type="st
   p.prefix<-"pf_GCr_"
   alt.p.prefix<-"p_GCor_"
   }
-  ##FIX ME: safety check for the input color using dbListTables,  signature
+  ## safety check for the input color using dbListTables
   allcolors<-dbListTables(dbconn(x))
   stopifnot(Module.color%in%allcolors ==TRUE)
   if(is.null(trait)==TRUE){
@@ -65,6 +66,14 @@ setMethod("modulesBy", "TxDbLite", function(x,Module.color=NULL,p.value.type="st
   
  }) 
 
+
+#' @rdname wgcnaDbLite-class
+#' @param x this is the SQLite db
+#' @param Module.color this is a selected table in the db, a module color 
+#' @param p.value.type either studentT or fisher, two types of p.value tests were done.
+#' @param trait  this is the trait of interest 
+#' @export
+#' @import TxDbLite
 setMethod("modulesBy", "wgcnaDbLite", function(x,Module.color=NULL,p.value.type="studentT",trait=NULL) {
   p.value.type<-match.arg(p.value.type,c("studentT","fisher"))
   if(p.value.type=="studentT"){
