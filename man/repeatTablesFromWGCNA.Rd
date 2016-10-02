@@ -10,11 +10,11 @@
 repeatTablesFromWGCNA(kexp, lnames, useBiCor = TRUE, verbose = TRUE,
   dbname = "wgcnaDBLite", annotate = TRUE, version = "1.0.0")
 
-getEntrezIDs(gxs, organism)
+getEntrezIDs(gxs, species)
 
-getSymbols(gxs, organism)
+getSymbols(gxs, species)
 
-wgcnaDbLiteMetadata(kexp, packageName, organism, Ensmbl)
+wgcnaDbLiteMetadata(kexp, packageName, species = NULL, Ensmbl)
 }
 \arguments{
 \item{lnames}{is the saved object from wgcna.R that includes basic formatted data compatible with WGCNA, datExpr, datTraits, annot library etc. FIX ME: have this annotation library be independent of wgcna.R}
@@ -23,7 +23,7 @@ wgcnaDbLiteMetadata(kexp, packageName, organism, Ensmbl)
 
 \item{gxs}{geneIDs from a dataframe}
 
-\item{organism}{what kind of organism these genes are from}
+\item{species}{what kind of organism these genes are from}
 
 \item{packageName}{the name of the annotation package to be built}
 

@@ -23,7 +23,12 @@ repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="w
   MEs<-lnames[["MEs"]]
   datExpr<-lnames[["datExpr"]]
   datTraits<-lnames[["datTraits"]]
+  if(annotate==FALSE){
+  #if annotate is FALSE, then we use the default annotation data object, however the colnames need to be changed slightly.
   annot<-lnames[["annot"]]
+  yy<-grep("ensembl_gene_id",colnames(annot))
+  colnames(annot)[yy]<-"gene_id"
+  }
   MEs<-lnames[["MEs"]]
   moduleTraitCor<-lnames[["moduleTraitCor"]]
   moduleTraitPvalue<-lnames[["moduleTraitPvalue"]]
@@ -36,11 +41,11 @@ repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="w
   weight<-as.data.frame(datTraits)
 
   ##FIX ME: add organism
-  if(all(grepl("^ENSG",colnames(datTraits)))==TRUE){
-   organism<-"Homo.sapiens"
+  if(any(grepl("^ENSG",colnames(datExpr)))){
+   species<-"Homo.sapiens"
    packageName<-gsub("EnsDbLite","wgcnaDbLite",Ensmbl)
-  } else if(all(grepl("^ENSMUSG",colnames(datTraits)))==TRUE){
-  organism<-"Mus.musculus"
+  } else if(any(grepl("^ENSMUSG",colnames(datExpr)))){
+  species<-"Mus.musculus"
   packageName<-gsub("EnsDbLite","wgcanDbLite",Ensmbl)
   }
 
@@ -56,32 +61,32 @@ repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="w
   if(verbose) cat("Calculating student-t pvalue ...\n")
   MMPvalue = as.data.frame(corPvalueStudent(as.matrix(geneModuleMembership), nSamples));
   names(geneModuleMembership) = paste("MM", modNames, sep="");
-  names(MMPvalue) = paste("p.MM", modNames, sep="");
+  names(MMPvalue) = paste("p_MM", modNames, sep="");
   if(verbose) cat("Calculating Cross Correlation of genes~traits...\n")
   geneTraitCor = as.data.frame(cor(datExpr, weight, use = "p"));
   if(verbose) cat("Calculating student-t pvalues of gene~trait correlations...\n")
   geneTraitPvalue = as.data.frame(corPvalueStudent(as.matrix(geneTraitCor), nSamples));
   if(verbose) cat("Calculating Fisher-Exact p.values...\n")  
   geneTraitFisherPvalue = as.data.frame(corPvalueFisher(as.matrix(geneTraitCor), nSamples));
-  colnames(geneTraitCor)<-paste("GCor.",colnames(weight),sep="");
-  colnames(geneTraitPvalue)<-paste("p.GCor.",colnames(weight),sep="");
-  colnames(geneTraitFisherPvalue)<-paste("pf.GCr.",colnames(weight),sep="");
+  colnames(geneTraitCor)<-paste("GCor_",colnames(weight),sep="");
+  colnames(geneTraitPvalue)<-paste("p_GCor_",colnames(weight),sep="");
+  colnames(geneTraitFisherPvalue)<-paste("pf_GCr_",colnames(weight),sep="");
   } else {
   if(verbose) cat("Calculating Module bi-Correlations with EigenGenes...\n")
  geneModuleMembership = as.data.frame(bicor(datExpr, MEs, use = "all.obs"));
   if(verbose) cat("Calculating student-t p.values...\n")
   MMPvalue = as.data.frame(corPvalueStudent(as.matrix(geneModuleMembership), nSamples)); ##pvalue per gene in each module
   names(geneModuleMembership) = paste("MM", modNames, sep="");
-  names(MMPvalue) = paste("p.MM", modNames, sep="");
+  names(MMPvalue) = paste("p_MM", modNames, sep="");
   ##gene pvale per trait
   if(verbose) cat("Calculating bi-correlation of gene~trait...\n")
   geneTraitCor = as.data.frame(bicor(datExpr, weight, use = "all.obs"));
   if(verbose) cat("Calculating student-t p.values gene~trait...\n")
   geneTraitPvalue = as.data.frame(corPvalueStudent(as.matrix(geneTraitCor), nSamples));
   geneTraitFisherPvalue<-as.data.frame(corPvalueFisher(as.matrix(geneTraitCor),nSamples));
-   colnames(geneTraitCor) = paste("GCor.", colnames(weight), sep="");
-  colnames(geneTraitPvalue) = paste("p.GCor.", colnames(weight), sep="");
-  colnames(geneTraitFisherPvalue)<-paste("pf.GCr.",colnames(weight),sep="");
+   colnames(geneTraitCor) = paste("GCor_", colnames(weight), sep="");
+  colnames(geneTraitPvalue) = paste("p_GCor_", colnames(weight), sep="");
+  colnames(geneTraitFisherPvalue)<-paste("pf_GCr_",colnames(weight),sep="");
   }
 
   stopifnot(all(rownames(geneModuleMembership)==rownames(MMPvalue))==TRUE)
@@ -95,15 +100,15 @@ repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="w
   ##call annotations?
    if(annotate==TRUE){
   annot<-data.frame(gene_id=rownames(geneModuleDF),row.names=rownames(geneModuleDF))
-  entrezID <- getEntrezIDs(annot, organism)
+  entrezID <- getEntrezIDs(annot, species)
   entrez.match<-match(rownames(annot),names(entrezID))
   stopifnot(all(rownames(annot)==names(entrezID)[entrez.match]))
   annot$entrezid<-entrezID[entrez.match]
-  symbolNames<-getSymbols(annot,organism)
+  symbolNames<-getSymbols(annot,species)
   symbol.match<-match(rownames(annot),names(symbolNames))
   stopifnot(all(rownames(annot)==names(symbolNames)[symbol.match]))
   annot$hgnc_symbol<-symbolNames[symbol.match]
- # gxs$gene_name <- getSymbols(gxs, organism)[names(gxs)]
+  geneModuleDF<-cbind(geneModuleDF,annot)
  }
 
 
@@ -117,13 +122,13 @@ repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="w
   con<-dbConnect(dbDriver("SQLite"),dbname=dbname)
   if(verbose) cat("Extracting Module Color Names...")
    modulesNeeded<-unique(moduleColors)
-   modulePvalue.Needed<-colnames(geneModuleDF)[grep("p.MM",colnames(geneModuleDF))]
+   modulePvalue.Needed<-colnames(geneModuleDF)[grep("p_MM",colnames(geneModuleDF))]
   stopifnot(length(modulesNeeded)==length(modulePvalue.Needed))
   if(verbose) cat("Extracting Pheno-types of interest...")
   traitsNeeded<-colnames(datTraits)
-  geneTraitCorNeeded<-paste0("GCor.",traitsNeeded)
-  pTraitNeeded<-paste0("p.GCor.",traitsNeeded)
-  pfTraitNeeded<-paste0("pf.GCr.",traitsNeeded) 
+  geneTraitCorNeeded<-paste0("GCor_",traitsNeeded)
+  pTraitNeeded<-paste0("p_GCor_",traitsNeeded)
+  pfTraitNeeded<-paste0("pf_GCr_",traitsNeeded) 
   stopifnot(all(geneTraitCorNeeded%in%colnames(geneModuleDF)))
   stopifnot(all(pTraitNeeded %in% colnames(geneModuleDF)))
   stopifnot(all(pfTraitNeeded%in%colnames(geneModuleDF)))
@@ -133,9 +138,9 @@ repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="w
   pfTrait.id<-match(pfTraitNeeded,colnames(geneModuleDF))
   #color,GCor_TxBio,pvalue , pf.value,annotations
   ## FIX ME: add annotations
-  annot.id<-match(rownames(geneModuleDF),annot$ensembl_gene_id)
+  annot.id<-match(rownames(geneModuleDF),annot$gene_id)
   
-  for(i in 1:length(tablesNeeded)){
+  for(i in 1:length(modulesNeeded)){
   mod.id<-which(modulesNeeded[i]==substring(colnames(geneModuleDF),3 ))
   mod.p.id<-which(modulePvalue.Needed[i]==substring(colnames(geneModuleDF),5))
   colorTable<-geneModuleDF[,c(mod.id,mod.p.id,geneTraitCor.id,pTrait.id,pfTrait.id)]
@@ -143,17 +148,17 @@ repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="w
   colorTable<-cbind(colorTable,colorKey)
   colorTable<-cbind(colorTable,annot[annot.id,]) 
   stopifnot(all(rownames(colorTable)==rownames(geneModuleDF)))
-  stopifnot(all(rownames(colorTable)==colorTable$ensembl_gene_id))
+  stopifnot(all(rownames(colorTable)==colorTable$gene_id))
   
   ##write dbLite table  
-  if(verbose) cat(paste0("Creating the database for ",tablesNeeded[i],"\n"))
-  dbWriteTable(con,name=tablesNeeded[i],colorTable,overwrite=T,row.names=T)
-  dbGetQuery(con,paste0("create index colorKey_idx","_",i," on ",tablesNeeded[i]," (colorKey);"))
+  if(verbose) cat(paste0("Creating the database for ",modulesNeeded[i],"\n"))
+  dbWriteTable(con,name=modulesNeeded[i],colorTable,overwrite=T,row.names=T)
+  dbGetQuery(con,paste0("create index colorKey_idx","_",i," on ",modulesNeeded[i]," (colorKey);"))
    }
   ##FIX ME :  write out some meta data color module summaries, species .. 
   Metadata <- wgcnaDbLiteMetadata(kexp,
                                packageName=packageName,
-                               organism=organism,
+                               species=species,
                                Ensmbl=Ensmbl)
  dbWriteTable(con, name="metadata", Metadata, overwrite=TRUE, row.names=FALSE)
 
@@ -172,13 +177,13 @@ repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="w
 #' add EntrezGene IDs for Ensembl genes
 #'
 #' @param gxs       geneIDs from a dataframe
-#' @param organism  what kind of organism these genes are from
+#' @param species  what kind of organism these genes are from
 #' 
 #' @return  entrez_id values for the genes, where found
 #'
 #'
-getEntrezIDs <- function(gxs, organism) { # {{{
-  org <- getOrgDetails(organism)
+getEntrezIDs <- function(gxs, species) { # {{{
+  org <- getOrgDetails(species)
   library(org$package, character.only=TRUE)
   res <- try(mapIds(get(org$package), keys=as.character(gxs$gene_id),
                 column="ENTREZID", keytype=org$keytype), silent=TRUE)
@@ -197,8 +202,8 @@ getEntrezIDs <- function(gxs, organism) { # {{{
 #' @return  symbols for the genes, where found 
 #'
 #' 
-getSymbols <- function(gxs, organism) { # {{{
-  org <- getOrgDetails(organism)
+getSymbols <- function(gxs, species) { # {{{
+  org <- getOrgDetails(species)
   library(org$package, character.only=TRUE)
 
   ## needed since Ens83...
@@ -227,11 +232,11 @@ getSymbols <- function(gxs, organism) { # {{{
 #' @return a data.frame of metadata suitable for cramming into the database
 #'
 #' @export
-wgcnaDbLiteMetadata <- function(kexp,packageName,organism,Ensmbl) { # {{{
+wgcnaDbLiteMetadata <- function(kexp,packageName,species=NULL,Ensmbl) { # {{{
 
   
   Ensmbl<-gsub(" ","",Ensmbl)
-  org <- getOrgDetails(organism)
+  org <- getOrgDetails(species)
   sourceFile <- Ensmbl
   kversion<-kallistoVersion(kexp)
   MetaData <- data.frame(matrix(ncol=2, nrow=8))
@@ -241,7 +246,7 @@ wgcnaDbLiteMetadata <- function(kexp,packageName,organism,Ensmbl) { # {{{
   MetaData[3,] <- c("type_of_gene_id", "Ensembl Gene ID")
   MetaData[4,] <- c("created_by", paste("TxDbLite", packageVersion("TxDbLite")))
   MetaData[5,] <- c("creation_time", date())
-  MetaData[6,] <- c("organism", organism)
+  MetaData[6,] <- c("organism", species)
   MetaData[7,] <- c("kallistoVersion", kversion)
   MetaData[8,] <- c("sourceFile", sourceFile)
   return(MetaData)

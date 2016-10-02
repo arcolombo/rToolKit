@@ -4,6 +4,7 @@
 \name{wgcnaDbLite-class}
 \alias{dbconn,wgcnaDbLite-method}
 \alias{metadata,wgcnaDbLite-method}
+\alias{modulesBy,TxDbLite-method}
 \alias{show,wgcnaDbLite-method}
 \alias{wgcnaDbLite-class}
 \title{A parent class for wgcna databases including annotations}
@@ -13,6 +14,9 @@
 \S4method{show}{wgcnaDbLite}(object)
 
 \S4method{metadata}{wgcnaDbLite}(x, ...)
+
+\S4method{modulesBy}{TxDbLite}(x, Module.color = NULL,
+  p.value.type = "studentT", trait = NULL)
 }
 \arguments{
 \item{x}{wgcnaDblite SQL-lite database instance}
@@ -20,6 +24,16 @@
 \item{object}{wgcnaDbLite SQL-lite annotation database}
 
 \item{...}{additional parameters releated to annotation database}
+
+\item{Module.color}{this is a selected table in the db, a module color}
+
+\item{p.value.type}{either studentT or fisher, two types of p.value tests were done.}
+
+\item{trait}{this is the trait of interest}
+
+\item{x}{this is the SQLite db}
+
+\item{x}{wgcna database}
 }
 \description{
 A parent class for wgcna databases including annotations
