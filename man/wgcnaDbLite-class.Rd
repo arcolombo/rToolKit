@@ -17,10 +17,10 @@
 \S4method{metadata}{wgcnaDbLite}(x, ...)
 
 \S4method{modulesBy}{TxDbLite}(x, Module.color = NULL,
-  p.value.type = "studentT", trait = NULL)
+  p.value.type = "studentT", trait = NULL, p.value = NULL)
 
 \S4method{modulesBy}{wgcnaDbLite}(x, Module.color = NULL,
-  p.value.type = "studentT", trait = NULL)
+  p.value.type = "studentT", trait = NULL, p.value = NULL)
 }
 \arguments{
 \item{x}{wgcnaDblite SQL-lite database instance}

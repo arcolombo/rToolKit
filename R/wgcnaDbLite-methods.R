@@ -25,7 +25,7 @@ setMethod("metadata", "wgcnaDbLite", function(x, ...) { # {{{
 }) # }}}
 
 
-setGeneric("modulesBy",function(x,Module.color=NULL,p.value.type="studentT",trait=NULL,...) standardGeneric("modulesBy")) 
+setGeneric("modulesBy",function(x,Module.color=NULL,p.value.type="studentT",trait=NULL,p.value=NULL,...) standardGeneric("modulesBy")) 
  
   
 #' @rdname wgcnaDbLite-class
@@ -35,7 +35,7 @@ setGeneric("modulesBy",function(x,Module.color=NULL,p.value.type="studentT",trai
 #' @param trait  this is the trait of interest 
 #' @export
 #' @import TxDbLite
-setMethod("modulesBy", "TxDbLite", function(x,Module.color=NULL,p.value.type="studentT",trait=NULL) {
+setMethod("modulesBy", "TxDbLite", function(x,Module.color=NULL,p.value.type="studentT",trait=NULL,p.value=NULL) {
   p.value.type<-match.arg(p.value.type,c("studentT","fisher"))
   if(p.value.type=="studentT"){
   p.prefix<-"p_GCor_"
@@ -54,6 +54,7 @@ setMethod("modulesBy", "TxDbLite", function(x,Module.color=NULL,p.value.type="st
                     stringsAsFactors=FALSE)
    ##only return one specified p.value type 
    id<-!grepl(alt.p.prefix,colnames(res))
+   ##filter the columns, does not filter by p.value
    res<-res[,id]
   } else{
    #traits was specified so return specific
@@ -61,7 +62,11 @@ setMethod("modulesBy", "TxDbLite", function(x,Module.color=NULL,p.value.type="st
   pval.Trait<-paste0(p.prefix,trait)
   sql<-paste0("select row_names, ","MM",Module.color,", ",gcor,", ",pval.Trait,", colorKey, gene_id, entrezid, hgnc_symbol from ",Module.color," where colorKey='",Module.color,"'")
   res<-as.data.frame(dbGetQuery(dbconn(x),sql))
-   }
+   if(is.null(p.value)==FALSE){
+    p.col<-paste0(p.prefix,trait)
+    res<-res[which(res[,grepl(p.col,colnames(res))]<=p.value),]
+   } 
+  }
     return(res)
   
  }) 
@@ -74,7 +79,7 @@ setMethod("modulesBy", "TxDbLite", function(x,Module.color=NULL,p.value.type="st
 #' @param trait  this is the trait of interest 
 #' @export
 #' @import TxDbLite
-setMethod("modulesBy", "wgcnaDbLite", function(x,Module.color=NULL,p.value.type="studentT",trait=NULL) {
+setMethod("modulesBy", "wgcnaDbLite", function(x,Module.color=NULL,p.value.type="studentT",trait=NULL,p.value=NULL) {
   p.value.type<-match.arg(p.value.type,c("studentT","fisher"))
   if(p.value.type=="studentT"){
   p.prefix<-"p_GCor_"
@@ -100,18 +105,20 @@ setMethod("modulesBy", "wgcnaDbLite", function(x,Module.color=NULL,p.value.type=
   pval.Trait<-paste0(p.prefix,trait)
   sql<-paste0("select row_names, ","MM",Module.color,", ",gcor,", ",pval.Trait,", colorKey, gene_id, entrezid, hgnc_symbol from ",Module.color," where colorKey='",Module.color,"'")
   res<-as.data.frame(dbGetQuery(dbconn(x),sql))
+     if(is.null(p.value)==FALSE){
+    p.col<-paste0(p.prefix,trait)
+    res<-res[which(res[,grepl(p.col,colnames(res))]<=p.value),]
+   } 
    }
     return(res)
   
  })
 
 
-###FIX ME:  add filter scripts where one can filter based on p.value
+###FIX ME:  add filter scripts where one can filter based on p.valu
 
 
-### FIX ME: add verbose plots to plot significant correlations as potential drivers
-
-### FIX ME: add Cormap functions .
+### FIX ME: add verbose plots to plot significant correlations consensus
 
 
 
