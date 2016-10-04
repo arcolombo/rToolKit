@@ -3,7 +3,7 @@
 \docType{class}
 \name{wgcnaDbLite-class}
 \alias{dbconn,wgcnaDbLite-method}
-\alias{driversBy,wgcnaDbLite-method}
+\alias{drivers,wgcnaDbLite-method}
 \alias{metadata,wgcnaDbLite-method}
 \alias{modulesBy,wgcnaDbLite-method}
 \alias{show,wgcnaDbLite-method}
@@ -20,11 +20,12 @@
 \S4method{modulesBy}{wgcnaDbLite}(x, Module.color = NULL,
   p.value.type = "studentT", trait = NULL, p.value = NULL)
 
-\S4method{driversBy}{wgcnaDbLite}(x, Module.color = NULL,
+\S4method{traitsBy}{wgcnaDbLite}(x, Module.color = NULL,
   p.value.type = "studentT", trait = NULL, p.value = NULL)
 
-\S4method{traitsBy}{wgcnaDbLite}(x, Module.color = NULL,
-  p.value.type = "studentT", p.value = 0.05)
+\S4method{drivers}{wgcnaDbLite}(x, Module.color = NULL,
+  p.value.type = "studentT", p.value = 0.05, traitConsensus = c("Alu",
+  "ERVK", "ERV3", "ERVL", "LTR Retrotransposon"), species = "Homo.sapiens")
 }
 \arguments{
 \item{x}{wgcnaDblite SQL-lite database instance}
@@ -63,6 +64,12 @@
 }
 \description{
 A parent class for wgcna databases including annotations
+
+this will return all the gene cross correlations for a given module and all traits in a given row if trait param is NULL. or if traits are specified will return the cross correlations (significant) between a desired module and trait.
+
+traitsBy will return significant Gene cross correlations  between a trait and module of interest. this is synonomous to modulesBy with a specifid p.value and trait.
+
+we define a 'driver' of a module~trait association as the set of all genes shared amongst correlated sets with a significance. also for the intersected genes across traits, the correlation scores for each gene are averages, along with the p.values so that the intersection 'driver' list will have an average correlation score, and an average p.value for a driver association across sets of traits.
 }
 \section{Slots}{
 

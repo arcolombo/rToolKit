@@ -3,27 +3,21 @@
 #' @import TxDbLite
 #' @export
 #' @return a df of the most significant common elements across biotypes per a given module
-traitConsensus<-function(dbname=NULL,dbPath=".",consensus=c("Alu","ERVK","ERV3","ERVL","LTR Retrotransposon"),Module.color="blue",species=c("Homo.sapiens","Mus.musculus")){
-
+annotateDrivers<-function(dbname=NULL,dbPath=".",consensus=c("Alu","ERVK","ERV3","ERVL","LTR Retrotransposon"),Module.color="blue",species=c("Homo.sapiens","Mus.musculus")){
+## merely call drviers and annotate.  the drivers generic should handle the calculations etc
   species<-match.arg(species,c("Homo.sapiens","Mus.musculus"))
   stopifnot(file.exists(paste0(dbPath,"/",dbname)))
   dbn<-paste0(dbPath,"/",dbname)
 
   colors<-dbListTables(dbconn(wgcnaDbLite(basename(dbn))))
   stopifnot(Module.color%in%colors)
-  traitSet<-traitsBy(wgcnaDbLite(basename(dbn)),Module.color=Module.color)
+  traitSet<-drivers(wgcnaDbLite(dbn),Module.color=Module.color, traitConsensus=consensus)
+   
+ 
 
-  cons.id<-substring(names(traitSet),length(unlist(strsplit(Module.color,"",fixed=T)))+2)%in%consensus
-   trait.cons<-traitSet[cons.id]
-   intCons<-intersect(trait.cons[[1]]$row_names,trait.cons[[2]]$row_names)
-    for(i in 3:length(names(trait.cons))){
-    intCons<-intersect(intCons,trait.cons[[i]]$row_names)
-    }
-
-  ###FIX ME::: include the average of the p.values must report the p.values
-  gxs<-data.frame(gene_id=intCons,stringsAsFactors=FALSE)  
-  rownames(gxs)<-gxs$gene_id
-   ##FIX ME: annotate intCons
+ ###drivers are the average of the p.values and avg. correlation
+   gxs<-data.frame(gene_id=traitSet$row_names,stringsAsFactors=FALSE) 
+   rownames(gxs)<-gxs$gene_id
     entrezID <- getEntrezIDs(gxs, species)
    entrez.match<-match(rownames(gxs),names(entrezID))
   stopifnot(all(rownames(gxs)==names(entrezID)[entrez.match]))
@@ -32,8 +26,11 @@ traitConsensus<-function(dbname=NULL,dbPath=".",consensus=c("Alu","ERVK","ERV3",
   symbol.match<-match(rownames(gxs),names(symbolNames))
   stopifnot(all(rownames(gxs)==names(symbolNames)[symbol.match]))
   gxs$hgnc_symbol<-symbolNames[symbol.match]
-  write.csv(gxs,file=paste0(paste(consensus,collapse="."),"_",Module.color,".consensus.csv"),quote=FALSE,row.names=TRUE)
-  return(gxs)
+  write.csv(gxs,file=paste0(paste(consensus,collapse="."),"_",Module.color,".consensusDrivers.csv"),quote=FALSE,row.names=TRUE)
+   traitSet.id<-match(traitSet$row_names,gxs$gene_id)
+   annotatedDrivers<-cbind(traitSet,gxs[traitSet.id,])
+   stopifnot(rownames(annotatedDrivers)==annotatedDrivers$gene_id)
+   return(annotatedDrivers)
 
 } ##main
 
