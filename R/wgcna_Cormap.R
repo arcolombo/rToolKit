@@ -41,7 +41,7 @@ textMatrix =  paste(signif(moduleTraitCor, 2), "\n(",
                            signif(moduleTraitPvalue, 1), ")", sep = "");
 
 dim(textMatrix) = dim(moduleTraitCor)
- 
+moduleTraitCor<-moduleTraitCor[order(moduleTraitCor[,1],decreasing=TRUE),] 
 par(mar = c(6, 10, 3, 3));
 # Display the correlation values within a heatmap plot
 plot.new()

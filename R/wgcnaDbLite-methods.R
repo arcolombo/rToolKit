@@ -99,8 +99,8 @@ setMethod("traitsBy", "wgcnaDbLite", function(x,Module.color=NULL,p.value.type="
   stopifnot(Module.color%in%allcolors ==TRUE)
   
   #drivers are defined as the most significantly cross correlated genes
-  gcor<-paste0("GCor_",trait)
-  pval.Trait<-paste0(p.prefix,trait)
+  gcor<-paste0("`","GCor_",trait,"`")
+  pval.Trait<-paste0("`",p.prefix,trait,"`")
   sql<-paste0("select row_names, ","MM",Module.color,", ",gcor,", ",pval.Trait,", colorKey, gene_id, entrezid, hgnc_symbol from ",Module.color," where colorKey='",Module.color,"'")
   res<-as.data.frame(dbGetQuery(dbconn(x),sql))
      if(is.null(p.value)==TRUE){
@@ -207,11 +207,5 @@ setMethod("drivers", "wgcnaDbLite", function(x,Module.color=NULL,p.value.type="s
     return(drivers)
 
  })
-
-
-
-### FIX ME: add verbose plots to plot significant correlations consensus
-
-
 
 
