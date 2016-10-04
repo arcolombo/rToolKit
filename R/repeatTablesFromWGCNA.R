@@ -178,7 +178,7 @@ repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="w
 #'
 #' @param gxs       geneIDs from a dataframe
 #' @param species  what kind of organism these genes are from
-#' 
+#' @export 
 #' @return  entrez_id values for the genes, where found
 #'
 #'
@@ -198,7 +198,7 @@ getEntrezIDs <- function(gxs, species) { # {{{
 
 #' @describeIn repeatTablesFromWGCNA
 #' 
-#' add symbols for Ensembl genes
+#' @export
 #' @return  symbols for the genes, where found 
 #'
 #' 

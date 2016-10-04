@@ -9,8 +9,4 @@ setClass("wgcnaDbLite",
   prototype=list(con=NULL,tables=list())
 )
 
-#' A parent class for Ensembl based network annotations
-#' @rdname wgcnaDbLite-class
-#' @export 
-setClass("wgcnaDbLite",contains="TxDbLite")
 

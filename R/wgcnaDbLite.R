@@ -16,6 +16,6 @@ wgcnaDbLite <- function(x, path=".", ...) {
   names(tables) <- tables
   Tables <- lapply(tables, function(x)
     colnames(dbGetQuery(con, paste0("select * from ", x, " limit 1"))))
-  new("TxDbLite", con = con, tables = Tables)
+  new("wgcnaDbLite", con = con, tables = Tables)
 }
 

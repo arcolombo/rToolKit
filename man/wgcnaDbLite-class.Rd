@@ -3,10 +3,11 @@
 \docType{class}
 \name{wgcnaDbLite-class}
 \alias{dbconn,wgcnaDbLite-method}
+\alias{driversBy,wgcnaDbLite-method}
 \alias{metadata,wgcnaDbLite-method}
-\alias{modulesBy,TxDbLite-method}
 \alias{modulesBy,wgcnaDbLite-method}
 \alias{show,wgcnaDbLite-method}
+\alias{traitsBy,wgcnaDbLite-method}
 \alias{wgcnaDbLite-class}
 \title{A parent class for wgcna databases including annotations}
 \usage{
@@ -16,11 +17,14 @@
 
 \S4method{metadata}{wgcnaDbLite}(x, ...)
 
-\S4method{modulesBy}{TxDbLite}(x, Module.color = NULL,
-  p.value.type = "studentT", trait = NULL, p.value = NULL)
-
 \S4method{modulesBy}{wgcnaDbLite}(x, Module.color = NULL,
   p.value.type = "studentT", trait = NULL, p.value = NULL)
+
+\S4method{driversBy}{wgcnaDbLite}(x, Module.color = NULL,
+  p.value.type = "studentT", trait = NULL, p.value = NULL)
+
+\S4method{traitsBy}{wgcnaDbLite}(x, Module.color = NULL,
+  p.value.type = "studentT", p.value = 0.05)
 }
 \arguments{
 \item{x}{wgcnaDblite SQL-lite database instance}
@@ -35,6 +39,8 @@
 
 \item{trait}{this is the trait of interest}
 
+\item{p.value}{p.value significance threshold}
+
 \item{x}{this is the SQLite db}
 
 \item{x}{this is the SQLite db}
@@ -44,11 +50,19 @@
 \item{p.value.type}{either studentT or fisher, two types of p.value tests were done.}
 
 \item{trait}{this is the trait of interest}
+
+\item{p.value}{p.value significance threshold}
+
+\item{x}{this is the SQLite db}
+
+\item{Module.color}{this is a selected table in the db, a module color}
+
+\item{p.value.type}{either studentT or fisher, two types of p.value tests were done.}
+
+\item{p.value}{p.value significance threshold}
 }
 \description{
 A parent class for wgcna databases including annotations
-
-A parent class for Ensembl based network annotations
 }
 \section{Slots}{
 
