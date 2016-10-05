@@ -39,7 +39,7 @@ wgcna_qusage<-function(kexp,lnames,geneModuleDF=NULL,biotype="Alu",intMods=c("bl
   nGenes<-ncol(datExpr)
   nSamples = nrow(datExpr);
   modNames<-substring(colnames(MEs),3)
- moduleColors<-bwModuleColors
+  moduleColors<-bwModuleColors
  
   weight<-data.frame(biotype=datTraits[,grep(biotype,colnames(datTraits))])
   colnames(weight)<-biotype

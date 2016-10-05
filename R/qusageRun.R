@@ -4,7 +4,7 @@
 #' @export
 #' @return enrichment data set
 qusageRun<-function(cnts_mt=NULL,gmt.path="~/Documents/Arkas-Paper-Data/MSigDB/MsigDb_all/",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),comparison="pHSC",control="LSC",module=NULL){
-
+##FIX ME: do not loop across modules dummy! 
 ##create labels from colnames
   cN<-colnames(cnts_mt)
   cN<-strsplit(cN,"_")
