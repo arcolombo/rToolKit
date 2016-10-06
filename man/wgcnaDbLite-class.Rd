@@ -6,6 +6,8 @@
 \alias{drivers,wgcnaDbLite-method}
 \alias{metadata,wgcnaDbLite-method}
 \alias{modulesBy,wgcnaDbLite-method}
+\alias{pathways,qusageDbLite-method}
+\alias{qusageDbLite-class}
 \alias{show,wgcnaDbLite-method}
 \alias{traitsBy,wgcnaDbLite-method}
 \alias{wgcnaDbLite-class}
@@ -26,6 +28,9 @@
 \S4method{drivers}{wgcnaDbLite}(x, Module.color = NULL,
   p.value.type = "studentT", p.value = 0.05, traitConsensus = c("Alu",
   "ERVK", "ERV3", "ERVL", "LTR Retrotransposon"), species = "Homo.sapiens")
+
+\S4method{pathways}{qusageDbLite}(x, Module.color = NULL, tx.Biotype = NULL,
+  contrast = NULL, p.value = 0.05)
 }
 \arguments{
 \item{x}{wgcnaDblite SQL-lite database instance}
@@ -42,6 +47,10 @@
 
 \item{p.value}{p.value significance threshold}
 
+\item{tx.Biotype}{enter hte module color if you want the full module enrichment, or a tx.biotype for a fixed trait}
+
+\item{contrast}{either phsc or blast}
+
 \item{x}{this is the SQLite db}
 
 \item{x}{this is the SQLite db}
@@ -61,15 +70,23 @@
 \item{p.value.type}{either studentT or fisher, two types of p.value tests were done.}
 
 \item{p.value}{p.value significance threshold}
+
+\item{x}{this is the SQLite db}
+
+\item{Module.color}{this is a selected table in the db, a module color}
 }
 \description{
 A parent class for wgcna databases including annotations
+
+A parent class for qusage based enrichments
 
 this will return all the gene cross correlations for a given module and all traits in a given row if trait param is NULL. or if traits are specified will return the cross correlations (significant) between a desired module and trait.
 
 traitsBy will return significant Gene cross correlations  between a trait and module of interest. this is synonomous to modulesBy with a specifid p.value and trait.
 
 we define a 'driver' of a module~trait association as the set of all genes shared amongst correlated sets with a significance. also for the intersected genes across traits, the correlation scores for each gene are averages, along with the p.values so that the intersection 'driver' list will have an average correlation score, and an average p.value for a driver association across sets of traits.
+
+pathways will return the qusage enrichment pathway descriptions for a given module color.  if you want the entire module enrichment then the Module.color and tx.Biotype must also be a color.  if you want specific traits of interest then set the tx.biotype to the trait.  the contrast is to gather the enrichment data for the comparison either pHSC.vs.LSC (comparison=phsc) or Blast.vs.LSC (comparison=blast)  [lower case only!]
 }
 \section{Slots}{
 

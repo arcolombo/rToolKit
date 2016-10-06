@@ -10,7 +10,7 @@ qusageRun(cnts_mt = NULL,
   "c4.all.v5.1.symbols.gmt", "c5.all.v5.1.symbols.gmt",
   "c6.all.v5.1.symbols.gmt", "c7.all.v5.1.symbols.gmt",
   "h.all.v5.1.symbols.gmt"), comparison = "pHSC", control = "LSC",
-  module = NULL)
+  module = NULL, plotTable = FALSE)
 }
 \value{
 enrichment data set
