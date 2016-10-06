@@ -209,3 +209,33 @@ setMethod("drivers", "wgcnaDbLite", function(x,Module.color=NULL,p.value.type="s
  })
 
 
+setGeneric("pathways",function(x,Module.color=NULL,tx.Biotype=NULL,contrast=NULL,p.value=NULL) standardGeneric("pathways"))
+
+
+
+
+#' @rdname wgcnaDbLite-class
+#' @description pathways will return the qusage enrichment pathway descriptions for a given module color.  if you want the entire module enrichment then the Module.color and tx.Biotype must also be a color.  if you want specific traits of interest then set the tx.biotype to the trait.  the contrast is to gather the enrichment data for the comparison either pHSC.vs.LSC (comparison=phsc) or Blast.vs.LSC (comparison=blast)  [lower case only!]
+#' @param x this is the SQLite db
+#' @param Module.color this is a selected table in the db, a module color 
+#' @param tx.Biotype enter hte module color if you want the full module enrichment, or a tx.biotype for a fixed trait
+#' @param contrast  either phsc or blast
+#' @export
+setMethod("pathways", "qusageDbLite", function(x,Module.color=NULL,tx.Biotype=NULL,contrast=NULL,p.value=0.05) {
+
+
+  ##FIX ME: safety check for the input color using dbListTables,  signature
+  allcolors<-dbListTables(dbconn(x))
+  stopifnot(Module.color%in%allcolors ==TRUE)
+
+  #drivers are defined as the most significantly cross correlated genes
+  
+  sql<-paste0("select pathway_name, logFC, pvalue, FDR from ",Module.color," where colorKey='",Module.color,"'"," and bioKey='",tx.Biotype,"'"," and contrastKey='",contrast,"'")
+  res<-as.data.frame(dbGetQuery(dbconn(x),sql))
+  res<-res[which(res$pvalue<p.value),]
+  return(res)
+
+ })
+
+
+###FIX ME: add a consensus pathways function

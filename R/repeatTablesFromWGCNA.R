@@ -11,8 +11,7 @@
 #' @return a SQLlite Data base 
 repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="wgcnaDBLite",annotate=TRUE,version="1.0.0" ){
   
- ##FIX ME: create accessors for this class 
- ## FIX ME : adding this database will require a formal methods section
+
    tnxomes<-transcriptomes(kexp)
    ##supporting only ENSEMBL
    tnxomes<-strsplit(tnxomes,",")
@@ -24,7 +23,7 @@ repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="w
   datExpr<-lnames[["datExpr"]]
   datTraits<-lnames[["datTraits"]]
   if(annotate==FALSE){
-  #if annotate is FALSE, then we use the default annotation data object, however the colnames need to be changed slightly.
+  #if annotate is FALSE, then we use the default annotation data object, however the colnames need to be changed from lnames ensembl_gene_id to gene_id (crucual for uniformaity with dbLite.
   annot<-lnames[["annot"]]
   yy<-grep("ensembl_gene_id",colnames(annot))
   colnames(annot)[yy]<-"gene_id"

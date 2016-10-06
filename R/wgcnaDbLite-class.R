@@ -9,4 +9,8 @@ setClass("wgcnaDbLite",
   prototype=list(con=NULL,tables=list())
 )
 
+#' A parent class for qusage based enrichments
+#' @rdname wgcnaDbLite-class
+#' @export
+setClass("qusageDbLite", contains="wgcnaDbLite")
 
