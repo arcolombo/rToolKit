@@ -2,9 +2,9 @@
 #' @param kexp the kexp should have pHSC, LSC and blast.  
 qusageTablesFromWGCNA<-function(kexp,useBiCor=TRUE,verbose=TRUE,dbname="wgcnaDBLite.sqlite",annotate=TRUE,version="1.0.0",Module.color="brown",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),comparison="pHSC",control="LSC",how=c("cpm","tpm") ){
 
-##task: query the gene db given a module and biotype and pipe into wgcna_qusage.R to handle the pre-proccessing.  the output should be module.biotype.enrich specific data.  then write to a db.
+##task: this will take a full kexp and tmm normalize and log2 transform or tpm normalize and pass into qusageRun.R to handle the pre-proccessing for qusage call.  the output should be module.biotype.enrich specific data.  then write to a db. 
+ ##important note: it is tempting to merely use collapseBundles(kexp,"gene_name") and pipe into qusage HOWEVER QUSAGE REQUIRES NORMALIZED LOG2 XR. collapseBundles will only use the raw counts(kexp) bundle gene_name counts.  here we *****MUST******* use tmm normalized or Tpm calls.
 
-##FIX ME: deprecate wgcna_qusage.R
 
    tnxomes<-transcriptomes(kexp)
    ##supporting only ENSEMBL
@@ -14,7 +14,12 @@ qusageTablesFromWGCNA<-function(kexp,useBiCor=TRUE,verbose=TRUE,dbname="wgcnaDBL
 
   how<-match.arg(how,c("cpm","tpm"))
    geneSet<-match.arg(MsigDB,c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"))
-  if(how=="cpm"){
+
+##### the modules are in terms of ENSG IDs and we are going to build a qusage database of the modules, so we must collapse counts by ENSG IDs,normalize, log2XR and then annotate to get hgnc to pipe into qusage.  
+#####
+  
+  ##Lazy Species detection
+    if(how=="cpm"){
   ##TMM normalize
   counts<-collapseBundles(kexp,"gene_id")
   dge<-DGEList(counts=counts)
@@ -22,10 +27,11 @@ qusageTablesFromWGCNA<-function(kexp,useBiCor=TRUE,verbose=TRUE,dbname="wgcnaDBL
   expr<-cpm(dge,log=FALSE)
   counts<-log2(1+expr) ##enirhcment on log2 is required
   } else{
+  ##TPM Normalize
   counts<-collapseTpm(kexp,"gene_id")
   counts<-log2(1+counts)
   }
-  
+
   if(any(grepl("^ENSG",rownames(counts)))){
    species<-"Homo.sapiens"
    packageName<-gsub("EnsDbLite","wgcnaDbLite",Ensmbl)
@@ -35,8 +41,7 @@ qusageTablesFromWGCNA<-function(kexp,useBiCor=TRUE,verbose=TRUE,dbname="wgcnaDBL
   }
 
  ## take the database and query the geneIDs of interest, and use the kexp on those geneIDs
- ##FIX ME :::: need to run this for all colors_i 
-  
+   
  allTables<-dbListTables(dbconn(wgcnaDbLite(dbname)))
   ##the tables have metadata, must avoid this table
  allcolors<-allTables[!grepl("metadata",allTables)]
@@ -50,13 +55,14 @@ qusageTablesFromWGCNA<-function(kexp,useBiCor=TRUE,verbose=TRUE,dbname="wgcnaDBL
 ## take the module genes unfiltered --> qusage (modulesBy)
  for(i in 1:length(allcolors)){
  ######START FOR LOOP HERE allcolors_i 
-  wgcna.color<-modulesBy(wgcnaDbLite(dbname),p.value=2,Module.color=allcolors[i])
+   wgcna.color<-modulesBy(wgcnaDbLite(dbname),p.value=2,Module.color=allcolors[i])
    color.id<-match(wgcna.color$row_names,rownames(counts))
-   stopifnot(rownames(counts[color.id,])==wgcna.color$row_names)
+   stopifnot(all(rownames(counts[color.id,] )==wgcna.color$row_names)) ##check
    module.counts<-counts[color.id,]
    ##qusage gmt files are in terms of symbols, so map ENSGID--->HGNC
    rownames(module.counts)<-wgcna.color$hgnc_symbol 
    ##split the count data by stage
+   module.counts<-counts
    pHSC.id<-grep("pHSC_",colnames(module.counts))
    LSC.id<-grep("LSC_",colnames(module.counts))
    Blast.id<-grep("Blast_",colnames(module.counts))

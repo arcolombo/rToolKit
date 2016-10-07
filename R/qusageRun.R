@@ -22,26 +22,26 @@ qusageRun<-function(cnts_mt=NULL,gmt.path="~/Documents/Arkas-Paper-Data/MSigDB/M
   cnts_pL2<-cnts_mt[which(rownames(cnts_mt)!=""),]
   ##collapse duplicated gene names with unique EnsIDs
     if(any(duplicated(rownames(cnts_pL2)))){
-     message("found duplicated hgnc names with differen EnsG ids")
-  
+     stop("found duplicated hgnc names with differen EnsG ids please getGenes...\n")
+      }
     #filter duplicate gene names and then collapse the dupes 
-    dupes<-rownames(cnts_pL2)[which(duplicated(rownames(cnts_pL2))==TRUE)]
-    cnts_pL3<-cnts_pL2[which(duplicated(rownames(cnts_pL2))==FALSE),]
-    cnts_pL3<-as.data.frame(cnts_pL3,stringsAsFactors=FALSE)
-   stopifnot(nrow(cnts_pL3)+length(dupes) ==nrow(cnts_pL2))
-    for(i in 1:length(dupes)){
-     dd.id<-which(rownames(cnts_pL2)==dupes[i])
-     if(length(dd.id)<=1){
-      next
-     }
-    dd<-cnts_pL2[rownames(cnts_pL2)==dupes[i],]
-    d3<-data.frame(t(colSums(dd)),row.names=unique(rownames(dd)))
-    cnts_pL3<-rbind(cnts_pL3,d3)
-   }
-  } else{
-   cnts_pL3<-cnts_pL2
-   } 
-
+#    dupes<-rownames(cnts_pL2)[which(duplicated(rownames(cnts_pL2))==TRUE)]
+#    cnts_pL3<-cnts_pL2[which(duplicated(rownames(cnts_pL2))==FALSE),]
+#    cnts_pL3<-as.data.frame(cnts_pL3,stringsAsFactors=FALSE)
+#   stopifnot(nrow(cnts_pL3)+length(dupes) ==nrow(cnts_pL2))
+#    for(i in 1:length(dupes)){
+#     dd.id<-which(rownames(cnts_pL2)==dupes[i])
+#     if(length(dd.id)<=1){
+#      next
+#     }
+#    dd<-cnts_pL2[rownames(cnts_pL2)==dupes[i],]
+#    d3<-data.frame(t(colSums(dd)),row.names=unique(rownames(dd)))
+#    cnts_pL3<-rbind(cnts_pL3,d3)
+#   }
+#  } else{
+#   cnts_pL3<-cnts_pL2
+#   } 
+ cnts_pL3<-cnts_pL2
  
   qs.results<-qusage(cnts_pL3,labels,contrast,geneSets,pairVector=pairs.id)
   #print(contrast)

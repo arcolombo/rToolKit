@@ -45,7 +45,7 @@ annotateDrivers<-function(dbname=NULL,dbPath=".",consensus=c("Alu","ERVK","ERV3"
 #' 
 #' @return  entrez_id values for the genes, where found
 #'
-#'
+#' @export
 getEntrezIDs <- function(gxs, species) { # {{{
   org <- getOrgDetails(species)
   library(org$package, character.only=TRUE)
@@ -66,7 +66,7 @@ getEntrezIDs <- function(gxs, species) { # {{{
 #' add symbols for Ensembl genes
 #' @return  symbols for the genes, where found 
 #'
-#' 
+#' @export 
 getSymbols <- function(gxs, species) { # {{{
   org <- getOrgDetails(species)
   library(org$package, character.only=TRUE)
