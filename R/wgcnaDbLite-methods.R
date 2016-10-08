@@ -238,4 +238,29 @@ setMethod("pathways", "qusageDbLite", function(x,Module.color=NULL,tx.Biotype=NU
  })
 
 
+setGeneric("kexpEnrich",function(x,contrast=NULL,p.value=NULL) standardGeneric("kexpEnrich"))
+
+#' @rdname wgcnaDbLite-class
+#' @description pathways will return the qusage enrichment pathway descriptions for a given entire kexp, not module specific, but every gene in te kexp. The contrast is to gather the enrichment data for the comparison either pHSC.vs.LSC (comparison=phsc) or Blast.vs.LSC (comparison=blast)  [lower case only!]
+#' @param x this is the SQLite db
+#' @param tx.Biotype enter hte module color if you want the full module enrichment, or a tx.biotype for a fixed trait
+#' @param contrast  either phsc or blast
+#' @export
+setMethod("kexpEnrich", "qusageDbLite", function(x,contrast=NULL,p.value=0.05) {
+
+ ##FIX ME: safety check for the input color using dbListTables,  signature
+  allcolors<-dbListTables(dbconn(x))
+  stopifnot(Module.color%in%allcolors ==TRUE)
+
+  #drivers are defined as the most significantly cross correlated genes
+
+  sql<-paste0("select * from kexp where colorKey='kexp' and bioKey='kexp' and contrastKey='",contrast,"'")
+  res<-as.data.frame(dbGetQuery(dbconn(x),sql))
+  res<-res[which(res$p.Value<p.value),]
+  return(res)
+
+ })
+
+
+
 ###FIX ME: add a consensus pathways function
