@@ -22,6 +22,16 @@ wgcna_plotAll_dendrograms<-function(bwnet=bwnet,net=NULL,whichWGCNA=c("single","
                     addGuide = TRUE, guideHang = 0.05)
    readkey()
     }
+   pdf("allBlockDendroGrams.pdf",width=12,height=12)
+     for(i in 1:length(bwnet$dendrograms)){
+     plotDendroAndColors(bwnet$dendrograms[[i]],
+                      bwModuleColors[bwnet$blockGenes[[i]]],
+                    "Module colors",
+                     main =paste0("Gene dendrogram and module colors in block ",i),
+                    dendroLabels = FALSE, hang = 0.03,
+                    addGuide = TRUE, guideHang = 0.05)
+     }
+  dev.off()
   } else {
 
  for(i in 1:length(net$dendrograms)){
@@ -33,6 +43,17 @@ wgcna_plotAll_dendrograms<-function(bwnet=bwnet,net=NULL,whichWGCNA=c("single","
                     addGuide = TRUE, guideHang = 0.05)
    readkey()
     }
+
+  pdf("allSingleDendroGrams.pdf",width=12,height=12)
+   for(i in 1:length(net$dendrograms)){
+     plotDendroAndColors(net$dendrograms[[i]],
+                      bwModuleColors[net$blockGenes[[i]]],
+                    "Module colors",
+                     main =paste0("Gene dendrogram and module colors in block ",i),
+                    dendroLabels = FALSE, hang = 0.03,
+                    addGuide = TRUE, guideHang = 0.05)
+     }
+  dev.off()
   }
 
 } #main
