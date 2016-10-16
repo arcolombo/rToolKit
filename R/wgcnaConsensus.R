@@ -1,6 +1,7 @@
-#' @title runs a network analysis at the gene level to investigate repeat initiating pathways 
-#' @description running WGNCA could find the gene correlation patterns to infer a relationship behind repeat activation. This uses the recommended 'biocor' function which is a bi-weight mid-correlation calculation. For normalization, the default uses tmm normalization and a log2 transformation for each cpm for genes, and repeat txBiotypes in the *same* way but on separate calls (this seems ok intuitively).  We use 'signed' networks based on the FAQ.  This will create the blockwise/single module data frame and run the soft-thresholding and create a correlation heatmap.  the downstream method is wgcna_analsyis which investigates specific module color and specific biotype.
-#' @param kexp a kexp 2 group stage is preferred
+#' @title runs a consensus network analysis at the gene level to investigate repeat initiating pathways 
+#' @description runs WGNCA consensus analysis could find the gene correlation patterns to infer a relationship behind repeat activation. This uses the recommended 'biocor' function which is a bi-weight mid-correlation calculation. For normalization, the default uses tmm normalization and a log2 transformation for each cpm for genes, and repeat txBiotypes in the *same* way but on separate calls (this seems ok intuitively).  We use 'signed' networks based on the FAQ.  This will create the blockwise/single consensus module data frame and run the soft-thresholding and create a correlation heatmap.  the downstream method is wgcna_analsyis which investigates specific module color and specific biotype. Note this inputs 2 kallistoExperiments and creates a multiExpression structure as a necessary pre-processing step for blockWiseConsensus network call. 
+#' @param kexp1 a kexp one group stage is preferred
+#' @param kexp2 a kexp for consensus analysis
 #' @param read.cutoff integer floor filter
 #' @param minBranch integer for cluter min
 #' @param whichWGCNA character single or block analysis, block is more sensitive
@@ -13,36 +14,84 @@
 #' @import edgeR
 #' @export
 #' @return images and cluster at the gene and repeat level
-wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE,species=c("Homo.sapiens","Mus.musculus"),selectedPower=NULL,intBiotypes=c("Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","L1","L2","LTR Retrotransposon","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE){
+wgcnaConsensus<-function(kexp1,kexp2,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE,species=c("Homo.sapiens","Mus.musculus"),selectedPower=NULL,intBiotypes=c("Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","L1","L2","LTR Retrotransposon","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,setLabels=c("kexp1","kexp2")){
   ##FIX ME: add option for TPMs as well as  CPM. Add TPM support
   
-  ##prepare data
+  ##prepare kexp1 and kexp2 for multiExpr data list
   whichWGCNA<-match.arg(whichWGCNA,c("single","block"))
   species<-match.arg(species,c("Homo.sapiens","Mus.musculus"))
   
+  shortLabels<-c("Buenrostro","TCGA")
   ###rows must be SAMPLES columns genes
-  cpm<-collapseBundles(kexp,"gene_id",read.cutoff=read.cutoff)
-  cpm<-cpm[!grepl("^ERCC",rownames(cpm)),]
-  rexp<-findRepeats(kexp)
-  rpm<-collapseBundles(rexp,"tx_biotype",read.cutoff=read.cutoff) 
-  rpm<-rpm[!grepl("^ERCC",rownames(rpm)),]
+  cpm1<-collapseBundles(kexp1,"gene_id",read.cutoff=read.cutoff)
+  cpm1<-cpm1[!grepl("^ERCC",rownames(cpm1)),]
+  cpm2<-collapseBundles(kexp2,"gene_id",read.cutoff=read.cutoff)
+  cpm2<-cpm2[!grepl("^ERCC",rownames(cpm2)),]
+  ##for a consensus network analysis to work you can only examine common genes between kexp 1 and kexp2
+  if(nrow(cpm1)<=nrow(cpm2)){
+  id<-match(rownames(cpm1),rownames(cpm2))
+  cpm2<-cpm2[id,]
+  } else{
+    id<-match(rownames(cpm1),rownames(cpm2))
+   cpm1<-cpm1[id,] 
+ }
+  stopifnot(all(rownames(cpm1)%in%rownames(cpm2))==TRUE)
+####FIX ME: not sure how to deal with two different trait data sets.
+ # rexp1<-findRepeats(kexp1)
+ # rpm<-collapseBundles(rexp,"tx_biotype",read.cutoff=read.cutoff) 
+ # rpm<-rpm[!grepl("^ERCC",rownames(rpm)),]
  if(tmm.norm==TRUE){
-  d<-DGEList(counts=cpm)
-  cpm.norm<-cpm(d,normalized.lib.sizes=TRUE)
-  cpm<-cpm.norm
-  cpm.norm<-NULL
-  rd<-DGEList(counts=rpm)
-  rdm.norm<-cpm(rd,normalized.lib.sizes=TRUE)
-  rpm<-rdm.norm
-  rdm.norm<-NULL
+  d1<-DGEList(counts=cpm1)
+  cpm.norm1<-cpm(d1,normalized.lib.sizes=TRUE)
+  cpm1<-cpm.norm1
+  cpm.norm1<-NULL
+  #rd<-DGEList(counts=rpm)
+  #rdm.norm<-cpm(rd,normalized.lib.sizes=TRUE)
+  #rpm<-rdm.norm
+  #rdm.norm<-NULL
+  d2<-DGEList(counts=cpm2)
+  cpm.norm2<-cpm(d2,normalized.lib.sizes=TRUE)
+  cpm2<-cpm.norm2
+  cpm.norm2<-NULL
   }#tmm norm
-  cpm<-log2(1+cpm) ##log2 transform recommended of genes
-  rpm<-log2(1+rpm) ##log2 transform of repeats.
-  #split out repeats
-  datExpr0<-t(cpm)
-  gsg<-goodSamplesGenes(datExpr0,verbose=3)
+  cpm1<-log2(1+cpm1) ##log2 transform recommended of genes kexp1
+  cpm2<-log2(1+cpm2) ##log2 transform of genes kexp2
+  
+  # Form multi-set expression data: columns starting from 9 contain actual expression data.
+  multiExpr = vector(mode = "list", length = 2)
+  multiExpr[[1]] = list(data = as.data.frame(t(cpm1)));
+  names(multiExpr[[1]]$data) = rownames(cpm1);
+  rownames(multiExpr[[1]]$data) = colnames(cpm1)   ;
+  multiExpr[[2]] = list(data = as.data.frame(t(cpm2)));
+  names(multiExpr[[2]]$data) = rownames(cpm2);
+  rownames(multiExpr[[2]]$data) = colnames(cpm2);
+  # Check that the data has the correct format for many functions operating on multiple sets:
+  exprSize = checkSets(multiExpr)
+  print(exprSize)
+  
+  gsg<-goodSamplesGenesMS(multiExpr,verbose=3)
   ##rows must be SAMPLES columns repeats
- 
+  
+
+if (!gsg$allOK)
+{
+  # Print information about the removed genes:
+  if (sum(!gsg$goodGenes) > 0)
+    printFlush(paste("Removing genes:", paste(names(multiExpr[[1]]$data)[!gsg$goodGenes], 
+                                              collapse = ", ")))
+  for (set in 1:exprSize$nSets)
+  {
+    if (sum(!gsg$goodSamples[[set]]))
+      printFlush(paste("In set", setLabels[set], "removing samples",
+                       paste(rownames(multiExpr[[set]]$data)[!gsg$goodSamples[[set]]], collapse = ", ")))
+    # Remove the offending genes and samples
+    multiExpr[[set]]$data = multiExpr[[set]]$data[gsg$goodSamples[[set]], gsg$goodGenes];
+  }
+  # Update exprSize
+  exprSize = checkSets(multiExpr)
+}
+###########
+
   if(useAllBiotypes==FALSE){
   #select columns of intBiotypes
    stopifnot(is.null(intBiotypes)==FALSE)
@@ -54,16 +103,7 @@ wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),en
   stopifnot(nrow(datExpr0)==nrow(datTraits))
   ##the rows of each clinical/trait/repeat data must match both objects
   
-if (!gsg$allOK)
-{
-  # Optionally, print the gene and sample names that were removed:
-  if (sum(!gsg$goodGenes)>0) 
-     printFlush(paste("Removing genes:", paste(names(datExpr0)[!gsg$goodGenes], collapse = ", ")));
-  if (sum(!gsg$goodSamples)>0) 
-     printFlush(paste("Removing samples:", paste(rownames(datExpr0)[!gsg$goodSamples], collapse = ", ")));
-  # Remove the offending genes and samples from the data:
-  datExpr0 = datExpr0[gsg$goodSamples, gsg$goodGenes]
-}
+
 
 
 

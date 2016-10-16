@@ -3,7 +3,7 @@
 #' @import qusage
 #' @export
 #' @return enrichment data set
-qusageRun<-function(cnts_mt=NULL,gmt.path="~/Documents/Arkas-Paper-Data/MSigDB/MsigDb_all/",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),comparison="pHSC",control="LSC",module=NULL,plotTable=FALSE){
+qusageRun<-function(cnts_mt=NULL,gmt.path="~/Documents/Arkas-Paper-Data/MSigDB/MsigDb_all/",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),comparison="pHSC",control="LSC",module=NULL,plotTable=FALSE,paired=TRUE){
  
 ##create labels from colnames
   cN<-colnames(cnts_mt)
@@ -13,9 +13,10 @@ qusageRun<-function(cnts_mt=NULL,gmt.path="~/Documents/Arkas-Paper-Data/MSigDB/M
 
 
 ##create patient pairs 
+   if(paired==TRUE){
    pairs<-unlist(lapply(cN,function(x) x[2]))
    pairs.id<-match(toupper(pairs),toupper(pairs))
-
+  } 
 ##read MSigDB selection from input
   geneSet<-match.arg(MsigDB,c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"))
   geneSets<-read.gmt(paste0(gmt.path,"/",geneSet))
@@ -25,7 +26,11 @@ qusageRun<-function(cnts_mt=NULL,gmt.path="~/Documents/Arkas-Paper-Data/MSigDB/M
      stop("found duplicated hgnc names with differen EnsG ids please getGenes...\n")
       } 
  cnts_pL3<-cnts_pL2
+  if(paired==TRUE){
  qs.results<-qusage(cnts_pL3,labels,contrast,geneSets,pairVector=pairs.id)
+  } else{
+  qs.results<-qusage(cnts_pL3,labels,contrast,geneSets)
+  }
   #print(contrast)
   #print(qsTable(qs.results,number=40 ))
   if(plotTable==TRUE){

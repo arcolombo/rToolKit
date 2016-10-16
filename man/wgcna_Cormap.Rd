@@ -4,10 +4,21 @@
 \alias{wgcna_Cormap}
 \title{produces a correlation map given wgcna network data}
 \usage{
-wgcna_Cormap(lnames, read.cutoff = 2, plotDot = FALSE, recalc = FALSE)
+wgcna_Cormap(lnames, read.cutoff = 2, plotDot = FALSE, recalc = FALSE,
+  targets = NULL, orderBiotype = "Alu")
 }
 \arguments{
+\item{lnames}{this is the results from wgcna.R}
+
 \item{read.cutoff}{integer for min cutoff}
+
+\item{plotDot}{boolean this plots the median correlation score for each biotypes in a line plot}
+
+\item{recalc}{boolean if truen then will recalculate the bicor and pvalues}
+
+\item{targets}{this is a character vector of modules of interest to subset the corMap}
+
+\item{orderBiotype}{either Alu or L1.}
 }
 \value{
 images of eigengenes

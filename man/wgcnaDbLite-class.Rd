@@ -4,6 +4,7 @@
 \name{wgcnaDbLite-class}
 \alias{dbconn,wgcnaDbLite-method}
 \alias{drivers,wgcnaDbLite-method}
+\alias{kexpEnrich,qusageDbLite-method}
 \alias{metadata,wgcnaDbLite-method}
 \alias{modulesBy,wgcnaDbLite-method}
 \alias{pathways,qusageDbLite-method}
@@ -31,6 +32,8 @@
 
 \S4method{pathways}{qusageDbLite}(x, Module.color = NULL, tx.Biotype = NULL,
   contrast = NULL, p.value = 0.05)
+
+\S4method{kexpEnrich}{qusageDbLite}(x, contrast = NULL, p.value = 0.05)
 }
 \arguments{
 \item{x}{wgcnaDblite SQL-lite database instance}
@@ -74,6 +77,12 @@
 \item{x}{this is the SQLite db}
 
 \item{Module.color}{this is a selected table in the db, a module color}
+
+\item{x}{this is the SQLite db}
+
+\item{tx.Biotype}{enter hte module color if you want the full module enrichment, or a tx.biotype for a fixed trait}
+
+\item{contrast}{either phsc or blast}
 }
 \description{
 A parent class for wgcna databases including annotations
@@ -87,6 +96,8 @@ traitsBy will return significant Gene cross correlations  between a trait and mo
 we define a 'driver' of a module~trait association as the set of all genes shared amongst correlated sets with a significance. also for the intersected genes across traits, the correlation scores for each gene are averages, along with the p.values so that the intersection 'driver' list will have an average correlation score, and an average p.value for a driver association across sets of traits.
 
 pathways will return the qusage enrichment pathway descriptions for a given module color.  if you want the entire module enrichment then the Module.color and tx.Biotype must also be a color.  if you want specific traits of interest then set the tx.biotype to the trait.  the contrast is to gather the enrichment data for the comparison either pHSC.vs.LSC (comparison=phsc) or Blast.vs.LSC (comparison=blast)  [lower case only!]
+
+pathways will return the qusage enrichment pathway descriptions for a given entire kexp, not module specific, but every gene in te kexp. The contrast is to gather the enrichment data for the comparison either pHSC.vs.LSC (comparison=phsc) or Blast.vs.LSC (comparison=blast)  [lower case only!]
 }
 \section{Slots}{
 

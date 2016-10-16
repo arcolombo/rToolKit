@@ -247,14 +247,7 @@ setGeneric("kexpEnrich",function(x,contrast=NULL,p.value=NULL) standardGeneric("
 #' @param contrast  either phsc or blast
 #' @export
 setMethod("kexpEnrich", "qusageDbLite", function(x,contrast=NULL,p.value=0.05) {
-
- ##FIX ME: safety check for the input color using dbListTables,  signature
-  allcolors<-dbListTables(dbconn(x))
-  stopifnot(Module.color%in%allcolors ==TRUE)
-
-  #drivers are defined as the most significantly cross correlated genes
-
-  sql<-paste0("select * from kexp where colorKey='kexp' and bioKey='kexp' and contrastKey='",contrast,"'")
+ sql<-paste0("select * from kexp where colorKey='kexp' and bioKey='kexp' and contrastKey='",contrast,"'")
   res<-as.data.frame(dbGetQuery(dbconn(x),sql))
   res<-res[which(res$p.Value<p.value),]
   return(res)

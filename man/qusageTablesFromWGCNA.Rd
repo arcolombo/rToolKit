@@ -5,18 +5,32 @@
 \alias{qusageTablesFromWGCNA}
 \title{qusage enrichme modules returned from WGCNA.  the goal is to then select a MSigDB gmt and take the module.tx_biotype of interest and create a corresponding qusage enrichment database.}
 \usage{
-qusageTablesFromWGCNA(kexp, useBiCor = TRUE, verbose = TRUE,
-  dbname = "wgcnaDBLite.sqlite", annotate = TRUE, version = "1.0.0",
-  Module.color = "brown", MsigDB = c("c1.all.v5.1.symbols.gmt",
-  "c2.all.v5.1.symbols.gmt", "c4.all.v5.1.symbols.gmt",
-  "c5.all.v5.1.symbols.gmt", "c6.all.v5.1.symbols.gmt",
-  "c7.all.v5.1.symbols.gmt", "h.all.v5.1.symbols.gmt"), comparison = "pHSC",
-  control = "LSC", how = c("cpm", "tpm"))
+qusageTablesFromWGCNA(kexp, verbose = TRUE, dbname = "wgcnaDBLite.sqlite",
+  version = "1.0.0", Module.color = "brown",
+  MsigDB = c("c1.all.v5.1.symbols.gmt", "c2.all.v5.1.symbols.gmt",
+  "c4.all.v5.1.symbols.gmt", "c5.all.v5.1.symbols.gmt",
+  "c6.all.v5.1.symbols.gmt", "c7.all.v5.1.symbols.gmt",
+  "h.all.v5.1.symbols.gmt"), how = c("cpm", "tpm"),
+  species = c("Homo.sapiens", "Mus.musculus"))
 
 qusageDbLiteMetadata(kexp, packageName, species = NULL, Ensmbl, how = how)
 }
 \arguments{
 \item{kexp}{the kexp should have pHSC, LSC and blast.}
+
+\item{verbose}{boolean for std out}
+
+\item{dbname}{this is the db name for wgcnaDbLite with correlation db}
+
+\item{version}{character, for the metadata information}
+
+\item{Module.color}{this is a color needed to grab the trait names}
+
+\item{MsigDB}{which db to use}
+
+\item{how}{either cpm or tpm}
+
+\item{species}{either Homo.sapiesn or Mus.musculus}
 
 \item{packageName}{the name of the annotation package to be built}
 
@@ -25,6 +39,8 @@ qusageDbLiteMetadata(kexp, packageName, species = NULL, Ensmbl, how = how)
 \item{sourceFile}{name of FASTA file(s) whence it was built, as a string}
 }
 \value{
+a qusageDbLite db
+
 a data.frame of metadata suitable for cramming into the database
 }
 \section{Functions}{

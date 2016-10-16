@@ -2,19 +2,21 @@
 % Please edit documentation in R/qusageDbLite.R
 \name{qusageDbLite}
 \alias{qusageDbLite}
-\title{Constructor for an qusageDbLite object.}
+\title{Create a wgcnaDbLite object (usually called by subclass constructors)}
 \usage{
-qusageDbLite(x, ...)
+qusageDbLite(x, path = ".", ...)
 }
 \arguments{
-\item{x}{the name of the sqlite file}
+\item{x}{an annotation instance of wgcnaDbLite}
 
-\item{...}{any additional arguments relating to ENSEMBL annotation database.}
+\item{path}{where it lives (default: ".")}
+
+\item{...}{additional parameters}
 }
 \value{
-an qusageDbLite object.
+a TxDbLite object
 }
 \description{
-Constructor for an qusageDbLite object.
+Create a wgcnaDbLite object (usually called by subclass constructors)
 }
 

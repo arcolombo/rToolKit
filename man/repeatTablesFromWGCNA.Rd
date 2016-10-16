@@ -53,7 +53,7 @@ symbols for the genes, where found
 a data.frame of metadata suitable for cramming into the database
 }
 \description{
-after WGCNA creates a data object post networking and partitioning of data tables can add structure to the many gene~module and gene~trait correlations both including student-t and exact Fisher p.values with Gene annotations.  The tables created will be one table for each gene~module collection, and one table for each gene~trait collection with annotations.   FIX ME: there must be accessing methods for these tables.
+after WGCNA creates a data object post networking and partitioning of data tables can add structure to the many gene~module and gene~trait correlations both including student-t and exact Fisher p.values with Gene annotations.  The tables created will be one table for each gene~module collection, and one table for each gene~trait collection with annotations. NOTE: wgcna.R needs to be called and the network object needs to be created prior the database tables.
 }
 \section{Functions}{
 \itemize{
