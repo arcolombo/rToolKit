@@ -1,5 +1,5 @@
 #' @title stage wise analysis of clonal expression using TMM normalization
-#' @description stage level differential expression for global monotonicity analysis using TMM library normalization
+#' @description stage level differential expression for global monotonicity analysis using TMM library normalization this analyzes repeat elements only.
 #' @param kexp a kallisto expriment at the repeat level stage  
 #' @param stage1 first stage
 #' @param stage2 second stage
@@ -83,7 +83,34 @@ stageWiseAnalysis<-function(kexp,stage1="pHSC",stage2="LSC",stage3="Blast",read.
   ###delta2 PVal and adj.P.Val
  plotFrequency(Blast.v.LSC,topNames=rownames(top.stage2.PVal),topDE=top.stage2.PVal,whichDelta="delta2",p.cutoff=p.value)
   plotFrequency(Blast.v.LSC,topNames=rownames(top.stage2.adj),topDE=top.stage2.adj,whichDelta="delta2",p.cutoff=p.value,isAdjusted=TRUE)
-  } else if(byLevel=="tx_biotype") {
+ 
+ pdf("stageWiseAnalysis_RepeatElements.pdf")
+   layout(mat=matrix(c(1,2),ncol=2,byrow=TRUE))
+  beeswarm(asinh(top.stage1.PVal$logFC), main=expression(paste(Delta,"(pHSC,LSC)  TMM Norm")),xlab=paste0("LSC-pHSC p.val",p.value) )
+  par(new=TRUE)
+  boxplot(asinh(top.stage1.PVal$logFC),medcol="red",boxcol="red",whiskcol="red")
+  axis(side=4)
+  beeswarm(asinh(top.stage2.PVal$logFC),main=expression(paste(Delta,"(LSC,Blast)  TMM Norm")),xlab=paste0("Blast-LSC p.val",p.value))
+  par(new=TRUE)
+  boxplot(asinh(top.stage2.PVal$logFC),medcol="red",boxcol="red",whiskcol="red")
+ ##based on adj.Pval  FDR "BH"
+  layout(mat=matrix(c(1,2),ncol=2,byrow=TRUE))
+  beeswarm(asinh(top.stage1.adj$logFC), main=expression(paste(Delta,"(pHSC,LSC)  TMM Norm BH")),xlab=paste0("LSC-pHSC p.val",p.value) )
+  par(new=TRUE)
+  boxplot(asinh(top.stage1.adj$logFC),medcol="red",boxcol="red",whiskcol="red")
+  axis(side=4)
+
+  beeswarm(asinh(top.stage2.adj$logFC),main=expression(paste(Delta,"(LSC,Blast)  TMM Norm BH")),xlab=paste0("Blast-LSC p.val",p.value))
+  par(new=TRUE)
+  boxplot(asinh(top.stage2.adj$logFC),medcol="red",boxcol="red",whiskcol="red")
+ ###plot the frequency
+  plotFrequency(LSC.v.pHSC,topNames=rownames(top.stage1.PVal),topDE=top.stage1.PVal,whichDelta="delta1",p.cutoff=p.value,isAdjusted=FALSE)
+  plotFrequency(LSC.v.pHSC,topNames=rownames(top.stage1.adj),topDE=top.stage1.adj,whichDelta="delta1",p.cutoff=p.value,isAdjusted=TRUE)
+  ###delta2 PVal and adj.P.Val
+ plotFrequency(Blast.v.LSC,topNames=rownames(top.stage2.PVal),topDE=top.stage2.PVal,whichDelta="delta2",p.cutoff=p.value)
+  plotFrequency(Blast.v.LSC,topNames=rownames(top.stage2.adj),topDE=top.stage2.adj,whichDelta="delta2",p.cutoff=p.value,isAdjusted=TRUE)
+  dev.off()
+ } else if(byLevel=="tx_biotype") {
   #find DE of Tx Dbiotypes for each stage
      delta1_tx_fit<-fitTxBiotypes(LSC.v.pHSC,design=metadata(LSC.v.pHSC)$design)
     delta1_tx_top<- topTable(delta1_tx_fit$fit,n=nrow(LSC.v.pHSC),p.value=p.value)
@@ -100,7 +127,7 @@ stageWiseAnalysis<-function(kexp,stage1="pHSC",stage2="LSC",stage3="Blast",read.
   par(new=TRUE)
   boxplot(asinh(delta2_tx_top$logFC),medcol="red",boxcol="red",whiskcol="red")
   readkey()
- } else { 
+  } else { 
    #gene biotype DE 
   message("not supporting Gene biotype expression")
 

@@ -13,7 +13,7 @@
 #' @import edgeR
 #' @export
 #' @return images and cluster at the gene and repeat level
-wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE,species=c("Homo.sapiens","Mus.musculus"),selectedPower=NULL,tmm.norm=TRUE,useBiCor=TRUE){
+wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE,species=c("Homo.sapiens","Mus.musculus"),selectedPower=NULL,tmm.norm=TRUE,useBiCor=TRUE,geneMEs=NULL){
   ##FIX ME: add option for TPMs as well as  CPM. Add TPM support
   
   ##prepare data

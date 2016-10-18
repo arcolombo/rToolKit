@@ -14,7 +14,7 @@
 #' @export 
 #' @return a list of all the monotonic ordinal groups  
 patientWiseAnalysis<-function(kexp,whichDE=c("cqn","poissonSeq","limma"),comparison="LSC",control="pHSC",whichDelta=c("delta1","delta2"),patientID="SU353", orderDE=TRUE){
-
+  ##FIX ME order monotonicity has a bug.
 whichDE<-match.arg(whichDE,c("cqn","poissonSeq","limma"))
   whichDelta<-match.arg(whichDelta,c("delta1","delta2"))
   if(whichDE=="poissonSeq"){
@@ -157,7 +157,7 @@ whichDE<-match.arg(whichDE,c("cqn","poissonSeq","limma"))
    plot.new()
    hist(res$fdr,main=paste0("FDR values for patient: ",patientID),xlab="FDR")
  ## ordinal grouping of topNames @pvalue
-   ####call plotMonotonicity
+   ####call monotonicity
    stageId1<-grep("pHSC",colnames(patient))
    stageId2<-grep("LSC",colnames(patient))
    stageId3<-grep("Blast",colnames(patient))

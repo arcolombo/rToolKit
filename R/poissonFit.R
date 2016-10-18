@@ -13,7 +13,7 @@ poissonFit<-function(kexp, bundleID="tx_id",cutoff=1,comparison="LSC",control="p
   whichDelta<-match.arg(whichDelta,c("delta1","delta2"))
 ##uses poissonSeq to fit the data. 
   kexp<-kexp2Group(kexp,comparison=comparison,control=control)
-  kexp<-omitSU583(kexp)
+  kexp<-omitRelapsed(kexp)
   cnts<-collapseBundles(kexp,"tx_id",read.cutoff=cutoff)
   seq.depth<-PS.Est.Depth(cnts)
   inDat<-list()
@@ -28,8 +28,10 @@ poissonFit<-function(kexp, bundleID="tx_id",cutoff=1,comparison="LSC",control="p
   inDat$y<-y
   inDat$type<-"twoclass"
   inDat$pair<-FALSE
+   para<-list()
+  para$trans<-FALSE
   inDat$gname<-rownames(cnts)
-  res<-PS.Main(inDat) 
+  res<-PS.Main(inDat,para) 
 ###it does class 2 vs class 1 2/1 ########### 
 
 drawDF(kexp,res=res,cutoff=cutoff,fromList=FALSE)

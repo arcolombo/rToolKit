@@ -31,11 +31,12 @@ beeColumns<-function(kexp,patientID=NULL,repeat_biotype=NULL,selected=20,what=c(
   } else {
   dataMat<-as.data.frame(tpm(kexp)[rep.names,])
   }
-
+  dataMat<-dataMat[which(rowSums(dataMat)/3>2),]
+  if(nrow(dataMat)>1){
   beeswarm(asinh(dataMat), pch=16,xlab=paste0(patientID," ",repeat_biotype),
   ylab=paste0(toupper(what), " Norm. ",how),cex=0.8)
   par(new=TRUE)
   boxplot(asinh(dataMat),medcol="red",boxcol="red",whiskcol="red")
   axis(side=4)
- 
+   }
 }

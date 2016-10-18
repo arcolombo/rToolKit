@@ -10,7 +10,7 @@
 #' @export
 #' @return returns NULL but plots cool stuff
 patientPlot_cpm_library_norm<-function(kexp,patientID=NULL,repeatType=NULL,normType=c("TMM","CQN","none")){
-  message("don't be a dumb-shit and run this without call tmmNorm")
+
  readkey<-function()
 {
     cat ("Press [enter] to continue")
