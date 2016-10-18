@@ -10,6 +10,7 @@ We are interested in analyzing the repeat patterns in Buenrostro clonal data of 
   From the Differential Expression list we observe down regulated expression in repeat elements of LSC compared to pHSC and Blast. 
 ```
   library(repeatToolKit)
+ setwd("/home/arcolombo/Documents/Arkas-Paper-Data/AML-bonemarrow-LSCs/patient-plot-data/")
   load("aml.RData")
   amlX<-kexpByStage(aml)
   patientPlot_cpm_library_norm(amlX,patientID="SU353",normType="TMM")
@@ -42,16 +43,16 @@ We observe that for Blast-LSC HALLMARK INFLAMMATORY RESPONSE has logFC 0.5028425
 # Samples Clustered By Gene Expression Correlate To Specific Repeat Elements
 Here we cluster samples based on gene expression profile hierarchial cluster, andsee that there are positive association of repeat elements of ALU, ERV1, ERV3,ERVL,ERVK, and LTR Retrotransposons to pHSC and Blast as a group.
 
-![Correlation and RE](/inst/images/TxBiotype_Correlation_Samples-1.png)
+![Correlation and RE](/inst/extdata/images/TxBiotype_Correlation_Samples-1.png)
 
 
 # Networked Genes have eigen-values Correlated with Specific Repeat Elements
 
 An adjacency matrix is created which stores correlations for each gene. A network is constructed by taking the nearest neighbors with respect to correlation values, and rowSums across the adjacency matrix return connectivity of each gene.  Here for the AML Clonal Stages we see that the module eigenvalues correspond to specific repeat types.  The gene modules positively correlated to ALU,ERV3,ERVK,ERVL and LTRs are positive Differentially expressed; and vice versa.  These genes which follow the correlation hypothesis make up about 12-16% of the DE list. 
 
-![Network Stages](/inst/images/correlation_plots-1.png)
+![Network Stages](/inst/extdata/images/correlation_plots-1.png)
 
-![Network TCGA](/inst/images/full_correlation_plots-1.png)
+![Network TCGA](/inst/extdata/images/full_correlation_plots-1.png)
 
 ![Network ISG and NK Ligands TCGA](/inst/images/TCGA_ISG_NKLIGANDS_correlation_plots-1.png)
 
@@ -69,13 +70,13 @@ and Salmon  HALLMARK INFLAMMATORY RESPONSE  logFC -2.19092170479266 p.value 0.01
 # PrepKit Analysis
 We observe that upon controlling for tree split level depth which determines a module size, repeat library for TCGA (polyA) is not as complex as for Buenrostro (nugen)
 
-![Buenrostro Gene Library](/inst/images/Module_choices-1.png)
+![Buenrostro Gene Library](/inst/extdata/images/Module_choices-1.png)
 
-![TCGA Gene Modules](/inst/images/Module_choices-2.png)
+![TCGA Gene Modules](/inst/extdata/images/Module_choices-2.png)
 
-![Buenrostro Repeat Nugen](/inst/images/Module_choices-3.png)
+![Buenrostro Repeat Nugen](/inst/extdata/images/Module_choices-3.png)
 
-![TCGA  Repeat PolyA](/inst/images/Module_choices-4.png)
+![TCGA  Repeat PolyA](/inst/extdata/images/Module_choices-4.png)
 
 
 We also observe however that repeat signals for both kits are near same.
