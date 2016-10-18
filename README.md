@@ -80,5 +80,5 @@ We observe that upon controlling for tree split level depth which determines a m
 
 
 We also observe however that repeat signals for both kits are near same.
-![TCGA  Repeat signals](/inst/images/TCGA_Buenrostro_RepeatSignals-1.png)
-![Buenrostro  Repeat Signals](/inst/images/TCGA_Buenrostro_RepeatSignals-2.png)
+![TCGA  Repeat signals](/inst/extdata/images/TCGA_Buenrostro_RepeatSignals-1.png)
+![Buenrostro  Repeat Signals](/inst/extdata/images/TCGA_Buenrostro_RepeatSignals-2.png)
