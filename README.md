@@ -42,5 +42,5 @@ We observe that for Blast-LSC HALLMARK INFLAMMATORY RESPONSE has logFC 0.5028425
 # Samples Clustered By Gene Expression Correlate To Specific Repeat Elements
 Here we cluster samples based on gene expression profile hierarchial cluster, andsee that there are positive association of repeat elements of ALU, ERV1, ERV3,ERVL,ERVK, and LTR Retrotransposons to pHSC and Blast as a group.
 
-![Correlation and RE](/home/arcolombo/Documents/Arkas-Paper-Data/AML-bonemarrow-LSCs/labMeeting/TxBiotype_Correlation_Samples-1.png)
+![Correlation and RE](TxBiotype_Correlation_Samples-1.png)
 
