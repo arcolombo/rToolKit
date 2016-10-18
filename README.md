@@ -33,7 +33,7 @@ We observe for pHSC-LSC HALLMARK INFLAMMATORY RESPONSE logFC 0.2034681, p.value 
 We observe that for Blast-LSC HALLMARK INFLAMMATORY RESPONSE has logFC 0.50284256 with a pvalue of 2.168942e-02 , FDR 4.016559e-02
  The activity of the inflammation is low for the entire cell types that were not cleared by the immune system (still alive).  we imagine that for dead cells that were cleared, the immune system epsilon near the event of clearance, the inflammatory response would be globally much higher. 
 ```
-  setwd(""/home/arcolombo/Documents/Arkas-Paper-Data/AML-bonemarrow-LSCs/patient-plot-data/wgcna_data/repeat_short_list_biotypes")
+  setwd("/home/arcolombo/Documents/Arkas-Paper-Data/AML-bonemarrow-LSCs/patient-plot-data/wgcna_data/repeat_short_list_biotypes")
  dbn<-"qusageDbLite.cpm.sqlite"
  kexpEnrich(qusageDbLite(dbn),contrast="phsc")
  kexpEnrich(qusageDbLite(dbn),contrast="blast")
@@ -42,19 +42,19 @@ We observe that for Blast-LSC HALLMARK INFLAMMATORY RESPONSE has logFC 0.5028425
  
 # Samples Clustered By Gene Expression Correlate To Specific Repeat Elements
 Here we cluster samples based on gene expression profile hierarchial cluster, andsee that there are positive association of repeat elements of ALU, ERV1, ERV3,ERVL,ERVK, and LTR Retrotransposons to pHSC and Blast as a group.
-
+Here we observe that Biotypes of repeat elements correspond to subtype of leukemic stages.
 ![Correlation and RE](/inst/extdata/images/TxBiotype_Correlation_Samples-1.png)
 
 
 # Networked Genes have eigen-values Correlated with Specific Repeat Elements
 
-An adjacency matrix is created which stores correlations for each gene. A network is constructed by taking the nearest neighbors with respect to correlation values, and rowSums across the adjacency matrix return connectivity of each gene.  Here for the AML Clonal Stages we see that the module eigenvalues correspond to specific repeat types.  The gene modules positively correlated to ALU,ERV3,ERVK,ERVL and LTRs are positive Differentially expressed; and vice versa.  These genes which follow the correlation hypothesis make up about 12-16% of the DE list. 
+An adjacency matrix is created which stores correlations for each gene. A network is constructed by taking the nearest neighbors with respect to correlation values, and rowSums across the adjacency matrix return connectivity of each gene.  Here for the AML Clonal Stages we see that the module eigenvalues are associated to specific repeat expression type.  The gene modules positively correlated to ALU,ERV3,ERVK,ERVL and LTRs are positive Differentially expressed; and vice versa.  These genes which follow the correlation make up about 12-16% of the DE list. 
 
 ![Network Stages](/inst/extdata/images/correlation_plots-1.png)
 
 ![Network TCGA](/inst/extdata/images/full_correlation_plots-1.png)
 
-![Network ISG and NK Ligands TCGA](/inst/images/TCGA_ISG_NKLIGANDS_correlation_plots-1.png)
+![Network ISG and NK Ligands TCGA](/inst/extdata/images/TCGA_ISG_NKLIGANDS_correlation_plots-1.png)
 
 Here we see that for the full stages we have a pattern linking Alu, ERVs and LTRs. however with TCGA Blasts,  Alu does not follow this pattern.  Instead we observe a contrast of ERV3,ERVK,ERVL, and LTRs contrasting L1.
 
