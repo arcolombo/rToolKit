@@ -51,7 +51,7 @@ An adjacency matrix is created which stores correlations for each gene. A networ
 
 ![Network Stages](/inst/images/correlation_plots-1.png)
 
-![Network TCGA](/inst/images/full_correlation-1.png)
+![Network TCGA](/inst/images/full_correlation_plots-1.png)
 
 ![Network ISG and NK Ligands TCGA](/inst/images/TCGA_ISG_NKLIGANDS_correlation_plots-1.png)
 
