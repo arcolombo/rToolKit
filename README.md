@@ -44,3 +44,18 @@ Here we cluster samples based on gene expression profile hierarchial cluster, an
 
 ![Correlation and RE](/inst/images/TxBiotype_Correlation_Samples-1.png)
 
+
+# Networked Genes have eigen-values Correlated with Specific Repeat Elements
+
+An adjacency matrix is created which stores correlations for each gene. A network is constructed by taking the nearest neighbors with respect to correlation values, and rowSums across the adjacency matrix return connectivity of each gene.  Here for the AML Clonal Stages we see that the module eigenvalues correspond to specific repeat types.  The gene modules positively correlated to ALU,ERV3,ERVK,ERVL and LTRs are positive Differentially expressed; and vice versa.  These genes which follow the correlation hypothesis make up about 12-16% of the DE list. 
+
+![Network Stages](/inst/images/correlation_plots-1.png)
+
+![Network TCGA](/inst/images/full_correlation-1.png)
+
+![Network ISG and NK Ligands TCGA](/inst/images/TCGA_ISG_NKLIGANDS_correlation_plots-1.png)
+
+Here we see that for the full stages we have a pattern linking Alu, ERVs and LTRs. however with TCGA Blasts,  Alu does not follow this pattern.  Instead we observe a contrast of ERV3,ERVK,ERVL, and LTRs contrasting L1.
+
+# Alu Clonal Stage and Inflammation
+For the Buenrostro data set, the genes that are positively correlated to Alu biotype expression are significantly differentially expressed between pHSC and LSC, and constitute pathway activity related to interferon signaling and inflammation response.
