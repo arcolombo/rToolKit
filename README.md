@@ -59,3 +59,10 @@ Here we see that for the full stages we have a pattern linking Alu, ERVs and LTR
 
 # Alu Clonal Stage and Inflammation
 For the Buenrostro data set, the genes that are positively correlated to Alu biotype expression are significantly differentially expressed between pHSC and LSC, and constitute pathway activity related to interferon signaling and inflammation response.
+
+ For instance in The Clonal AML stage the module-eigenGenes for 'brown' HALLMARK INFLAMMATORY RESPONSE  log FC 0.3886049 p.value 0.0119416829, FDR 0.045010959. 
+
+Contrastly, magenta has HALLMARK INFLAMMATORY RESPONSE   logFC -1.5359160784992, pvlue 0.000102450339573235 and FDR 0.00252385468360483.
+
+and Salmon  HALLMARK INFLAMMATORY RESPONSE  logFC -2.19092170479266 p.value 0.0114874231065614 and FDR 0.0344622693196841
+
