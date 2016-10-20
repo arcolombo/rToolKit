@@ -5,7 +5,7 @@
 \title{produces a correlation map given wgcna network data}
 \usage{
 wgcna_Cormap(lnames, read.cutoff = 2, plotDot = FALSE, recalc = FALSE,
-  targets = NULL, orderBiotype = "Alu")
+  targets = NULL, orderBiotype = "Alu", how = how)
 }
 \arguments{
 \item{lnames}{this is the results from wgcna.R}

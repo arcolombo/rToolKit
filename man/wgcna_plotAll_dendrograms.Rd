@@ -4,8 +4,8 @@
 \alias{wgcna_plotAll_dendrograms}
 \title{this plots all the dendrograms from a net or bwnet call}
 \usage{
-wgcna_plotAll_dendrograms(bwnet = bwnet, net = NULL,
-  whichWGCNA = c("single", "block"), bwModuleColors = NULL)
+wgcna_plotAll_dendrograms(bwnet = NULL, whichWGCNA = c("single", "block"),
+  bwModuleColors = NULL, bwLabels = NULL, how = "cpm", byWhich = "gene")
 }
 \arguments{
 \item{whichWGCNA}{single or block level analysis, block is a bit less rigid}

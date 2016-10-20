@@ -26,6 +26,6 @@ stageWiseAnalysis(kexp, stage1 = "pHSC", stage2 = "LSC", stage3 = "Blast",
 \item{fold.cutoff}{floor for logFC}
 }
 \description{
-stage level differential expression for global monotonicity analysis using TMM library normalization
+stage level differential expression for global monotonicity analysis using TMM library normalization this analyzes repeat elements only.
 }
 
