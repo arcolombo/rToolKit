@@ -1,5 +1,5 @@
-#' @title runs a network analysis at the gene level to investigate repeat initiating pathways 
-#' @description running WGNCA could find the gene correlation patterns to infer a relationship behind repeat activation. This uses the recommended 'biocor' function which is a bi-weight mid-correlation calculation. For normalization, the default uses tmm normalization and a log2 transformation for each cpm for genes, and repeat txBiotypes as phenotypic data in the *same* way but on separate calls (this seems ok intuitively).  We use 'signed' networks based on the FAQ.  This will create the blockwise/single module data frame and run the soft-thresholding and create a correlation heatmap.  the downstream method is wgcna_analsyis which investigates specific module color and specific biotype (phenotypic relationship)
+#' @title creates a network module at the repeat biotype level to investigate repeat initiating pathways 
+#' @description this differs from wgcna.R, where wgcna.R create phenotypic module analysis of genes and phenotypic repeat data.  wBiotypecna will run a single/block wise adjacency/correlation matrices of repeat biotypes into modules of transcripts and also returns an object ready for wgcnaDbLite that includes repeat phenotypic data. This uses the recommended 'biocor' function which is a bi-weight mid-correlation calculation. For normalization, the default uses tmm normalization and a log2 transformation for each cpm for genes,  We use 'signed' networks based on the FAQ.  This will create the blockwise/single module data frame and run the soft-thresholding and create a correlation heatmap.  the downstream method is wgcna_analsyis which investigates specific module color and specific biotype (phenotypic relationship).  tx_biotype is included as phenotypic data
 #' @param kexp a kexp 2 group stage is preferred
 #' @param read.cutoff integer floor filter
 #' @param minBranch integer for cluter min
@@ -13,22 +13,23 @@
 #' @import edgeR
 #' @export
 #' @return images and cluster at the gene and repeat level
-wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE,species=c("Homo.sapiens","Mus.musculus"),selectedPower=NULL,intBiotypes=c("Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","L1","L2","LTR Retrotransposon","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm")){
-  ##FIX ME: add option for TPMs as well as  CPM. Add TPM support
+wBiotypecna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),species=c("Homo.sapiens","Mus.musculus"),selectedPower=6,intBiotypes=c("Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","L1","L2","LTR Retrotransposon","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm")){
+  
    how<-match.arg(how,c("cpm","tpm"))
+   byWhich<-"repeat"
   ##prepare data
   whichWGCNA<-match.arg(whichWGCNA,c("single","block"))
   species<-match.arg(species,c("Homo.sapiens","Mus.musculus"))
-  byWhich<-"gene"  
+  rexp<-findRepeats(kexp)
+
 
   if(how=="cpm"){
-  ###rows must be SAMPLES columns genes
-  cpm<-collapseBundles(kexp,"gene_id",read.cutoff=read.cutoff)
+  cpm<-collapseBundles(rexp,"tx_biotype",read.cutoff=read.cutoff)
   cpm<-cpm[!grepl("^ERCC",rownames(cpm)),]
-  rexp<-findRepeats(kexp)
+  cpm<-cpm[!grepl("^ENS",rownames(cpm)),]
   rpm<-collapseBundles(rexp,"tx_biotype",read.cutoff=read.cutoff) 
   rpm<-rpm[!grepl("^ERCC",rownames(rpm)),]
- if(tmm.norm==TRUE){
+   if(tmm.norm==TRUE){
   d<-DGEList(counts=cpm)
   cpm.norm<-cpm(d,normalized.lib.sizes=TRUE)
   cpm<-cpm.norm
@@ -37,22 +38,23 @@ wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),en
   rdm.norm<-cpm(rd,normalized.lib.sizes=TRUE)
   rpm<-rdm.norm
   rdm.norm<-NULL
-  }#tmm norm
+  }#tmm.norm
   }else if(how=="tpm"){
-  cpm<-collapseTpm(kexp,"gene_id",read.cutoff=read.cutoff)
+  cpm<-collapseTpm(rexp,"tx_biotype",read.cutoff=read.cutoff)
   cpm<-cpm[!grepl("^ERCC",rownames(cpm)),]
-  rexp<-findRepeats(kexp)
+  cpm<-cpm[!grepl("^ENS",rownames(cpm)),]
   rpm<-collapseTpm(rexp,"tx_biotype",read.cutoff=read.cutoff)
   rpm<-rpm[!grepl("^ERCC",rownames(rpm)),]
   }
-  cpm<-log2(1+cpm) ##log2 transform recommended of genes
+  
+  cpm<-log2(1+cpm) 
   rpm<-log2(1+rpm) ##log2 transform of repeats.
-  #split out repeats
   datExpr0<-t(cpm)
-  gsg<-goodSamplesGenes(datExpr0,verbose=3)
+
+   gsg<-goodSamplesGenes(datExpr0,verbose=3)
   ##rows must be SAMPLES columns repeats
- 
-  if(useAllBiotypes==FALSE){
+  
+  if(useAllBiotypes==FALSE&&byWhich=="repeat"){
   #select columns of intBiotypes
    stopifnot(is.null(intBiotypes)==FALSE)
    rpm<-rpm[rownames(rpm)%in%intBiotypes,]
@@ -60,9 +62,8 @@ wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),en
   datTraits<-t(rpm)
   datTraits<-as.data.frame(datTraits)
   stopifnot(nrow(datExpr0)==nrow(datTraits))
-  ##the rows of each clinical/trait/repeat data must match both objects
-  
-if (!gsg$allOK)
+
+ if (!gsg$allOK)
 {
   # Optionally, print the gene and sample names that were removed:
   if (sum(!gsg$goodGenes)>0) 
@@ -82,7 +83,7 @@ if (!gsg$allOK)
   #pdf(file = "Plots/sampleClustering.pdf", width = 12, height = 9);
   par(cex = 0.6);
   par(mar = c(0,4,2,0))
-  plot(sampleTree, main = "Sample clustering to detect outliers", 
+  plot(sampleTree, main =paste0("Sample ",byWhich," clustering to detect outliers"), 
        sub="", 
       xlab="", cex.lab = 1.5, 
      cex.axis = 1.5, cex.main = 2)
@@ -97,30 +98,30 @@ if (!gsg$allOK)
 
 # clust 1 contains the samples we want to keep.
   keepSamples = (clust!=0)
-  print(paste0("samples to omit ",colnames(kexp)[which(keepSamples==FALSE)]))
+  print(paste0("samples to omit ",colnames(rexp)[which(keepSamples==FALSE)]))
   datExpr = datExpr0[keepSamples, ]
   nGenes = ncol(datExpr)
   nSamples = nrow(datExpr)
-  
-  if((nrow(datExpr)!=nrow(datExpr0))==TRUE){
+   if((nrow(datExpr)!=nrow(datExpr0))==TRUE){
  datTraits<-datTraits[keepSamples,]
   }
+ 
 # Re-cluster samples
   sampleTree2 = hclust(dist(datExpr), method = "average")
-  # Convert traits to a color representation: white means low, red means high, grey means missing entry
-  traitColors = numbers2colors(datTraits, signed = FALSE);
-# Plot the sample dendrogram and the colors underneath.
-  plotDendroAndColors(sampleTree2, traitColors,
-                    groupLabels = names(datTraits), 
-                    marAll=c(1,11,3,3),
-                    main=paste0("TxBiotype ",how," Correlation Samples")) 
-  readkey()   
-  pdf(paste0("TxBiotype_",how,"_Correlation_Samples.pdf"))
+   traitColors = numbers2colors(datTraits, signed = FALSE);
+
   plotDendroAndColors(sampleTree2, traitColors,
                     groupLabels = names(datTraits),
                     marAll=c(1,11,3,3),
-                    main=paste0("TxBiotype ",how," Correlation Samples") )
-  dev.off() 
+                    main="Repeat Module TxBiotype Correlation Samples")
+  readkey()
+  pdf("RepeatMM_TxBiotype_Correlation_Samples.pdf")
+  plotDendroAndColors(sampleTree2, traitColors,
+                    groupLabels = names(datTraits),
+                    marAll=c(1,11,3,3),
+                    main="Repeat Module TxBiotype Correlation Samples")
+  dev.off()
+
 # Choose a set of soft-thresholding powers
   if(is.null(selectedPower)==TRUE){
   powers = c(c(1:10), seq(from = 12, to=20, by=2))
@@ -131,36 +132,56 @@ if (!gsg$allOK)
   par(mfrow = c(1,2));
   cex1 = 0.9;
   # Scale-free topology fit index as a function of the soft-thresholding power
-  plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
-     xlab="Soft Threshold (power)",ylab="Scale Free Topology Model Fit,signed R^2",type="n",
-     main = paste("Scale independence"));
+  y<-( -sign(sft$fitIndices[,3])*sft$fitIndices[,2])
+  x<-sft$fitIndices[,1] 
+ plot(x,y,
+     xlab="Soft Threshold (power)",
+     ylab="Scale Free Topology Model Fit,signed R^2",
+     type='n',  
+   main = paste("Scale independence"));
   text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
      labels=powers,cex=cex1,col="red");
   # this line corresponds to using an R^2 cut-off of h
-  abline(h=0.90,col="red")
+  abline(h=0.80,col="red")
   # Mean connectivity as a function of the soft-thresholding power
   readkey()
-  plot(sft$fitIndices[,1], sft$fitIndices[,5],
+   y2<-sft$fitIndices[,5]
+  plot(x, y2,
      xlab="Soft Threshold (power)",ylab="Mean Connectivity", type="n",
      main = paste("Mean connectivity"))
-   text(sft$fitIndices[,1], sft$fitIndices[,5],
+   text(x, y2,
      labels=powers,cex=cex1,col="red");
+
   selectedPower<-readPower()
+  pdf("RepeatModule_soft_ThresholdPower.pdf")
+  plot(x,y,
+     xlab="RE Soft Threshold (power)",
+     ylab="RE Scale Free Topology Model Fit,signed R^2",
+     type='n',
+   main = paste("RE Scale independence"));
+  text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     labels=powers,cex=cex1,col="red");
+    abline(h=0.80,col="red")
+    y2<-sft$fitIndices[,5]
+  plot(x, y2,
+     xlab="RE Soft Threshold (power)",ylab="Mean Connectivity", type="n",
+     main = paste("RE Mean connectivity"))
+   text(x, y2,
+     labels=powers,cex=cex1,col="red");
+   dev.off()
+
   } #selectedPower NULL
   message("annotating...")
   datExpr<-as.data.frame(datExpr,stringsAsFactors=FALSE)
-  annot<-geneAnnotation(datExpr,datTraits,species=species)
-
-  if(entrezOnly==TRUE){
-  id<-!is.na(annot$entrezgene)
-  datExpr<-datExpr[,names(datExpr)%in%annot$ensembl_gene_id[id]]
-  probes2annot<-match(names(datExpr),annot$ensembl_gene_id)
-  stopifnot(sum(is.na(probes2annot))==0) ##no NA 
-  } else{
-  datExpr<-datExpr[,names(datExpr)%in%annot$ensembl_gene_id]
-  probes2annot<-match(names(datExpr),annot$ensembl_gene_id)
-  stopifnot(sum(is.na(probes2annot))==0) ##no NA 
-  }
+  ####### ensembl_gene_id  entrezgene hgnc_symbol description   add data here
+  annot<-as.data.frame(rowRanges(rexp))
+  txID<-grep("tx_biotype",colnames(annot))
+  entrezID<-grep("entrezid",colnames(annot))
+  geneID<-grep("gene_biotype",colnames(annot))
+  txBioID<-grep("biotype_class",colnames(annot))
+  annot<-annot[,c(txID,entrezID,geneID,txBioID)]
+  colnames(annot)<-c("ensembl_gene_id","entrezgene","hgnc_symbol","description")
+  annot$entrezgene<-"NA"
 
 
 
@@ -185,21 +206,21 @@ net = blockwiseModules(datExpr, power = selectedPower,
   bwModuleColors = labels2colors(net$colors)
   MEs = net$MEs; ##use the module network calculation, do not recalculate 2nd time
   #plots each gene tree one by one
-   wgcna_plotAll_dendrograms(bwnet=net,whichWGCNA="single",bwModuleColors=bwModuleColors,bwLabels=bwLabels,how=how,byWhich=byWhich)
+  wgcna_plotAll_dendrograms(bwnet=net,whichWGCNA="single",bwModuleColors=bwModuleColors,bwLabels=bwLabels,how=how,byWhich=byWhich)
   
   nGenes = ncol(datExpr);
   nSamples = nrow(datExpr);
   geneTree = net$dendrograms;
   if(useBiCor==TRUE){
-  moduleTraitCor<-bicor(MEs,datTraits)
+   moduleTraitCor<-bicor(MEs,datTraits)
   moduleTraitPvalue = bicorAndPvalue(MEs,datTraits,use="pairwise.complete.obs",alternative="two.sided")[["p"]]
-   modulePvalFisher<-corPvalueFisher(moduleTraitCor,nSamples)
+    modulePvalFisher<-corPvalueFisher(moduleTraitCor,nSamples)
   } else {
-  moduleTraitCor = cor(MEs, datTraits, use = "p");
+   moduleTraitCor = cor(MEs, datTraits, use = "p");
   moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples);
   modulePvalFisher<-corPvalueFisher(moduleTraitCor,nSamples)
   }
- 
+  
  lnames <-list(datExpr=datExpr,
             datTraits=datTraits,
             annot=annot,
@@ -212,7 +233,7 @@ net = blockwiseModules(datExpr, power = selectedPower,
             modulePvalFisher=modulePvalFisher,
             usedbiCor=useBiCor,
             how=how,
-            byWhich="gene")
+            byWhich=byWhich)
 } ##single block should have 1 module per datTraits column
   if(whichWGCNA=="block"){
 ##############BLOCK LEVEL ###################
@@ -244,7 +265,7 @@ net = blockwiseModules(datExpr, power = selectedPower,
   sizeGrWindow(6,6)
  ########################################################################
   ##plot gene tree one by one 
-  wgcna_plotAll_dendrograms(bwnet=bwnet,whichWGCNA="block",bwModuleColors=bwModuleColors,bwLabels=bwLabels,how=how,byWhich="gene")
+  wgcna_plotAll_dendrograms(bwnet=bwnet,whichWGCNA="block",bwModuleColors=bwModuleColors,bwLabels=bwLabels,how=how,byWhich=byWhich)
 # this line corresponds to using an R^2 cut-off of h
   # Recalculate MEs with color labels
   nGenes = ncol(datExpr);
@@ -252,15 +273,16 @@ net = blockwiseModules(datExpr, power = selectedPower,
   MEs0 = moduleEigengenes(datExpr, bwModuleColors)$eigengenes
   MEs = orderMEs(MEs0)
   if(useBiCor==TRUE){
-  moduleTraitCor<-bicor(MEs,datTraits)
-  moduleTraitPvalue = bicorAndPvalue(MEs,datTraits,use="all.obs",alternative="two.sided")[["p"]]
-  modulePvalFisher<-corPvalueFisher(moduleTraitCor,nSamples)
-
+   moduleTraitCor<-bicor(MEs,datTraits)
+  moduleTraitPvalue = bicorAndPvalue(MEs,datTraits,use="pairwise.complete.obs",alternative="two.sided")[["p"]]
+    modulePvalFisher<-corPvalueFisher(moduleTraitCor,nSamples)
   } else {
    moduleTraitCor = cor(MEs, datTraits, use = "p");
   moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples);
   modulePvalFisher<-corPvalueFisher(moduleTraitCor,nSamples)
-   }
+  }
+
+
   lnames<-list(datExpr=datExpr,
             datTraits=datTraits,
             annot=annot,
@@ -272,13 +294,10 @@ net = blockwiseModules(datExpr, power = selectedPower,
             moduleTraitPvalue=moduleTraitPvalue,
             modulePvalFisher=modulePvalFisher,
             biCor=useBiCor,
-            how=how, 
-            byWhich="gene")
+            how=how,
+            byWhich=byWhich)
   } ##by block
-  save(lnames,file=paste0("wgcna.",how,".dataInput.RData"),compress=TRUE)
-  dev.off()  
-# Display the correlation values within a heatmap plot
-  #wgcna_Cormap(lnames,read.cutoff=read.cutoff,plotDot=FALSE,how=how) 
-  return(lnames)
- 
-}#main
+  save(lnames,file=paste0("wgcna.",how,"_",byWhich,".dataInput.RData"),compress=TRUE)
+   cat("done.\n")
+   return(lnames)
+ }#main

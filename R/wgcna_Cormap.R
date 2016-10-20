@@ -9,7 +9,7 @@
 #' @import WGCNA
 #' @export
 #' @return images of eigengenes
-wgcna_Cormap<-function(lnames,read.cutoff=2,plotDot=FALSE,recalc=FALSE,targets=NULL,orderBiotype="Alu"){
+wgcna_Cormap<-function(lnames,read.cutoff=2,plotDot=FALSE,recalc=FALSE,targets=NULL,orderBiotype="Alu",how=how){
   orderBiotype<-match.arg(orderBiotype,c("Alu","L1"))
 if(is.null(lnames)==TRUE){
 load("wgcna.dataInput.RData")
@@ -72,7 +72,7 @@ message(paste0("found lnames"))
                yColorWidth=0.07,
                cex.lab.y=.7,
                colors.lab.y=1.3,
-               main = paste("Module-Repeat Biotype relationships"))
+               main = paste0("Module-Repeat ",how," Biotype relationships"))
 
 
   readkey()
@@ -85,7 +85,7 @@ message(paste0("found lnames"))
   axis(1,at=1:length(colorDF),labels=names(colorDF),las=2)
   readkey()
   } else {
-  pdf("correlation_plots.pdf",width=12,height=12)
+  pdf(paste0("correlation_",how,"_plots.pdf"),width=12,height=12)
     par(mar = c(11.5, 5, 3, 3));
     labeledHeatmap(Matrix = moduleTraitCor,
                xLabels = names(datTraits),
@@ -100,7 +100,7 @@ message(paste0("found lnames"))
                 yColorWidth=0.07,
                 cex.lab.y=.7,
                 colors.lab.y=1.3,
-                main = paste("Module-Repeat Biotype relationships"))
+                main = paste0("Module-Repeat ",how," Biotype relationships"))
   plot(colorDF,main="Median Correlation Per Module")
   axis(1,at=1:length(colorDF),labels=names(colorDF),las=2)
   dev.off()

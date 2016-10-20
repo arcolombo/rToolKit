@@ -1,7 +1,13 @@
 #' @title creates a WGCNA annotation package that includes many tables
-#' @description  after WGCNA creates a data object post networking and partitioning of data tables can add structure to the many gene~module and gene~trait correlations both including student-t and exact Fisher p.values with Gene annotations.  The tables created will be one table for each gene~module collection, and one table for each gene~trait collection with annotations. NOTE: wgcna.R needs to be called and the network object needs to be created prior the database tables.
-#' @param lnames is the saved object from wgcna.R that includes basic formatted data compatible with WGCNA, datExpr, datTraits, annot library etc. FIX ME: have this annotation library be independent of wgcna.R
+#' @description  after WGCNA creates a data object post networking and partitioning of data tables can add structure to the many gene~module and gene~trait correlations both including student-t and exact Fisher p.values with Gene annotations.  The tables created will be one table for each gene~module collection, and one table for each gene~trait collection with annotations. NOTE: wgcna.R needs to be called and the network object needs to be created prior the database tables.Further if you are not building a data base with phenotypic traits, then the datTraits will be NA.
+#' @param kexp any kexp doesn't matter, only use the metadata
+#' @param lnames is the saved object from wgcna.R that includes basic formatted data compatible with WGCNA, datExpr, datTraits, annot library etc. Note that datTraits will be NA if considering gene modules only.
 #' @param useBiCor boolean ,  if TRUE uses mid-correlation mid-weight robust to outliers
+#' @param verbose boolean true for std out
+#' @param dbname  character
+#' @param annotate boolean, for genes level set to TRUE, repeats set to FALSE
+#' @param version character for meta
+#' @param byWhich character 
 #' @importFrom Rsamtools indexFa index
 #' @importFrom Rsamtools scanFaIndex FaFile scanFa path
 #' @importFrom GenomeInfoDb seqnames
@@ -9,9 +15,9 @@
 #' @importFrom S4Vectors DataFrame
 #' @export
 #' @return a SQLlite Data base 
-repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="wgcnaDBLite",annotate=TRUE,version="1.0.0" ){
+repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="wgcnaDBLite",annotate=FALSE,version="1.0.0",byWhich=c("gene","repeat") ){
   
-
+   byWhich<-match.arg(byWhich,c("gene","repeat"))
    tnxomes<-transcriptomes(kexp)
    ##supporting only ENSEMBL
    tnxomes<-strsplit(tnxomes,",")
@@ -22,13 +28,17 @@ repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="w
   MEs<-lnames[["MEs"]]
   datExpr<-lnames[["datExpr"]]
   datTraits<-lnames[["datTraits"]]
+  sat.ID<-grep("satellite",colnames(datTraits),ignore.case=T)
+  if(length(sat.ID)>1){ 
+  colnames(datTraits)[sat.ID[1]]<-"satelliteBB"
+  }
+  how<-lnames[["how"]]
   if(annotate==FALSE){
   #if annotate is FALSE, then we use the default annotation data object, however the colnames need to be changed from lnames ensembl_gene_id to gene_id (crucual for uniformaity with dbLite.
   annot<-lnames[["annot"]]
   yy<-grep("ensembl_gene_id",colnames(annot))
   colnames(annot)[yy]<-"gene_id"
   }
-  MEs<-lnames[["MEs"]]
   moduleTraitCor<-lnames[["moduleTraitCor"]]
   moduleTraitPvalue<-lnames[["moduleTraitPvalue"]]
   modNames = substring(names(MEs), 3)
@@ -37,9 +47,10 @@ repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="w
   modNames<-substring(colnames(MEs),3)
   moduleColors<-bwModuleColors
 
+  
   weight<-as.data.frame(datTraits)
-
-  ##FIX ME: add organism
+  
+  if(byWhich=="gene"){ 
   if(any(grepl("^ENSG",colnames(datExpr)))){
    species<-"Homo.sapiens"
    packageName<-gsub("EnsDbLite","wgcnaDbLite",Ensmbl)
@@ -47,10 +58,11 @@ repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="w
   species<-"Mus.musculus"
   packageName<-gsub("EnsDbLite","wgcanDbLite",Ensmbl)
   }
-
-
-
-
+ } else{
+ cat("Homo.Sapiens supported for repeat tables...\n")
+    species<-"Homo.sapiens"
+   packageName<-gsub("EnsDbLite","wgcnaDbLite",Ensmbl)
+ }
 
  if(useBiCor==FALSE){
   ##finds correlation per gene in modules
@@ -108,7 +120,23 @@ repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="w
   stopifnot(all(rownames(annot)==names(symbolNames)[symbol.match]))
   annot$hgnc_symbol<-symbolNames[symbol.match]
   geneModuleDF<-cbind(geneModuleDF,annot)
- }
+ } else{
+  ##do not annotate namely for Repeat Elements
+  if(byWhich=="repeat"){
+  #for repeat we want the description in the annotation to be the hgnc_symbol, the description for wrcna is the tx biotype. more useful here
+  annotDF<-annot[rownames(annot)%in%rownames(geneModuleDF),]
+  gene.ID<-grep("gene_id",colnames(annotDF))
+  ent.ID<-grep("entrezgene",colnames(annotDF))
+  desc.ID<-grep("description",colnames(annotDF))
+  annotDF<-annotDF[,c(gene.ID,ent.ID,desc.ID)]
+  colnames(annotDF)<-c("gene_id","entrezid","hgnc_symbol")
+  entrez.match<-match(rownames(annotDF),rownames(geneModuleDF))
+  stopifnot(all(rownames(annotDF)==rownames(geneModuleDF[entrez.match,])))
+  geneModuleDF<-cbind(geneModuleDF,annotDF)
+  } else { 
+  stop("For gene repeat Tables please flag annotate as TRUE...\n")
+  }
+ } ##annotate as FALSE
 
 
 
@@ -123,7 +151,7 @@ repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="w
    modulesNeeded<-unique(moduleColors)
    modulePvalue.Needed<-colnames(geneModuleDF)[grep("p_MM",colnames(geneModuleDF))]
   stopifnot(length(modulesNeeded)==length(modulePvalue.Needed))
-  if(verbose) cat("Extracting Pheno-types of interest...")
+  if(verbose) cat("Extracting Pheno-types of interest...\n")
   traitsNeeded<-colnames(datTraits)
   geneTraitCorNeeded<-paste0("GCor_",traitsNeeded)
   pTraitNeeded<-paste0("p_GCor_",traitsNeeded)
@@ -158,7 +186,9 @@ repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="w
   Metadata <- wgcnaDbLiteMetadata(kexp,
                                packageName=packageName,
                                species=species,
-                               Ensmbl=Ensmbl)
+                               Ensmbl=Ensmbl,
+                               how=how,
+                               byWhich=byWhich)
  dbWriteTable(con, name="metadata", Metadata, overwrite=TRUE, row.names=FALSE)
 
 
@@ -231,7 +261,7 @@ getSymbols <- function(gxs, species) { # {{{
 #' @return a data.frame of metadata suitable for cramming into the database
 #'
 #' @export
-wgcnaDbLiteMetadata <- function(kexp,packageName,species=NULL,Ensmbl) { # {{{
+wgcnaDbLiteMetadata <- function(kexp,packageName,species=NULL,Ensmbl,how=how,byWhich=byWhich) { # {{{
 
   
   Ensmbl<-gsub(" ","",Ensmbl)
@@ -248,6 +278,8 @@ wgcnaDbLiteMetadata <- function(kexp,packageName,species=NULL,Ensmbl) { # {{{
   MetaData[6,] <- c("organism", species)
   MetaData[7,] <- c("kallistoVersion", kversion)
   MetaData[8,] <- c("sourceFile", sourceFile)
+  MetaData[9,]<- c("how",how)
+  MetaData[10,]<-c("which",byWhich)
   return(MetaData)
 
 } # }}}
