@@ -44,9 +44,9 @@ message(paste0("found lnames"))
   moduleTraitPvalue<-moduleTraitPvalue[rownames(moduleTraitPvalue)%in%targets,]
  }
   if(orderBiotype=="L1"){
- moduleTraitCor<-moduleTraitCor[order(moduleTraitCor[,8],decreasing=TRUE),]
+ moduleTraitCor<-moduleTraitCor[order(moduleTraitCor[,grep("L1",colnames(moduleTraitCor))],decreasing=TRUE),]
  } else if(orderBiotype=="Alu"){
-  moduleTraitCor<-moduleTraitCor[order(moduleTraitCor[,1],decreasing=TRUE),]
+  moduleTraitCor<-moduleTraitCor[order(moduleTraitCor[,grep("Alu",colnames(moduleTraitCor))],decreasing=TRUE),]
  }
 
  moduleTraitPvalue.id<-match(rownames(moduleTraitCor),rownames(moduleTraitPvalue))

@@ -174,7 +174,7 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
   message("annotating...")
   datExpr<-as.data.frame(datExpr,stringsAsFactors=FALSE)
   ####### ensembl_gene_id  entrezgene hgnc_symbol description   add data here
-  annot<-as.data.frame(DataFrame(rowRanges(rexp)))
+  annot<-DataFrame(rowRanges(rexp)[!duplicated(rowRanges(rexp)$tx_id)])
   txID<-grep("tx_id",colnames(annot))
   entrezID<-grep("entrezid",colnames(annot))
   geneID<-grep("gene_id",colnames(annot))
@@ -183,6 +183,7 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
   annot<-annot[,!grepl("^X.",colnames(annot))]
   colnames(annot)<-c("ensembl_gene_id","entrezid","hgnc_symbol","description")
   annot$entrezgene<-"NA"
+  annot<-as.data.frame(annot)
 
 
 
