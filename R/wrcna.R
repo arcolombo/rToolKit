@@ -223,7 +223,7 @@ net = blockwiseModules(datExpr, power = selectedPower,
   modulePvalFisher<-corPvalueFisher(moduleTraitCor,nSamples)
   }
   
- lnames <-list(datExpr=datExpr,
+ rnames <-list(datExpr=datExpr,
             datTraits=datTraits,
             annot=annot,
             MEs=MEs,
@@ -285,7 +285,7 @@ net = blockwiseModules(datExpr, power = selectedPower,
   }
 
 
-  lnames<-list(datExpr=datExpr,
+  rnames<-list(datExpr=datExpr,
             datTraits=datTraits,
             annot=annot,
             MEs=MEs,
@@ -299,7 +299,7 @@ net = blockwiseModules(datExpr, power = selectedPower,
             how=how,
             byWhich=byWhich)
   } ##by block
-  save(lnames,file=paste0("wgcna.",how,"_",byWhich,".dataInput.RData"),compress=TRUE)
+  save(rnames,file=paste0("wgcna.",how,"_",byWhich,".dataInput.RData"),compress=TRUE)
    cat("done.\n")
-   return(lnames)
+   return(rnames)
  }#main

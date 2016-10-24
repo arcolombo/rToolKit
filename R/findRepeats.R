@@ -5,8 +5,7 @@
 findRepeats<-function(kexp){
 
 rowRanges(kexp)[which(rowRanges(kexp)$biotype_class=="repeat")]$gene_id<-rowRanges(kexp)[which(rowRanges(kexp)$biotype_class=="repeat")]$tx_id
-
-return(kexp[which(rowRanges(kexp)$biotype_class=="repeat"),])
-
+kexp<-kexp[which(rowRanges(kexp)$biotype_class=="repeat"),]
+return(kexp[!duplicated(rownames(kexp)),])
 
 }

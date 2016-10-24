@@ -4,6 +4,7 @@
 \name{wgcnaDbLite-class}
 \alias{dbconn,wgcnaDbLite-method}
 \alias{drivers,wgcnaDbLite-method}
+\alias{goEnrich,wgcnaDbLite-method}
 \alias{kexpEnrich,qusageDbLite-method}
 \alias{metadata,wgcnaDbLite-method}
 \alias{modulesBy,wgcnaDbLite-method}
@@ -34,6 +35,8 @@
   contrast = NULL, p.value = 0.05)
 
 \S4method{kexpEnrich}{qusageDbLite}(x, contrast = NULL, p.value = 0.05)
+
+\S4method{goEnrich}{wgcnaDbLite}(x, Module.color = NULL, p.value = 0.05)
 }
 \arguments{
 \item{x}{wgcnaDblite SQL-lite database instance}
@@ -80,9 +83,15 @@
 
 \item{x}{this is the SQLite db}
 
-\item{tx.Biotype}{enter hte module color if you want the full module enrichment, or a tx.biotype for a fixed trait}
-
 \item{contrast}{either phsc or blast}
+
+\item{p.value}{significanse alpha threshold}
+
+\item{x}{this is the SQLite db}
+
+\item{Module.color}{this is the gene module to query Goenrich data}
+
+\item{p.value}{alpha level}
 }
 \description{
 A parent class for wgcna databases including annotations
@@ -97,7 +106,9 @@ we define a 'driver' of a module~trait association as the set of all genes share
 
 pathways will return the qusage enrichment pathway descriptions for a given module color.  if you want the entire module enrichment then the Module.color and tx.Biotype must also be a color.  if you want specific traits of interest then set the tx.biotype to the trait.  the contrast is to gather the enrichment data for the comparison either pHSC.vs.LSC (comparison=phsc) or Blast.vs.LSC (comparison=blast)  [lower case only!]
 
-pathways will return the qusage enrichment pathway descriptions for a given entire kexp, not module specific, but every gene in te kexp. The contrast is to gather the enrichment data for the comparison either pHSC.vs.LSC (comparison=phsc) or Blast.vs.LSC (comparison=blast)  [lower case only!]
+kexpEnrich will return the qusage enrichment pathway descriptions for a given entire kexp, not module specific, but every gene in te kexp. The contrast is to gather the enrichment data for the comparison either pHSC.vs.LSC (comparison=phsc) or Blast.vs.LSC (comparison=blast)  [lower case only!]
+
+goEnrich will return the WGCNA experimental enrichment pathway descriptions for a given  gene level kexp, module specific. The contrast is to gather the enrichment data for the comparison is go [lower case only!]
 }
 \section{Slots}{
 

@@ -7,11 +7,15 @@
 #' @param MsigDB which db to use
 #' @param how either cpm or tpm
 #' @param species either Homo.sapiesn or Mus.musculus
+#' @param comparison1 pHSC, or charactoer for 2 group copmarison
+#' @param controls LSC, or character for control group
+#' @param comparison2 Blast, or character for 2nd pairwise. this is required, if you only have a two group then let comparison1=comparison2.
+#' @param paired for patient paired data
 #' @import edgeR
 #' @import TxDbLite
 #' @export
 #' @return a qusageDbLite db
-qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",version="1.0.0",Module.color="brown",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),how=c("cpm","tpm"),species=c("Homo.sapiens","Mus.musculus") ){
+qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",version="1.0.0",Module.color="brown",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),how=c("cpm","tpm"),species=c("Homo.sapiens","Mus.musculus"),comparison1="pHSC",comparison2="Blast",controls="LSC",paired=TRUE ){
 
 ##task: this will take a full kexp and first normalize then collapse by gene_name then log2 transform or tpm normalize and pass into qusageRun.R to handle the pre-proccessing for qusage call.  the output should be module.biotype.enrich specific data.  then write to a db. 
  ##important note: it is tempting to merely use collapseBundles(kexp,"gene_name") and pipe into qusage HOWEVER QUSAGE REQUIRES NORMALIZED LOG2 XR. collapseBundles will only use the raw counts(kexp) bundle gene_name counts.  here we *****MUST******* use tmm normalized or Tpm calls.
@@ -49,7 +53,7 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
   packageName<-gsub("EnsDbLite","wgcanDbLite",Ensmbl)
   }
 
-  ##FIX ME: call for the whole pHSC-LSC and Blast-LSC as separate tables
+ 
  ## take the database and query the geneIDs of interest, and use the kexp on those geneIDs
    
  allTables<-dbListTables(dbconn(wgcnaDbLite(dbname)))
@@ -87,21 +91,21 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
    }  
    ##split the count data by stage
    module.counts<-counts
-   pHSC.id<-grep("pHSC_",colnames(module.counts))
-   LSC.id<-grep("LSC_",colnames(module.counts))
-   Blast.id<-grep("Blast_",colnames(module.counts))
-   cnts_phLS<-module.counts[,c(pHSC.id,LSC.id)]
-   cnts_blsLS<-module.counts[,c(Blast.id,LSC.id)]
+   comparison1.id<-grep(paste0(comparison1,"_"),colnames(module.counts))
+   controls.id<-grep(paste0(controls,"_"),colnames(module.counts))
+   comparison2.id<-grep(paste0(comparison2,"_"),colnames(module.counts))
+   cnts_phLS<-module.counts[,c(comparison1.id,controls.id)]
+   cnts_blsLS<-module.counts[,c(comparison2.id,controls.id)]
 
     ##call qusage for each stage
-    qusage_run1<-qusageRun(cnts_mt=cnts_phLS,MsigDB=MsigDB,comparison="pHSC",control="LSC",module=allcolors[i])
-    qusage_run2<-qusageRun(cnts_mt=cnts_blsLS,MsigDB=MsigDB,comparison="Blast",control="LSC",module=allcolors[i])
+    qusage_run1<-qusageRun(cnts_mt=cnts_phLS,MsigDB=MsigDB,comparison=comparison1,control=controls,module=allcolors[i],paired=paired)
+    qusage_run2<-qusageRun(cnts_mt=cnts_blsLS,MsigDB=MsigDB,comparison=comparison2,control=controls,module=allcolors[i],paired=paired)
  
       if(nrow(qusage_run1[!is.na(qusage_run1$p.Value),])>1){
       qusage_run1<-data.frame(qusage_run1[!is.na(qusage_run1$p.Value),],
                              colorKey=allcolors[i],
                              bioKey=allcolors[i],
-                             contrastKey="phsc")
+                             contrastKey=tolower(comparison1))
        }else{
          qusage_run1<-data.frame(pathway.name="NA",
                                     log.fold.change="NA",
@@ -109,12 +113,12 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
                                     FDR="NA",
                                     colorKey=allcolors[i],
                                     bioKey=allcolors[i],
-                                    contrastKey="phsc")
+                                    contrastKey=tolower(comparison1))
        } 
       if(nrow(qusage_run2[!is.na(qusage_run2$p.Value),])>1){                             qusage_run2<-data.frame(qusage_run2[!is.na(qusage_run2$p.Value),] ,
                               colorKey=allcolors[i], 
                               bioKey=allcolors[i],
-                              contrastKey="blast")
+                              contrastKey=tolower(comparison2))
 
        }else{
          qusage_run2<-data.frame(pathway.name="NA",
@@ -123,7 +127,7 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
                                     FDR="NA",
                                     colorKey=allcolors[i],
                                     bioKey=allcolors[i],
-                                    contrastKey="blast")
+                                    contrastKey=tolower(comparison2))
 
        }
    ##entire module universe of enrichment.
@@ -133,8 +137,9 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
    ###here we filter the most significant correlated module ~ trait (driver) associations and run enrichment on these
   if(verbose) cat("Extracting Trait Driver Enrichments...\n")  
   ##grabs the wgcnaDbLite db 
- wgcna.color.trait<-traitsBy(wgcnaDbLite(dbname),p.value=0.05,Module.color=allcolors[i],trait=allTraits[j]) 
-  if(nrow(wgcna.color.trait)<=8){
+ wgcna.color.trait<-traitsBy(wgcnaDbLite(dbname),p.value=0.05,Module.color=allcolors[i],trait=allTraits[j])
+   
+  if(nrow(wgcna.color.trait[!is.na(wgcna.color.trait$hgnc_symbol),]  )<=8){
     qusage_module.trait<-data.frame(pathway.name="NA",
                                     log.fold.change="NA",
                                     p.Value="NA",
@@ -168,22 +173,22 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
   module.trait.counts<-log2(1+module.trait.counts)
    }
    ##split the count data by stage
-   pHSC.trait.id<-grep("pHSC_",colnames(module.trait.counts))
-   LSC.trait.id<-grep("LSC_",colnames(module.trait.counts))
-   Blast.trait.id<-grep("Blast_",colnames(module.trait.counts))
-   trait.cnts_phLS<-module.trait.counts[,c(pHSC.trait.id,LSC.trait.id)]
-   trait.cnts_blsLS<-module.trait.counts[,c(Blast.trait.id,LSC.trait.id)]
+   comparison1.trait.id<-grep(paste0(comparison1,"_"),colnames(module.trait.counts))
+   controls.trait.id<-grep(paste0(controls,"_"),colnames(module.trait.counts))
+   comparison2.trait.id<-grep(paste0(comparison2,"_"),colnames(module.trait.counts))
+   trait.cnts_phLS<-module.trait.counts[,c(comparison1.trait.id,controls.trait.id)]
+   trait.cnts_blsLS<-module.trait.counts[,c(comparison2.trait.id,controls.trait.id)]
   stopifnot(nrow(trait.cnts_phLS)==nrow(module.trait.counts))
   stopifnot(nrow(trait.cnts_blsLS)==nrow(module.trait.counts))
     ##call qusage for each stage
-    qusage_trait.run1<-qusageRun(cnts_mt=trait.cnts_phLS,MsigDB=MsigDB,comparison="pHSC",control="LSC",module=allcolors[i])
-    qusage_trait.run2<-qusageRun(cnts_mt=trait.cnts_blsLS,MsigDB=MsigDB,comparison="Blast",control="LSC",module=allcolors[i])
+    qusage_trait.run1<-qusageRun(cnts_mt=trait.cnts_phLS,MsigDB=MsigDB,comparison=comparison1,control=controls,module=allcolors[i],paired=paired)
+    qusage_trait.run2<-qusageRun(cnts_mt=trait.cnts_blsLS,MsigDB=MsigDB,comparison=comparison2,control=controls,module=allcolors[i],paired=paired)
      
      if(nrow(qusage_trait.run1[!is.na(qusage_trait.run1$p.Value),])>1){
      qusage_trait.run1<-data.frame(qusage_trait.run1[!is.na(qusage_trait.run1$p.Value),],
                              colorKey=allcolors[i],
                              bioKey=allTraits[j],
-                             contrastKey="phsc")
+                             contrastKey=tolower(comparison1))
      }else{
         qusage_trait.run1<-data.frame(pathway.name="NA",
                                     log.fold.change="NA",
@@ -191,14 +196,14 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
                                     FDR="NA",
                                     colorKey=allcolors[i],
                                     bioKey=allTraits[j],
-                                    contrastKey="phsc")
+                                    contrastKey=tolower(comparison1))
 
      }
      if(nrow(qusage_trait.run2[!is.na(qusage_trait.run2$p.Value),])>1){
        qusage_trait.run2<-data.frame(qusage_trait.run2[!is.na(qusage_trait.run2$p.Value),],
                               colorKey=allcolors[i],
                               bioKey=allTraits[j],
-                              contrastKey="blast")
+                              contrastKey=tolower(comparison2))
 
      }else{
      qusage_trait.run2<-data.frame(pathway.name="NA",
@@ -207,7 +212,7 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
                                     FDR="NA",
                                     colorKey=allcolors[i],
                                     bioKey=allTraits[j],
-                                    contrastKey="blast")
+                                    contrastKey=tolower(comparison2))
 
        }
    
@@ -240,24 +245,24 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
   }
  ##split by stage
    full_module.counts<-full_counts
-   pHSC.id<-grep("pHSC_",colnames(full_module.counts))
-   LSC.id<-grep("LSC_",colnames(full_module.counts))
-   Blast.id<-grep("Blast_",colnames(full_module.counts))
+   pHSC.id<-grep(paste0(comparison1,"_"),colnames(full_module.counts))
+   LSC.id<-grep(paste0(controls,"_"),colnames(full_module.counts))
+   Blast.id<-grep(paste0(comparison2,"_"),colnames(full_module.counts))
    full_cnts_phLS<-full_module.counts[,c(pHSC.id,LSC.id)]
    full_cnts_blsLS<-full_module.counts[,c(Blast.id,LSC.id)]
 
     ##call qusage for each stage
-    qusage_full1<-qusageRun(cnts_mt=full_cnts_phLS,MsigDB=MsigDB,comparison="pHSC",control="LSC",module="fullKexp")
-    qusage_full2<-qusageRun(cnts_mt=full_cnts_blsLS,MsigDB=MsigDB,comparison="Blast",control="LSC",module="fullKexp")
+    qusage_full1<-qusageRun(cnts_mt=full_cnts_phLS,MsigDB=MsigDB,comparison=comparison1,control=controls,module="fullKexp",paired=paired)
+    qusage_full2<-qusageRun(cnts_mt=full_cnts_blsLS,MsigDB=MsigDB,comparison=comparison2,control=controls,module="fullKexp",paired=paired)
       qusage_full1<-data.frame(qusage_full1,
                              colorKey="kexp",
                              bioKey="kexp",
-                             contrastKey="phsc")
+                             contrastKey=tolower(comparison1))
     
         qusage_full2<-data.frame(qusage_full2,
                               colorKey="kexp",
                               bioKey="kexp",
-                              contrastKey="blast")
+                              contrastKey=tolower(comparison2))
   full_qusage<-rbind(qusage_full1,qusage_full2)
   dbWriteTable(quscon,name="kexp",full_qusage,overwrite=T,row.names=T)
 

@@ -15,7 +15,7 @@
 #' @importFrom S4Vectors DataFrame
 #' @export
 #' @return a SQLlite Data base 
-repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="wgcnaDBLite",annotate=FALSE,version="1.0.0",byWhich=c("gene","repeat") ){
+repeatTablesFromWGCNA<-function(kexp,lnames=NULL,useBiCor=TRUE,verbose=TRUE,dbname="wgcnaDBLite",annotate=FALSE,version="1.0.0",byWhich=c("gene","repeat") ){
   
    byWhich<-match.arg(byWhich,c("gene","repeat"))
    tnxomes<-transcriptomes(kexp)
@@ -138,7 +138,41 @@ repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="w
   }
  } ##annotate as FALSE
 
-
+ if(byWhich=="gene"){
+#call wgcna_goEnrich for enrichment data
+  if(verbose)cat("Calculating GO Gene Enrichment...\n") 
+  if(species=="Homo.sapiens"){
+   commonName<-"human"
+   }else if(species=="Mus.musculus"){
+   commonName<-"mouse"
+  } else{
+  cat("Could not detect species...defaulting to human\n")
+  commonName<-"human"
+  }
+  enri<-wgcna_goEnrich(lnames,species=commonName)
+  term.id<-grep("term name",colnames(enri))
+  pval.id<-grep("p-val",colnames(enri))
+  fdr.id<-grep("Bonf",colnames(enri))
+  ##format enri row_names, pathway.name log.fold.change,p.Value,FDR, colorKey, bioKey, contrastKey. the format must match qusageDbLite db format, so the queries match.
+  enriDF<-data.frame(pathway.name=enri[,term.id],
+                     log.fold.change="NA",
+                     p.Value=enri[,pval.id],
+                     FDR=enri[,fdr.id],
+                     colorKey=enri$module,
+                     bioKey="kexp",
+                     contrastKey="go")
+ 
+  } else{
+  if(verbose)cat("Did not detect Gene Level, setting GO Gene enrichment as NA...\n")
+   enriDF<-data.frame(pathway.name="NA",
+                     log.fold.change="NA",
+                     p.Value="NA",
+                     FDR="NA",
+                     colorKey="NA",
+                     bioKey="kexp",
+                     contrastKey="go")
+  }
+ 
 
  ##the goal is to have a SQL library instead of a large data frame geneTraitModuleDF
  ##the bwLabels is the key, and should be written to a table as well. this is the cornerstone to accessing moduleGenes and all associated data.
@@ -164,7 +198,7 @@ repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="w
   pTrait.id<-match(pTraitNeeded,colnames(geneModuleDF))
   pfTrait.id<-match(pfTraitNeeded,colnames(geneModuleDF))
   #color,GCor_TxBio,pvalue , pf.value,annotations
-  ## FIX ME: add annotations
+ 
   annot.id<-match(rownames(geneModuleDF),annot$gene_id)
   
   for(i in 1:length(modulesNeeded)){
@@ -180,8 +214,9 @@ repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="w
   ##write dbLite table  
   if(verbose) cat(paste0("Creating the database for ",modulesNeeded[i],"\n"))
   dbWriteTable(con,name=modulesNeeded[i],colorTable,overwrite=T,row.names=T)
-  dbGetQuery(con,paste0("create index colorKey_idx","_",i," on ",modulesNeeded[i]," (colorKey);"))
+#  dbGetQuery(con,paste0("create index colorKey_idx","_",i," on ",modulesNeeded[i]," (colorKey);"))
    }
+
   ##FIX ME :  write out some meta data color module summaries, species .. 
   Metadata <- wgcnaDbLiteMetadata(kexp,
                                packageName=packageName,
@@ -190,8 +225,8 @@ repeatTablesFromWGCNA<-function(kexp,lnames,useBiCor=TRUE,verbose=TRUE,dbname="w
                                how=how,
                                byWhich=byWhich)
  dbWriteTable(con, name="metadata", Metadata, overwrite=TRUE, row.names=FALSE)
-
-
+ #write the GOenrich to SQL
+ dbWriteTable(con,name="go",enriDF,overwrite=TRUE,row.names=T)
 
 
   cat("done. \n")

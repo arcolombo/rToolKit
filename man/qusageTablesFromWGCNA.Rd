@@ -11,7 +11,8 @@ qusageTablesFromWGCNA(kexp, verbose = TRUE, dbname = "wgcnaDBLite.sqlite",
   "c4.all.v5.1.symbols.gmt", "c5.all.v5.1.symbols.gmt",
   "c6.all.v5.1.symbols.gmt", "c7.all.v5.1.symbols.gmt",
   "h.all.v5.1.symbols.gmt"), how = c("cpm", "tpm"),
-  species = c("Homo.sapiens", "Mus.musculus"))
+  species = c("Homo.sapiens", "Mus.musculus"), comparison1 = "pHSC",
+  comparison2 = "Blast", controls = "LSC", paired = TRUE)
 
 qusageDbLiteMetadata(kexp, packageName, species = NULL, Ensmbl, how = how)
 }
@@ -31,6 +32,14 @@ qusageDbLiteMetadata(kexp, packageName, species = NULL, Ensmbl, how = how)
 \item{how}{either cpm or tpm}
 
 \item{species}{either Homo.sapiesn or Mus.musculus}
+
+\item{comparison1}{pHSC, or charactoer for 2 group copmarison}
+
+\item{comparison2}{Blast, or character for 2nd pairwise. this is required, if you only have a two group then let comparison1=comparison2.}
+
+\item{controls}{LSC, or character for control group}
+
+\item{paired}{for patient paired data}
 
 \item{packageName}{the name of the annotation package to be built}
 

@@ -10,9 +10,29 @@ moduleWiseAnalysis(kexp, lnames, rnames,
   qusageDbName = "qusageDbLite.cpm.sqlite", geneModules = c("darkturquoise",
   "red", "grey60", "pink", "darkred", "royalblue", "green", "magenta", "brown"),
   repeatModules = c("blue", "brown", "grey", "turquoise"), read.cutoff = 2,
-  how = c("cpm", "tpm"))
+  how = c("cpm", "tpm"), enrichmentCaller = c("go", "qusage"),
+  comparison1 = "phsc", comparison2 = "blast")
+}
+\arguments{
+\item{kexp}{this should be the full stage kexp, could even be a tcga kexp}
+
+\item{lnames}{is the wgcna.R output and rnames is the wrcna.R call}
+
+\item{wgcnaDbName}{this is the sql db of the wgcna}
+
+\item{wrcnaDbName}{sql db of the wrcna repeat db}
+
+\item{qusageDbName}{this is the sql db of a qusage db. not required if there is a missing qusage db one can call goEnrich for preliminary analyses}
+
+\item{geneModules}{this should be single gene module of interest.  we can examine one gene module's association to all the repeat modules.  so geneModule should be a single color character}
+
+\item{repeatModules}{this should be the character of all repeat modules}
+
+\item{how}{either cpm or tpm, tpm recommended for heatmap visualizations}
+
+\item{repeat.cutoff}{the cpm floor threshold}
 }
 \description{
-after running wgcna and wrcna we are interested in finding associaitons between gene and repeat modules.  given modules of interest we correlate and test for comparability between each module.  we also analyze the associations of connectivity.
+after running wgcna and wrcna we are interested in finding associaitons between one fixed gene with all the repeat modules.  given a fixed module of interest we correlate and test for comparability between every repeat module.  If there is no contrast between the gene modules, i.e. qusage contrasts are not present, then we use the wgcna_goEnrich caller
 }
 

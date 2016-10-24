@@ -15,9 +15,9 @@ getEntrezIDs(gxs, species)
 
 getSymbols(gxs, species)
 
-repeatTablesFromWGCNA(kexp, lnames, useBiCor = TRUE, verbose = TRUE,
-  dbname = "wgcnaDBLite", annotate = FALSE, version = "1.0.0",
-  byWhich = c("gene", "repeat"))
+repeatTablesFromWGCNA(kexp, lnames = NULL, useBiCor = TRUE,
+  verbose = TRUE, dbname = "wgcnaDBLite", annotate = FALSE,
+  version = "1.0.0", byWhich = c("gene", "repeat"))
 
 getEntrezIDs(gxs, species)
 

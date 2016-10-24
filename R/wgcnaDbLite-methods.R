@@ -241,10 +241,10 @@ setMethod("pathways", "qusageDbLite", function(x,Module.color=NULL,tx.Biotype=NU
 setGeneric("kexpEnrich",function(x,contrast=NULL,p.value=NULL) standardGeneric("kexpEnrich"))
 
 #' @rdname wgcnaDbLite-class
-#' @description pathways will return the qusage enrichment pathway descriptions for a given entire kexp, not module specific, but every gene in te kexp. The contrast is to gather the enrichment data for the comparison either pHSC.vs.LSC (comparison=phsc) or Blast.vs.LSC (comparison=blast)  [lower case only!]
+#' @description kexpEnrich will return the qusage enrichment pathway descriptions for a given entire kexp, not module specific, but every gene in te kexp. The contrast is to gather the enrichment data for the comparison either pHSC.vs.LSC (comparison=phsc) or Blast.vs.LSC (comparison=blast)  [lower case only!]
 #' @param x this is the SQLite db
-#' @param tx.Biotype enter hte module color if you want the full module enrichment, or a tx.biotype for a fixed trait
 #' @param contrast  either phsc or blast
+#' @param p.value  significanse alpha threshold
 #' @export
 setMethod("kexpEnrich", "qusageDbLite", function(x,contrast=NULL,p.value=0.05) {
  sql<-paste0("select * from kexp where colorKey='kexp' and bioKey='kexp' and contrastKey='",contrast,"'")
@@ -254,6 +254,26 @@ setMethod("kexpEnrich", "qusageDbLite", function(x,contrast=NULL,p.value=0.05) {
 
  })
 
+
+setGeneric("goEnrich",function(x,Module.color=NULL,p.value=NULL) standardGeneric("goEnrich"))
+
+#' @rdname wgcnaDbLite-class
+#' @description goEnrich will return the WGCNA experimental enrichment pathway descriptions for a given  gene level kexp, module specific. The contrast is to gather the enrichment data for the comparison is go [lower case only!]
+#' @param x this is the SQLite db
+#' @param Module.color  this is the gene module to query Goenrich data
+#' @param p.value alpha level
+#' @export
+setMethod("goEnrich", "wgcnaDbLite", function(x,Module.color=NULL,p.value=0.05) {
+ sql<-paste0("select * from go where bioKey='kexp' and contrastKey='go' and colorKey='",Module.color,"'")
+  res<-as.data.frame(dbGetQuery(dbconn(x),sql))
+  res<-res[which(res$p.Value<p.value),]
+  pathway.id<-grep("pathway.name",colnames(res))
+  p.id<-grep("p.Value",colnames(res))
+  f.id<-grep("FDR",colnames(res))
+  col.id<-grep("colorKey",colnames(res))
+  return(res[,c(pathway.id,p.id,f.id,col.id)] )
+
+ })
 
 
 ###FIX ME: add a consensus pathways function

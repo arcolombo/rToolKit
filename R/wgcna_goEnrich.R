@@ -1,12 +1,11 @@
 #' @title GO enrichment for wgcna_analysis modules
-#' @description downstream from wgcna_analysis we can investigate enrichment
+#' @description downstream from wgcna_analysis we can investigate enrichment. The wgcna_goEnrich is used when creating the repeatTables SQL database.  the WGCNA:goEnrich is a bit slow, so it is ideal to call this method once upon SQLdb creation and query the info needed.  so repeatTablesFromWGCNA calls this method and stores into the DB.  WGCNA:goEnrich is an experimental method, and repeatToolKit supports qusage, however qusage is differential activity, where goEnrich tests for overall activity as a preliminary glimpse.  useful for exploration
 #' @param lnames  this is the main method from wgcna, this is a slow calculation which sucks, but you call it once, and save it, so you can do downstream analysis with one painful object creation call
-#' @param intModules colors of interesting modules
-#' @param species human or mouse for annotatin
-#' @param entrezOnly boolean, I am not sure if you should use all entries for goEnrichment, with and without entrez.  so keeping a flag for now.  it seems as though the GoEnirch call filters NA entrez automatically.
+#' @param species human or mouse for annotation
+#' @param entrezOnly boolean, I am not sure if you should use all entries for goEnrichment, with and without entrez.  so keeping a flag for now.  it seems as though the GoEnirch call filters NA entrez automatically. so for safe keeping keep entrezOnly to false, and let WGCNA enrichment caller filter out the NAs.
 #' @export
 #' @return images and go enrichment object
-wgcna_goEnrich<-function(lnames,intModules=c("blue","steelblue","darkturquoise"),species=c("human","mouse"),entrezOnly=FALSE ) {
+wgcna_goEnrich<-function(lnames,species=c("human","mouse"),entrezOnly=FALSE ) {
 
   species<-match.arg(species,c("human","mouse"))
   if(is.null(lnames)==TRUE){
@@ -43,16 +42,6 @@ wgcna_goEnrich<-function(lnames,intModules=c("blue","steelblue","darkturquoise")
   }
 
 
-for (module in intModules)
-{
-  # Select module probes
-  t<-showModuleMembers(lnames,biocolor=module)
- 
-  # Write them into a file
-  fileName = paste("IDs-", module, ".txt", sep="");
-  write.table(as.data.frame(t), file = fileName,
-              row.names = FALSE, col.names = FALSE)
-}
 # As background in the enrichment analysis, we will use all probes in the analysis.
 ###FIX ME:  examine goEnrichment script
   GOenr = GOenrichmentAnalysis(bwModuleColors, 

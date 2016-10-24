@@ -4,22 +4,19 @@
 \alias{wgcna_goEnrich}
 \title{GO enrichment for wgcna_analysis modules}
 \usage{
-wgcna_goEnrich(lnames, intModules = c("blue", "steelblue", "darkturquoise"),
-  species = c("human", "mouse"), entrezOnly = FALSE)
+wgcna_goEnrich(lnames, species = c("human", "mouse"), entrezOnly = FALSE)
 }
 \arguments{
 \item{lnames}{this is the main method from wgcna, this is a slow calculation which sucks, but you call it once, and save it, so you can do downstream analysis with one painful object creation call}
 
-\item{intModules}{colors of interesting modules}
+\item{species}{human or mouse for annotation}
 
-\item{species}{human or mouse for annotatin}
-
-\item{entrezOnly}{boolean, I am not sure if you should use all entries for goEnrichment, with and without entrez.  so keeping a flag for now.  it seems as though the GoEnirch call filters NA entrez automatically.}
+\item{entrezOnly}{boolean, I am not sure if you should use all entries for goEnrichment, with and without entrez.  so keeping a flag for now.  it seems as though the GoEnirch call filters NA entrez automatically. so for safe keeping keep entrezOnly to false, and let WGCNA enrichment caller filter out the NAs.}
 }
 \value{
 images and go enrichment object
 }
 \description{
-downstream from wgcna_analysis we can investigate enrichment
+downstream from wgcna_analysis we can investigate enrichment. The wgcna_goEnrich is used when creating the repeatTables SQL database.  the WGCNA:goEnrich is a bit slow, so it is ideal to call this method once upon SQLdb creation and query the info needed.  so repeatTablesFromWGCNA calls this method and stores into the DB.  WGCNA:goEnrich is an experimental method, and repeatToolKit supports qusage, however qusage is differential activity, where goEnrich tests for overall activity as a preliminary glimpse.  useful for exploration
 }
 
