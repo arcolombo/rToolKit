@@ -10,8 +10,8 @@ moduleWiseAnalysis(kexp, lnames, rnames,
   qusageDbName = "qusageDbLite.cpm.sqlite", geneModules = c("darkturquoise",
   "red", "grey60", "pink", "darkred", "royalblue", "green", "magenta", "brown"),
   repeatModules = c("blue", "brown", "grey", "turquoise"), read.cutoff = 2,
-  how = c("cpm", "tpm"), enrichmentCaller = c("go", "qusage"),
-  comparison1 = "phsc", comparison2 = "blast")
+  how = "cpm", enrichmentCaller = c("go", "qusage"), comparison1 = "phsc",
+  comparison2 = "blast", openDevice = FALSE)
 }
 \arguments{
 \item{kexp}{this should be the full stage kexp, could even be a tcga kexp}
@@ -29,6 +29,8 @@ moduleWiseAnalysis(kexp, lnames, rnames,
 \item{repeatModules}{this should be the character of all repeat modules}
 
 \item{how}{either cpm or tpm, tpm recommended for heatmap visualizations}
+
+\item{openDevice}{boolean if true then the images are opened on a device along with printing to pdf.  should be false for exploring all colors}
 
 \item{repeat.cutoff}{the cpm floor threshold}
 }

@@ -57,8 +57,9 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
  ## take the database and query the geneIDs of interest, and use the kexp on those geneIDs
    
  allTables<-dbListTables(dbconn(wgcnaDbLite(dbname)))
-  ##the tables have metadata, must avoid this table
- allcolors<-allTables[!grepl("metadata",allTables)]
+  ##the tables have metadata, must avoid meta table
+ allcolors<-allTables[!grepl("metadata",allTables)] 
+ allcolors<-allcolors[!grepl("go",allcolors)] ##filter out goEnrich table
  allTraits<-colnames(modulesBy(wgcnaDbLite(dbname),Module.color=Module.color)) 
  allTraits<-allTraits[grepl("^GCor_",allTraits)]
  allTraits<-sapply(strsplit(allTraits,"_"),function(x) x[2])

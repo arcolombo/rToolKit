@@ -1,5 +1,5 @@
-#' @title produces a correlation map given wgcna network data
-#' @description after calling wgcna the datExpr and module colors are used to create a correlation map image.
+#' @title produces a correlation map given wgcna network data using a different library ComplexHeatmap
+#' @description after calling wgcna the datExpr and module colors are used to create a correlation map image with the columns ordered.
 #' @param lnames this is the results from wgcna.R
 #' @param read.cutoff  integer for min cutoff
 #' @param plotDot boolean this plots the median correlation score for each biotypes in a line plot
@@ -7,12 +7,15 @@
 #' @param targets this is a character vector of modules of interest to subset the corMap
 #' @param orderBiotype either Alu or L1.
 #' @import WGCNA
+#' @import ComplexHeatmap
+#' @import pvclust
+#' @import dendsort
 #' @export
 #' @return images of eigengenes
-wgcna_Cormap<-function(lnames,read.cutoff=2,plotDot=FALSE,recalc=FALSE,targets=NULL,orderBiotype="Alu",how=how){
-  orderBiotype<-match.arg(orderBiotype,c("Alu","L1"))
+wgcna_Heatcor<-function(lnames,read.cutoff=2,plotDot=FALSE,recalc=FALSE,targets=NULL,how=how,reOrder=TRUE){
+ 
 if(is.null(lnames)==TRUE){
-load("wgcna.dataInput.RData")
+cat("Please call wgcna.R prior calling a heatmap...\n")
 }
 ###declare needed objects from load
 if(is.null(lnames)==FALSE){
@@ -43,39 +46,27 @@ message(paste0("found lnames"))
   moduleTraitCor<-moduleTraitCor[rownames(moduleTraitCor)%in%targets,]
   moduleTraitPvalue<-moduleTraitPvalue[rownames(moduleTraitPvalue)%in%targets,]
  }
-  if(orderBiotype=="L1"){
- moduleTraitCor<-moduleTraitCor[order(moduleTraitCor[,grep("L1",colnames(moduleTraitCor))],decreasing=TRUE),]
- } else if(orderBiotype=="Alu"){
-  moduleTraitCor<-moduleTraitCor[order(moduleTraitCor[,grep("Alu",colnames(moduleTraitCor))],decreasing=TRUE),]
- }
+ # if(orderBiotype=="L1"){
+ #moduleTraitCor<-moduleTraitCor[order(moduleTraitCor[,grep("L1",colnames(moduleTraitCor))],decreasing=TRUE),]
+# } else if(orderBiotype=="Alu"){
+#  moduleTraitCor<-moduleTraitCor[order(moduleTraitCor[,grep("Alu",colnames(moduleTraitCor))],decreasing=TRUE),]
+# }
 
  moduleTraitPvalue.id<-match(rownames(moduleTraitCor),rownames(moduleTraitPvalue))
  moduleTraitPvalue<-moduleTraitPvalue[moduleTraitPvalue.id,]
-  textMatrix =  paste(signif(moduleTraitCor, 2), "\n(",
-                            signif(moduleTraitPvalue, 1), ")", sep = "");
  
- stopifnot(dim(textMatrix)==dim(moduleTraitCor))
- 
- par(mar = c(6, 10, 3, 3));
+  par(mar = c(6, 10, 3, 3));
  # Display the correlation values within a heatmap plot
   plot.new()
-  labeledHeatmap(Matrix=moduleTraitCor,
-,                xLabels=names(datTraits),
-                 yLabels= rownames(moduleTraitCor),
-                 ySymbols=rownames(moduleTraitCor), 
-                 colorLabels=FALSE,
-               colors=greenWhiteRed(50),
-               textMatrix=textMatrix,
-               setStdMargins = FALSE,
-               cex.text = 0.6,
-               zlim = c(-1,1),
-               yColorWidth=0.07,
-               cex.lab.y=.7,
-               colors.lab.y=1.3,
-               main = paste0("Module-Repeat ",how," Biotype relationships"))
-
-
+  if(reOrder==TRUE){
+  x.pv<-pvclust(moduleTraitCor,nboot=100)
+  
+  print(Heatmap(moduleTraitCor,cluster_columns=x.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Module-Repeat ",how," Biotype relationships")))
+  } else{
+ print(Heatmap(moduleTraitCor,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Module-Repeat ",how," Biotype relationships")))
+  }
   readkey()
+
   colorDF<-sapply(MEs,function(x) median(x))
   colorDF<-colorDF[order(colorDF,decreasing=TRUE)]
   if(plotDot==TRUE){
@@ -85,22 +76,14 @@ message(paste0("found lnames"))
   axis(1,at=1:length(colorDF),labels=names(colorDF),las=2)
   readkey()
   } else {
-  pdf(paste0("correlation_",how,"_plots.pdf"),width=12,height=12)
+  pdf(paste0("Heat_correlation_",how,"_plots.pdf"),width=12,height=12)
     par(mar = c(6, 10, 3, 3));
-    labeledHeatmap(Matrix = moduleTraitCor,
-               xLabels = names(datTraits),
-               yLabels = rownames(moduleTraitCor),
-               ySymbols = rownames(moduleTraitCor),
-               colorLabels = FALSE,
-               colors = greenWhiteRed(50),
-               textMatrix = textMatrix,
-                setStdMargins = FALSE,
-                cex.text = 0.3,
-                zlim = c(-1,1),
-                yColorWidth=0.07,
-                cex.lab.y=.7,
-                colors.lab.y=1.3,
-                main = paste0("Module-Repeat ",how," Biotype relationships"))
+    if(reOrder==TRUE){
+     x.pv<-pvclust(moduleTraitCor,nboot=100)
+     print(Heatmap(moduleTraitCor,cluster_columns=x.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Module-Repeat ",how," Biotype relationships")))
+   } else{
+   print(Heatmap(moduleTraitCor,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Module-Repeat ",how," Biotype relationships")))
+  }
   plot(colorDF,main="Median Correlation Per Module")
   axis(1,at=1:length(colorDF),labels=names(colorDF),las=2)
   dev.off()

@@ -275,5 +275,19 @@ setMethod("goEnrich", "wgcnaDbLite", function(x,Module.color=NULL,p.value=0.05) 
 
  })
 
+setGeneric("listModuleColors",function(x,...) standardGeneric("listModuleColors"))
+
+#' @rdname wgcnaDbLite-class
+#' @param x wgcnaDblite SQL-lite database instance
+#' @param ... additional parameters releated to annotation database
+#' @export
+setMethod("listModuleColors", "wgcnaDbLite", function(x, ...) { # {{{
+  md <- dbListTables(dbconn(x))
+  md<-md[!grepl("metadata",md)]
+  md<-md[!grepl("go",md)]
+  return(md)
+}) # }}}
+
+
 
 ###FIX ME: add a consensus pathways function

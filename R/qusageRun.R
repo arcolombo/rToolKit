@@ -34,11 +34,12 @@ qusageRun<-function(cnts_mt=NULL,gmt.path="~/Documents/Arkas-Paper-Data/MSigDB/M
   #print(contrast)
   #print(qsTable(qs.results,number=40 ))
   if(plotTable==TRUE){
-  par(mar = c(10, 6, 3, 3));
+  par(mar = c(12, 3, 3, 3));
   plot(qs.results)
    title(paste0(contrast,".",module))
   pdf(paste0("qs_",module,"_",geneSet,"_",contrast,".pdf"))
-  plot(qs.results)  
+    par(mar = c(12, 3, 2, 3));
+    plot(qs.results)  
   dev.off()
   }
   return(qsTable(qs.results,number=40))

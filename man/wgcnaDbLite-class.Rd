@@ -6,6 +6,7 @@
 \alias{drivers,wgcnaDbLite-method}
 \alias{goEnrich,wgcnaDbLite-method}
 \alias{kexpEnrich,qusageDbLite-method}
+\alias{listModuleColors,wgcnaDbLite-method}
 \alias{metadata,wgcnaDbLite-method}
 \alias{modulesBy,wgcnaDbLite-method}
 \alias{pathways,qusageDbLite-method}
@@ -37,6 +38,8 @@
 \S4method{kexpEnrich}{qusageDbLite}(x, contrast = NULL, p.value = 0.05)
 
 \S4method{goEnrich}{wgcnaDbLite}(x, Module.color = NULL, p.value = 0.05)
+
+\S4method{listModuleColors}{wgcnaDbLite}(x, ...)
 }
 \arguments{
 \item{x}{wgcnaDblite SQL-lite database instance}
@@ -92,6 +95,10 @@
 \item{Module.color}{this is the gene module to query Goenrich data}
 
 \item{p.value}{alpha level}
+
+\item{x}{wgcnaDblite SQL-lite database instance}
+
+\item{...}{additional parameters releated to annotation database}
 }
 \description{
 A parent class for wgcna databases including annotations

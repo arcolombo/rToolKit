@@ -138,6 +138,6 @@ stageWiseAnalysis<-function(kexp,stage1="pHSC",stage2="LSC",stage3="Blast",read.
 
   ##FIX ME: Repeat this analysis with CQN and edgeR
  
-
+ return(list(phsc=top.stage1.adj, blast=top.stage2.adj))
 
 } ###{ main
