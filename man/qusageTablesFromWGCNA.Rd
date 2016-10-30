@@ -12,7 +12,8 @@ qusageTablesFromWGCNA(kexp, verbose = TRUE, dbname = "wgcnaDBLite.sqlite",
   "c6.all.v5.1.symbols.gmt", "c7.all.v5.1.symbols.gmt",
   "h.all.v5.1.symbols.gmt"), how = c("cpm", "tpm"),
   species = c("Homo.sapiens", "Mus.musculus"), comparison1 = "pHSC",
-  comparison2 = "Blast", controls = "LSC", paired = TRUE)
+  comparison2 = "Blast", controls = "LSC", paired = TRUE,
+  batchNormalize = FALSE, batchVector = NULL, comparisonNumber = 1)
 
 qusageDbLiteMetadata(kexp, packageName, species = NULL, Ensmbl, how = how)
 }
@@ -33,13 +34,19 @@ qusageDbLiteMetadata(kexp, packageName, species = NULL, Ensmbl, how = how)
 
 \item{species}{either Homo.sapiesn or Mus.musculus}
 
-\item{comparison1}{pHSC, or charactoer for 2 group copmarison}
+\item{comparison1}{pHSC, or charactoer for 2 group copmarison. these arguments are input into qusageRun and must be split using "_" with the factor of interest as the first leading term.}
 
-\item{comparison2}{Blast, or character for 2nd pairwise. this is required, if you only have a two group then let comparison1=comparison2.}
+\item{comparison2}{Blast, or character for 2nd pairwise. this is required, if you only have a two group then let comparison1=comparison2.  must be named using "_" with the factor of interest as the leading term.}
 
-\item{controls}{LSC, or character for control group}
+\item{controls}{LSC, or character for control group. these parameters are input into qusageRun with the factor of interest as the leading term.}
 
 \item{paired}{for patient paired data}
+
+\item{batchNormalize}{boolean, if true then the samples are from different batches and the edgeR batchCorrectEffect will be called for cpm}
+
+\item{batchVector}{this is the batch vector. the length of the batch vector must match the number of columns. there are not any checks to validate the batch effect factors, user dependent input}
+
+\item{comparisonNumber}{integer 1 or 2.  this integer reflects how many pairwise comparisons needed.  for time series analysis, it is sometimes desired to test for enrichment at N different time points,  intial-comparison1 , and intial-comparison2. qusage will be called to compare the comparisonNumber pairs}
 
 \item{packageName}{the name of the annotation package to be built}
 
