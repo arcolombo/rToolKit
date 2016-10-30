@@ -186,9 +186,18 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
    }
    trait.dge<-DGEList(counts=module.trait.counts)
    trait.dge<-calcNormFactors(trait.dge)
-   trait.expr<-cpm(trait.dge,log=FALSE)
-   module.trait.counts<-log2(1+trait.expr) ##enirhcment on log2 is required
-    } else {
+   trait.expr<-cpm(trait.dge,normalized.lib.sizes=TRUE,log=FALSE)
+   if(batchNormalize==TRUE){
+   stopifnot(is.null(batchVector)==FALSE)
+   stopifnot(length(batchVector)==ncol(kexp))
+   batch.cpm.trait<-removeBatchEffect(trait.expr,batch=batchVector)
+   module.trait.counts<-log2(1+batch.cpm.trait)
+   id.trait<-which(is.na(module.trait.counts))
+   module.trait.counts[id.trait]<-1.0
+    }else if(batchNormalize==FALSE){
+     module.trait.counts<-log2(1+trait.expr) ##enirhcment on log2 is required
+    }
+   } else {
   module.trait.counts<-collapseTpm(module.trait.kexp,"gene_name")
    if(nrow(module.trait.counts)<=8){
     next
@@ -205,8 +214,11 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
   stopifnot(nrow(trait.cnts_blsLS)==nrow(module.trait.counts))
     ##call qusage for each stage
     qusage_trait.run1<-qusageRun(cnts_mt=trait.cnts_phLS,MsigDB=MsigDB,comparison=comparison1,control=controls,module=allcolors[i],paired=paired)
+    if(comparisonNumber==2){
     qusage_trait.run2<-qusageRun(cnts_mt=trait.cnts_blsLS,MsigDB=MsigDB,comparison=comparison2,control=controls,module=allcolors[i],paired=paired)
-     
+     }else if(comparisonNumber==1){
+     qusage_trait.run2<-qusage_trait.run1
+     }
      if(nrow(qusage_trait.run1[!is.na(qusage_trait.run1$p.Value),])>1){
      qusage_trait.run1<-data.frame(qusage_trait.run1[!is.na(qusage_trait.run1$p.Value),],
                              colorKey=allcolors[i],
@@ -259,8 +271,18 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
   full_counts<-collapseBundles(kexp,"gene_name")
   dge<-DGEList(counts=full_counts)
   dge<-calcNormFactors(dge)
-  expr<-cpm(dge,log=FALSE)
-  full_counts<-log2(1+expr) ##enirhcment on log2 is required
+  expr<-cpm(dge,normalized.lib.sizes=TRUE,log=FALSE)
+  if(batchNormalize==TRUE){
+     stopifnot(is.null(batchVector)==FALSE)
+     stopifnot(length(batchVector)==ncol(kexp))##the batchVector nomenclature must match the length of columns.
+     ##takes TMM normalized and batch corrects
+     full.batch.cpm<-removeBatchEffect(expr,batch=batchVector)
+     full_counts<-log2(1+full.batch.cpm)
+     full.id<-which(is.na(full_counts))
+     full_counts[full.id]<-1.0
+      }else if(batchNormalized==FALSE){
+     full_counts<-log2(1+expr) ##enirhcment on log2 is required
+    }
   } else{
   ##TPM Normalize
   full_counts<-collapseTpm(kexp,"gene_id")
@@ -276,7 +298,11 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
 
     ##call qusage for each stage
     qusage_full1<-qusageRun(cnts_mt=full_cnts_phLS,MsigDB=MsigDB,comparison=comparison1,control=controls,module="fullKexp",paired=paired)
+    if(comparisonNumber==2){
     qusage_full2<-qusageRun(cnts_mt=full_cnts_blsLS,MsigDB=MsigDB,comparison=comparison2,control=controls,module="fullKexp",paired=paired)
+     }else if(comparisonNumber==1){
+     qusage_full2<-qusage_full1
+    }
       qusage_full1<-data.frame(qusage_full1,
                              colorKey="kexp",
                              bioKey="kexp",
