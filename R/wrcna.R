@@ -13,7 +13,7 @@
 #' @import edgeR
 #' @export
 #' @return images and cluster at the gene and repeat level
-wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),species=c("Homo.sapiens","Mus.musculus"),selectedPower=6,intBiotypes=c("Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","L1","L2","LTR Retrotransposon","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm")){
+wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),species=c("Homo.sapiens","Mus.musculus"),selectedPower=6,intBiotypes=c("Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","L1","L2","LTR Retrotransposon","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm"), batchNormalize=FALSE,batchVector=NULL){
   
    how<-match.arg(how,c("cpm","tpm"))
    byWhich<-"repeat"
@@ -38,7 +38,14 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
   rdm.norm<-cpm(rd,normalized.lib.sizes=TRUE)
   rpm<-rdm.norm
   rdm.norm<-NULL
-  }#tmm.norm
+   if(batchNormalize==TRUE){
+     stopifnot(is.null(batchVector)==FALSE)
+     stopifnot(length(batchVector)==ncol(kexp))##the batchVector nomenclature must match the length of columns.
+     ##takes TMM normalized and batch corrects
+     batch.cpm<-removeBatchEffect(cpm,batch=batchVector)
+     batch.rpm<-removeBatchEffect(rpm,batch=batchVector)
+      }
+     }#tmm.norm
   }else if(how=="tpm"){
   cpm<-collapseTpm(rexp,"gene_id",read.cutoff=read.cutoff)
   cpm<-cpm[!grepl("^ERCC",rownames(cpm)),]
@@ -46,9 +53,18 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
   rpm<-collapseTpm(rexp,"tx_biotype",read.cutoff=read.cutoff)
   rpm<-rpm[!grepl("^ERCC",rownames(rpm)),]
   }
-  
+  if(batchNormalize==FALSE){
   cpm<-log2(1+cpm) 
   rpm<-log2(1+rpm) ##log2 transform of repeats.
+  }else if(batchNormalize==TRUE){
+   cpm<-log2(1+batch.cpm)
+    rpm<-log2(1+batch.rpm)
+    ### filter NaNs
+    id<-which(is.na(cpm))
+    cpm[id]<-1.0
+    rid<-which(is.na(rpm))
+    rpm[rid]<-1.0   
+    }
   datExpr0<-t(cpm)
 
    gsg<-goodSamplesGenes(datExpr0,verbose=3)
@@ -115,7 +131,7 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
                     marAll=c(1,11,3,3),
                     main=paste0("Repeat ",how," Module TxBiotype Correlation Samples"))
   readkey()
-  pdf(paste0("RepeatMM_",how,"_TxBiotype_Correlation_Samples.pdf"))
+  pdf(paste0("RepeatMM_",how,"_TxBiotype_Correlation_Samples.pdf"),width=12,height=9)
   plotDendroAndColors(sampleTree2, traitColors,
                     groupLabels = names(datTraits),
                     marAll=c(1,11,3,3),
@@ -153,7 +169,7 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
      labels=powers,cex=cex1,col="red");
 
   selectedPower<-readPower()
-  pdf(paste0("RepeatModule_",how,"_soft_ThresholdPower.pdf"))
+  pdf(paste0("RepeatModule_",how,"_soft_ThresholdPower.pdf"),width=12,height=9)
   plot(x,y,
      xlab=paste0("RE ",how," Soft Threshold (power)"),
      ylab="RE Scale Free Topology Model Fit,signed R^2",

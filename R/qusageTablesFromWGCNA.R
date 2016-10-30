@@ -7,15 +7,18 @@
 #' @param MsigDB which db to use
 #' @param how either cpm or tpm
 #' @param species either Homo.sapiesn or Mus.musculus
-#' @param comparison1 pHSC, or charactoer for 2 group copmarison
-#' @param controls LSC, or character for control group
-#' @param comparison2 Blast, or character for 2nd pairwise. this is required, if you only have a two group then let comparison1=comparison2.
+#' @param comparison1 pHSC, or charactoer for 2 group copmarison. these arguments are input into qusageRun and must be split using "_" with the factor of interest as the first leading term.
+#' @param controls LSC, or character for control group. these parameters are input into qusageRun with the factor of interest as the leading term.
+#' @param comparison2 Blast, or character for 2nd pairwise. this is required, if you only have a two group then let comparison1=comparison2.  must be named using "_" with the factor of interest as the leading term.
 #' @param paired for patient paired data
+#' @param batchNormalize boolean, if true then the samples are from different batches and the edgeR batchCorrectEffect will be called for cpm
+#' @param batchVector this is the batch vector. the length of the batch vector must match the number of columns. there are not any checks to validate the batch effect factors, user dependent input
+#' @param comparisonNumber integer 1 or 2.  this integer reflects how many pairwise comparisons needed.  for time series analysis, it is sometimes desired to test for enrichment at N different time points,  intial-comparison1 , and intial-comparison2. qusage will be called to compare the comparisonNumber pairs 
 #' @import edgeR
 #' @import TxDbLite
 #' @export
 #' @return a qusageDbLite db
-qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",version="1.0.0",Module.color="brown",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),how=c("cpm","tpm"),species=c("Homo.sapiens","Mus.musculus"),comparison1="pHSC",comparison2="Blast",controls="LSC",paired=TRUE ){
+qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",version="1.0.0",Module.color="brown",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),how=c("cpm","tpm"),species=c("Homo.sapiens","Mus.musculus"),comparison1="pHSC",comparison2="Blast",controls="LSC",paired=TRUE,batchNormalize=FALSE,batchVector=NULL,comparisonNumber=1 ){
 
 ##task: this will take a full kexp and first normalize then collapse by gene_name then log2 transform or tpm normalize and pass into qusageRun.R to handle the pre-proccessing for qusage call.  the output should be module.biotype.enrich specific data.  then write to a db. 
  ##important note: it is tempting to merely use collapseBundles(kexp,"gene_name") and pipe into qusage HOWEVER QUSAGE REQUIRES NORMALIZED LOG2 XR. collapseBundles will only use the raw counts(kexp) bundle gene_name counts.  here we *****MUST******* use tmm normalized or Tpm calls.
@@ -84,9 +87,22 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
    counts<-counts[,which(colSums(counts)>1)]
    dge<-DGEList(counts=counts)
    dge<-calcNormFactors(dge)
-   expr<-cpm(dge,log=FALSE)
-   counts<-log2(1+expr) ##enirhcment on log2 is required
-    } else {
+   expr<-cpm(dge,normalized.lib.sizes=TRUE,log=FALSE)
+   if(batchNormalize==TRUE){
+     stopifnot(is.null(batchVector)==FALSE)
+     stopifnot(length(batchVector)==ncol(kexp))##the batchVector nomenclature must match the length of columns.
+     ##takes TMM normalized and batch corrects
+     batch.cpm<-removeBatchEffect(expr,batch=batchVector)
+      }
+   if(batchNormalize==FALSE){ 
+  counts<-log2(1+expr) ##enirhcment on log2 is required
+  }else if(batchNormalize==TRUE){
+   counts<-log2(1+batch.cpm)
+    ### filter NaNs
+    id<-which(is.na(counts))
+    counts[id]<-1.0
+    }
+  } else {
   counts<-collapseTpm(module.kexp,"gene_name")
   counts<-log2(1+counts)
    }  
@@ -100,8 +116,14 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
 
     ##call qusage for each stage
     qusage_run1<-qusageRun(cnts_mt=cnts_phLS,MsigDB=MsigDB,comparison=comparison1,control=controls,module=allcolors[i],paired=paired)
+     if(comparisonNumber==2){
     qusage_run2<-qusageRun(cnts_mt=cnts_blsLS,MsigDB=MsigDB,comparison=comparison2,control=controls,module=allcolors[i],paired=paired)
- 
+    }else if(comparisonNumber==1){
+     qusage_run2<-qusage_run1
+     #if comparisonNumber1 is true then we check and use only comparison1-controls and copy that into a dummy run2.
+    }else{
+     cat("currently support only 2 paired time points of stage.\n")
+    }
       if(nrow(qusage_run1[!is.na(qusage_run1$p.Value),])>1){
       qusage_run1<-data.frame(qusage_run1[!is.na(qusage_run1$p.Value),],
                              colorKey=allcolors[i],
