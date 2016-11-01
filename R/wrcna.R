@@ -317,5 +317,6 @@ net = blockwiseModules(datExpr, power = selectedPower,
   } ##by block
   save(rnames,file=paste0("wgcna.",how,"_",byWhich,".dataInput.RData"),compress=TRUE)
    cat("done.\n")
+   dev.off()
    return(rnames)
  }#main

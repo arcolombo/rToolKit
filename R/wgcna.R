@@ -164,7 +164,7 @@ if (!gsg$allOK)
      labels=powers,cex=cex1,col="red");
   selectedPower<-readPower()
   ####Print to PDF############
-  pdf(paste0("selectedPower_",how,"analysis.pdf"))
+  pdf(paste0("WGCNAselectedPower_",how,"analysis.pdf"))
   sizeGrWindow(9, 5)
   par(mfrow = c(1,2));
   cex1 = 0.9;

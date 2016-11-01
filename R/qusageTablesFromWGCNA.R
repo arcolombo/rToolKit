@@ -138,7 +138,8 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
                                     bioKey=allcolors[i],
                                     contrastKey=tolower(comparison1))
        } 
-      if(nrow(qusage_run2[!is.na(qusage_run2$p.Value),])>1){                             qusage_run2<-data.frame(qusage_run2[!is.na(qusage_run2$p.Value),] ,
+      if(nrow(qusage_run2[!is.na(qusage_run2$p.Value),])>1){                          
+          qusage_run2<-data.frame(qusage_run2[!is.na(qusage_run2$p.Value),] ,
                               colorKey=allcolors[i], 
                               bioKey=allcolors[i],
                               contrastKey=tolower(comparison2))
@@ -280,7 +281,7 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
      full_counts<-log2(1+full.batch.cpm)
      full.id<-which(is.na(full_counts))
      full_counts[full.id]<-1.0
-      }else if(batchNormalized==FALSE){
+      }else if(batchNormalize==FALSE){
      full_counts<-log2(1+expr) ##enirhcment on log2 is required
     }
   } else{
