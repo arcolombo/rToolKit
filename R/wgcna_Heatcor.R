@@ -12,7 +12,7 @@
 #' @import dendsort
 #' @export
 #' @return images of eigengenes
-wgcna_Heatcor<-function(lnames,read.cutoff=2,plotDot=FALSE,recalc=FALSE,targets=NULL,how=how,reOrder=TRUE){
+wgcna_Heatcor<-function(lnames=NULL,read.cutoff=2,plotDot=FALSE,recalc=FALSE,targets=NULL,how=how,reOrder=TRUE){
  
 if(is.null(lnames)==TRUE){
 cat("Please call wgcna.R prior calling a heatmap...\n")
