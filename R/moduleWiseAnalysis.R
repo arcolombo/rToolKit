@@ -15,7 +15,7 @@
 #' @import pvclust
 #' @import ComplexHeatmap
 #' @export
-moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sqlite",wrcnaDbName="wrcnaDbLite.cpm.sqlite",qusageDbName="qusageDbLite.cpm.sqlite", geneModules=c("darkturquoise","red","grey60","pink","darkred","royalblue","green","magenta","brown"),repeatModules=c("blue","brown","grey","turquoise"),read.cutoff=2,how="cpm",enrichmentCaller=c("go","qusage"),comparison1="phsc",comparison2="blast",openDevice=FALSE,p.value=0.1 ){
+moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sqlite",wrcnaDbName="wrcnaDbLite.cpm.sqlite",qusageDbName="qusageDbLite.cpm.sqlite", geneModules=c("darkturquoise","red","grey60","pink","darkred","royalblue","green","magenta","brown"),repeatModules=c("blue","brown","grey","turquoise"),read.cutoff=2,how="tpm",enrichmentCaller=c("go","qusage"),comparison1="phsc",comparison2="blast",openDevice=FALSE,p.value=0.1 ){
   ##FIX ME: generically handle repeat modules of various sizes.
   how<-match.arg(how,c("cpm","tpm"))
   ## gather all ENGIDs for each module.

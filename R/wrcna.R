@@ -15,7 +15,7 @@
 #' @return images and cluster at the gene and repeat level
 wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),species=c("Homo.sapiens","Mus.musculus"),selectedPower=6, intBiotypes=c("acromeric","centromeric","CR1","Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","hAT","HSFAU","L1","L2","LTR Retrotransposon","Eutr1","Merlin","PiggyBac","Pseudogene","Repetitive element","satellite","snRNA","SVA","TcMar","telo","Transposable Element","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm"), batchNormalize=FALSE,batchVector=NULL,design=NULL){
    
-   if(is.null(design)==TRUE){
+   if(batchNormalize==TRUE &&  is.null(design)==TRUE){
    stopifnot(is.null(metadata(kexp)$design)==FALSE)
    design<-metadata(kexp)$design
   }

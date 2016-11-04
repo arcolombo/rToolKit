@@ -15,7 +15,7 @@
 #' @export
 #' @return images and cluster at the gene and repeat level
 wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE,species=c("Homo.sapiens","Mus.musculus"),selectedPower=NULL,intBiotypes=c("acromeric","centromeric","CR1","Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","hAT","HSFAU","L1","L2","LTR Retrotransposon","Eutr1","Merlin","PiggyBac","Pseudogene","Repetitive element","satellite","snRNA","SVA","TcMar","telo","Transposable Element","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm"),batchNormalize=FALSE,batchVector=NULL,design=NULL){
-   if(is.null(design)==TRUE){
+  if(batchNormalize==TRUE && is.null(desing)==TRUE){
    stopifnot(is.null(metadata(kexp)$design)==FALSE)
    design<-metadata(kexp)$design
   }
@@ -27,6 +27,7 @@ wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),en
 
   if(how=="cpm"){
   ###rows must be SAMPLES columns genes
+  if(batchNormalize==FALSE){
   cpm<-collapseBundles(kexp,"gene_id",read.cutoff=read.cutoff)
   cpm<-cpm[!grepl("^ERCC",rownames(cpm)),]
   rexp<-findRepeats(kexp)
@@ -43,15 +44,15 @@ wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),en
   rdm.norm<-cpm(rd,normalized.lib.sizes=TRUE,log=FALSE)
   rpm<-rdm.norm
   rdm.norm<-NULL
-   if(batchNormalize==TRUE){
-     stopifnot(is.null(batchVector)==FALSE)
-     stopifnot(length(batchVector)==ncol(kexp))##the batchVector nomenclature must match the length of columns.
-     ##takes TMM normalized and batch corrects
-     batch.cpm<-removeBatchEffect(log2(1+cpm),batch=batchVector,design=design)
-    batch.rpm<-removeBatchEffect(log2(1+rpm),batch=batchVector,design=design)
-     
-     }
-   }#tmm norm
+      }#tmm norm
+    rpm<-log2(1+rpm)
+    cpm<-log2(1+cpm)
+    }else if(batchNormalize==TRUE){
+   ##task: input kexp, design, batchVector
+   ##the caller will batch normalize WITH design matrix
+   ##output: log2 batch cpm, re-convert into CPM, final output is batch correct CPM values tx_id
+  ##taks for this branch is to collapse tx_id into gene_id (CPM), and tx_biotype(cpm)
+  }##batch
   }else if(how=="tpm"){
   cpm<-collapseTpm(kexp,"gene_id",read.cutoff=read.cutoff)
   cpm<-cpm[!grepl("^ERCC",rownames(cpm)),]
@@ -61,18 +62,7 @@ wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),en
   cpm<-log2(1+cpm) ##log2 transform recommended of genes
   rpm<-log2(1+rpm) ##log2 transform of repeats.
   }
-  if(batchNormalize==FALSE){
-  cpm<-log2(1+cpm) ##log2 transform recommended of genes
-  rpm<-log2(1+rpm) ##log2 transform of repeats.
-  }else if(batchNormalize==TRUE){
-    cpm<-batch.cpm
-    rpm<-batch.rpm
-    ### filter NaNs
-    id<-which(is.na(cpm))
-    cpm[id]<-1.0
-    rid<-which(is.na(rpm))
-    rpm[rid]<-1.0 
-    }
+  
   #split out repeats
   datExpr0<-t(cpm)
   gsg<-goodSamplesGenes(datExpr0,verbose=3)
@@ -122,7 +112,7 @@ if (!gsg$allOK)
   plot(sampleTree, main = "Sample clustering to detect outliers",
        sub="",
       xlab="", cex.lab = 1.5,
-     cex.axis = 1.5, cex.main = 2
+     cex.axis = 1.5, cex.main = 2)
    dev.off()
  
 

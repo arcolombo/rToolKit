@@ -19,7 +19,7 @@
 #' @import TxDbLite
 #' @export
 #' @return a qusageDbLite db
-qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",version="1.0.0",Module.color="brown",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),how=c("cpm","tpm"),species=c("Homo.sapiens","Mus.musculus"),comparison1="pHSC",comparison2="Blast",controls="LSC",paired=TRUE,batchNormalize=FALSE,batchVector=NULL,comparisonNumber=1,skipWithinEnrichment=TRUE ){
+qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",version="1.0.0",Module.color="brown",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),how=c("cpm","tpm"),species=c("Homo.sapiens","Mus.musculus"),comparison1="pHSC",comparison2="Blast",controls="LSC",paired=TRUE,batchNormalize=FALSE,batchVector=NULL,comparisonNumber=1,skipWithinEnrichment=TRUE,qusageDbName="qusageDbLite" ){
 
 ##task: this will take a full kexp and first normalize then collapse by gene_name then log2 transform or tpm normalize and pass into qusageRun.R to handle the pre-proccessing for qusage call.  the output should be module.biotype.enrich specific data.  then write to a db. 
  ##important note: it is tempting to merely use collapseBundles(kexp,"gene_name") and pipe into qusage HOWEVER QUSAGE REQUIRES NORMALIZED LOG2 XR. collapseBundles will only use the raw counts(kexp) bundle gene_name counts.  here we *****MUST******* use tmm normalized or Tpm calls.
@@ -68,7 +68,7 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
  allTraits<-allTraits[grepl("^GCor_",allTraits)]
  allTraits<-sapply(strsplit(allTraits,"_"),function(x) x[2])
   if(verbose) cat("Creating Enrichment database...\n")
-  qusage.dbname<-paste0("qusageDbLite.",how,".sqlite")
+  qusage.dbname<-paste0(qusageDbName,".",how,".sqlite")
   quscon<-dbConnect(dbDriver("SQLite"),dbname=qusage.dbname)
   
 ## take the module genes unfiltered --> qusage (modulesBy)
