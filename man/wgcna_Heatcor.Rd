@@ -4,8 +4,8 @@
 \alias{wgcna_Heatcor}
 \title{produces a correlation map given wgcna network data using a different library ComplexHeatmap}
 \usage{
-wgcna_Heatcor(lnames, read.cutoff = 2, plotDot = FALSE, recalc = FALSE,
-  targets = NULL, how = how, reOrder = TRUE)
+wgcna_Heatcor(lnames = NULL, read.cutoff = 2, plotDot = FALSE,
+  recalc = FALSE, targets = NULL, how = how, reOrder = TRUE)
 }
 \arguments{
 \item{lnames}{this is the results from wgcna.R}

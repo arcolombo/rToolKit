@@ -13,8 +13,12 @@
 #' @import edgeR
 #' @export
 #' @return images and cluster at the gene and repeat level
-wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),species=c("Homo.sapiens","Mus.musculus"),selectedPower=6,intBiotypes=c("Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","L1","L2","LTR Retrotransposon","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm"), batchNormalize=FALSE,batchVector=NULL){
-  
+wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),species=c("Homo.sapiens","Mus.musculus"),selectedPower=6, intBiotypes=c("acromeric","centromeric","CR1","Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","hAT","HSFAU","L1","L2","LTR Retrotransposon","Eutr1","Merlin","PiggyBac","Pseudogene","Repetitive element","satellite","snRNA","SVA","TcMar","telo","Transposable Element","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm"), batchNormalize=FALSE,batchVector=NULL,design=NULL){
+   
+   if(is.null(design)==TRUE){
+   stopifnot(is.null(metadata(kexp)$design)==FALSE)
+   design<-metadata(kexp)$design
+  }
    how<-match.arg(how,c("cpm","tpm"))
    byWhich<-"repeat"
   ##prepare data
@@ -31,19 +35,21 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
   rpm<-rpm[!grepl("^ERCC",rownames(rpm)),]
    if(tmm.norm==TRUE){
   d<-DGEList(counts=cpm)
-  cpm.norm<-cpm(d,normalized.lib.sizes=TRUE)
+  d<-calcNormFactors(d)
+  cpm.norm<-cpm(d,normalized.lib.sizes=TRUE,log=FALSE)
   cpm<-cpm.norm
   cpm.norm<-NULL
   rd<-DGEList(counts=rpm)
-  rdm.norm<-cpm(rd,normalized.lib.sizes=TRUE)
+  rd<-calcNormFactors(rd)
+  rdm.norm<-cpm(rd,normalized.lib.sizes=TRUE,log=FALSE)
   rpm<-rdm.norm
   rdm.norm<-NULL
    if(batchNormalize==TRUE){
      stopifnot(is.null(batchVector)==FALSE)
      stopifnot(length(batchVector)==ncol(kexp))##the batchVector nomenclature must match the length of columns.
      ##takes TMM normalized and batch corrects
-     batch.cpm<-removeBatchEffect(cpm,batch=batchVector)
-     batch.rpm<-removeBatchEffect(rpm,batch=batchVector)
+     batch.cpm<-removeBatchEffect(log2(1+cpm),batch=batchVector,design=design)
+     batch.rpm<-removeBatchEffect(log2(1+rpm),batch=batchVector,design=design)
       }
      }#tmm.norm
   }else if(how=="tpm"){
@@ -52,13 +58,15 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
   cpm<-cpm[!grepl("^ENS",rownames(cpm)),]
   rpm<-collapseTpm(rexp,"tx_biotype",read.cutoff=read.cutoff)
   rpm<-rpm[!grepl("^ERCC",rownames(rpm)),]
+  cpm<-log2(1+cpm)
+  rpm<-log2(1+rpm) ##log2 transform of repeats.
   }
   if(batchNormalize==FALSE){
   cpm<-log2(1+cpm) 
   rpm<-log2(1+rpm) ##log2 transform of repeats.
   }else if(batchNormalize==TRUE){
-   cpm<-log2(1+batch.cpm)
-    rpm<-log2(1+batch.rpm)
+   cpm<-batch.cpm
+    rpm<-batch.rpm
     ### filter NaNs
     id<-which(is.na(cpm))
     cpm[id]<-1.0
@@ -278,7 +286,7 @@ net = blockwiseModules(datExpr, power = selectedPower,
   # Convert labels to colors for plotting
   bwModuleColors = labels2colors(bwLabels)
   geneTree<-bwnet$dendrograms
-  save(bwnet,file="bwnet.RData",compress=TRUE)
+  save(bwnet,file=paste("bwnet_",how,"_",selectedPower,".RData"),compress=TRUE)
   # open a graphics window
   sizeGrWindow(6,6)
  ########################################################################
@@ -315,7 +323,7 @@ net = blockwiseModules(datExpr, power = selectedPower,
             how=how,
             byWhich=byWhich)
   } ##by block
-  save(rnames,file=paste0("wgcna.",how,"_",byWhich,".dataInput.RData"),compress=TRUE)
+  save(rnames,file=paste0("wgcna.",how,"_",selectedPower,"_",byWhich,".dataInput.RData"),compress=TRUE)
    cat("done.\n")
    dev.off()
    return(rnames)

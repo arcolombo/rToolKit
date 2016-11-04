@@ -14,11 +14,12 @@
 #' @param batchNormalize boolean, if true then the samples are from different batches and the edgeR batchCorrectEffect will be called for cpm
 #' @param batchVector this is the batch vector. the length of the batch vector must match the number of columns. there are not any checks to validate the batch effect factors, user dependent input
 #' @param comparisonNumber integer 1 or 2.  this integer reflects how many pairwise comparisons needed.  for time series analysis, it is sometimes desired to test for enrichment at N different time points,  intial-comparison1 , and intial-comparison2. qusage will be called to compare the comparisonNumber pairs 
+#' @param skipWithinEnrichment boolean, if true then only the gene modules are tested for pathway activation. if false then each biotype module iwth the highest significant genes correlating to the specific biotype module are additionally tested for pathway activation. 
 #' @import edgeR
 #' @import TxDbLite
 #' @export
 #' @return a qusageDbLite db
-qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",version="1.0.0",Module.color="brown",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),how=c("cpm","tpm"),species=c("Homo.sapiens","Mus.musculus"),comparison1="pHSC",comparison2="Blast",controls="LSC",paired=TRUE,batchNormalize=FALSE,batchVector=NULL,comparisonNumber=1 ){
+qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",version="1.0.0",Module.color="brown",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),how=c("cpm","tpm"),species=c("Homo.sapiens","Mus.musculus"),comparison1="pHSC",comparison2="Blast",controls="LSC",paired=TRUE,batchNormalize=FALSE,batchVector=NULL,comparisonNumber=1,skipWithinEnrichment=TRUE ){
 
 ##task: this will take a full kexp and first normalize then collapse by gene_name then log2 transform or tpm normalize and pass into qusageRun.R to handle the pre-proccessing for qusage call.  the output should be module.biotype.enrich specific data.  then write to a db. 
  ##important note: it is tempting to merely use collapseBundles(kexp,"gene_name") and pipe into qusage HOWEVER QUSAGE REQUIRES NORMALIZED LOG2 XR. collapseBundles will only use the raw counts(kexp) bundle gene_name counts.  here we *****MUST******* use tmm normalized or Tpm calls.
@@ -119,7 +120,14 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
      if(comparisonNumber==2){
     qusage_run2<-qusageRun(cnts_mt=cnts_blsLS,MsigDB=MsigDB,comparison=comparison2,control=controls,module=allcolors[i],paired=paired)
     }else if(comparisonNumber==1){
-     qusage_run2<-qusage_run1
+      qusage_run2<-data.frame(pathway.name="NA",
+                                    log.fold.change="NA",
+                                    p.Value="NA",
+                                    FDR="NA",
+                                    colorKey=allcolors[i],
+                                    bioKey=allcolors[i],
+                                    contrastKey=tolower(comparison2))
+
      #if comparisonNumber1 is true then we check and use only comparison1-controls and copy that into a dummy run2.
     }else{
      cat("currently support only 2 paired time points of stage.\n")
@@ -156,6 +164,7 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
        }
    ##entire module universe of enrichment.
           qusage_module<-rbind(qusage_run1,qusage_run2) 
+  if(skipWithinEnrichment==FALSE){
     for( j in 1:length(allTraits)){
    ########SECOND FOR LOOP ACROSS ALL TRAITS HERE #########
    ###here we filter the most significant correlated module ~ trait (driver) associations and run enrichment on these
@@ -257,6 +266,7 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
       qusage_module<-rbind(qusage_module,qusage_module.trait)
 
   } ##end of j allTrait loop
+ }##boolean to skip within enrichment calls
   if(verbose) cat("Writing Module Enrichment Database...\n")
 
   colnames(qusage_module)<-c("pathway_name","logFC","pvalue","FDR","colorKey","bioKey","contrastKey")

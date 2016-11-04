@@ -232,7 +232,7 @@ setMethod("pathways", "qusageDbLite", function(x,Module.color=NULL,tx.Biotype=NU
   
   sql<-paste0("select pathway_name, logFC, pvalue, FDR from ",Module.color," where colorKey='",Module.color,"'"," and bioKey='",tx.Biotype,"'"," and contrastKey='",contrast,"'")
   res<-as.data.frame(dbGetQuery(dbconn(x),sql))
-  res<-res[which(res$pvalue<p.value),]
+  res<-res[which(as.numeric(res$pvalue)<p.value),]
   return(res)
 
  })

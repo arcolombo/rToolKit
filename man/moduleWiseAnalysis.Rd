@@ -11,7 +11,7 @@ moduleWiseAnalysis(kexp, lnames, rnames,
   "red", "grey60", "pink", "darkred", "royalblue", "green", "magenta", "brown"),
   repeatModules = c("blue", "brown", "grey", "turquoise"), read.cutoff = 2,
   how = "cpm", enrichmentCaller = c("go", "qusage"), comparison1 = "phsc",
-  comparison2 = "blast", openDevice = FALSE)
+  comparison2 = "blast", openDevice = FALSE, p.value = 0.1)
 }
 \arguments{
 \item{kexp}{this should be the full stage kexp, could even be a tcga kexp}

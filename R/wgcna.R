@@ -11,10 +11,14 @@
 #' @param useAllBiotypes boolean if false then intBiotypes are used, if true than the correlations are checked against all tx_biotypes
 #' @import WGCNA
 #' @import edgeR
+#' @import sva
 #' @export
 #' @return images and cluster at the gene and repeat level
-wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE,species=c("Homo.sapiens","Mus.musculus"),selectedPower=NULL,intBiotypes=c("Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","L1","L2","LTR Retrotransposon","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm"),batchNormalize=FALSE,batchVector=NULL){
-  ##FIX ME: add option for TPMs as well as  CPM. Add TPM support
+wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE,species=c("Homo.sapiens","Mus.musculus"),selectedPower=NULL,intBiotypes=c("acromeric","centromeric","CR1","Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","hAT","HSFAU","L1","L2","LTR Retrotransposon","Eutr1","Merlin","PiggyBac","Pseudogene","Repetitive element","satellite","snRNA","SVA","TcMar","telo","Transposable Element","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm"),batchNormalize=FALSE,batchVector=NULL,design=NULL){
+   if(is.null(design)==TRUE){
+   stopifnot(is.null(metadata(kexp)$design)==FALSE)
+   design<-metadata(kexp)$design
+  }
    how<-match.arg(how,c("cpm","tpm"))
   ##prepare data
   whichWGCNA<-match.arg(whichWGCNA,c("single","block"))
@@ -30,20 +34,23 @@ wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),en
   rpm<-rpm[!grepl("^ERCC",rownames(rpm)),]
  if(tmm.norm==TRUE){
   d<-DGEList(counts=cpm)
-  cpm.norm<-cpm(d,normalized.lib.sizes=TRUE)
+  d<-calcNormFactors(d)
+  cpm.norm<-cpm(d,normalized.lib.sizes=TRUE,log=FALSE)
   cpm<-cpm.norm
   cpm.norm<-NULL
   rd<-DGEList(counts=rpm)
-  rdm.norm<-cpm(rd,normalized.lib.sizes=TRUE)
+  rd<-calcNormFactors(rd)
+  rdm.norm<-cpm(rd,normalized.lib.sizes=TRUE,log=FALSE)
   rpm<-rdm.norm
   rdm.norm<-NULL
    if(batchNormalize==TRUE){
      stopifnot(is.null(batchVector)==FALSE)
      stopifnot(length(batchVector)==ncol(kexp))##the batchVector nomenclature must match the length of columns.
      ##takes TMM normalized and batch corrects
-     batch.cpm<-removeBatchEffect(cpm,batch=batchVector)
-     batch.rpm<-removeBatchEffect(rpm,batch=batchVector)
-      }
+     batch.cpm<-removeBatchEffect(log2(1+cpm),batch=batchVector,design=design)
+    batch.rpm<-removeBatchEffect(log2(1+rpm),batch=batchVector,design=design)
+     
+     }
    }#tmm norm
   }else if(how=="tpm"){
   cpm<-collapseTpm(kexp,"gene_id",read.cutoff=read.cutoff)
@@ -51,13 +58,15 @@ wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),en
   rexp<-findRepeats(kexp)
   rpm<-collapseTpm(rexp,"tx_biotype",read.cutoff=read.cutoff)
   rpm<-rpm[!grepl("^ERCC",rownames(rpm)),]
+  cpm<-log2(1+cpm) ##log2 transform recommended of genes
+  rpm<-log2(1+rpm) ##log2 transform of repeats.
   }
   if(batchNormalize==FALSE){
   cpm<-log2(1+cpm) ##log2 transform recommended of genes
   rpm<-log2(1+rpm) ##log2 transform of repeats.
   }else if(batchNormalize==TRUE){
-    cpm<-log2(1+batch.cpm)
-    rpm<-log2(1+batch.rpm)
+    cpm<-batch.cpm
+    rpm<-batch.rpm
     ### filter NaNs
     id<-which(is.na(cpm))
     cpm[id]<-1.0
@@ -108,6 +117,15 @@ if (!gsg$allOK)
 # Plot a line to show the cut
   abline(h = cutHeight, col = "red");
   readkey()
+
+  pdf(paste0("hclust_",selectedPower,"_",how,".pdf"),width=12,height=9)
+  plot(sampleTree, main = "Sample clustering to detect outliers",
+       sub="",
+      xlab="", cex.lab = 1.5,
+     cex.axis = 1.5, cex.main = 2
+   dev.off()
+ 
+
 # Determine cluster under the line
   clust = cutreeStatic(sampleTree, cutHeight = cutHeight, minSize = minBranch)
   print(table(clust))
@@ -132,7 +150,7 @@ if (!gsg$allOK)
                     marAll=c(1,11,3,3),
                     main=paste0("TxBiotype ",how," Correlation Samples")) 
   readkey()   
-  pdf(paste0("TxBiotype_",how,"_Correlation_Samples.pdf"))
+  pdf(paste0("TxBiotype_",how,"_Correlation_Samples.pdf"),width=12,heigh=10)
   plotDendroAndColors(sampleTree2, traitColors,
                     groupLabels = names(datTraits),
                     marAll=c(1,11,3,3),
@@ -165,8 +183,6 @@ if (!gsg$allOK)
   selectedPower<-readPower()
   ####Print to PDF############
   pdf(paste0("WGCNAselectedPower_",how,"analysis.pdf"))
-  sizeGrWindow(9, 5)
-  par(mfrow = c(1,2));
   cex1 = 0.9;
   # Scale-free topology fit index as a function of the soft-thresholding power
   plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
@@ -276,7 +292,7 @@ net = blockwiseModules(datExpr, power = selectedPower,
   # Convert labels to colors for plotting
   bwModuleColors = labels2colors(bwLabels)
   geneTree<-bwnet$dendrograms
-  save(bwnet,file="bwnet.RData",compress=TRUE)
+  save(bwnet,file=paste0("bwnet_",selectedPower,".RData"),compress=TRUE)
   # open a graphics window
   sizeGrWindow(6,6)
  ########################################################################
@@ -312,7 +328,7 @@ net = blockwiseModules(datExpr, power = selectedPower,
             how=how, 
             byWhich="gene")
   } ##by block
-  save(lnames,file=paste0("wgcna.",how,".dataInput.RData"),compress=TRUE)
+  save(lnames,file=paste0("wgcna.",how,"_",selectedPower,".dataInput.RData"),compress=TRUE)
   dev.off()  
 # Display the correlation values within a heatmap plot
   #wgcna_Cormap(lnames,read.cutoff=read.cutoff,plotDot=FALSE,how=how) 

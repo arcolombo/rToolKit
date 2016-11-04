@@ -10,7 +10,7 @@ wgcna(kexp, read.cutoff = 2, minBranch = 2, whichWGCNA = c("single",
   "Endogenous Retrovirus", "ERV1", "ERV3", "ERVK", "ERVL", "L1", "L2",
   "LTR Retrotransposon", "Satellite"), useAllBiotypes = FALSE,
   tmm.norm = TRUE, useBiCor = TRUE, how = c("cpm", "tpm"),
-  bathNormalize = FALSE, batchVector = NULL)
+  batchNormalize = FALSE, batchVector = NULL)
 
 wgcna(kexp, read.cutoff = 2, minBranch = 2, whichWGCNA = c("single",
   "block"), entrezOnly = FALSE, species = c("Homo.sapiens", "Mus.musculus"),
@@ -18,7 +18,7 @@ wgcna(kexp, read.cutoff = 2, minBranch = 2, whichWGCNA = c("single",
   "Endogenous Retrovirus", "ERV1", "ERV3", "ERVK", "ERVL", "L1", "L2",
   "LTR Retrotransposon", "Satellite"), useAllBiotypes = FALSE,
   tmm.norm = TRUE, useBiCor = TRUE, how = c("cpm", "tpm"),
-  bathNormalize = FALSE, batchVector = NULL)
+  batchNormalize = FALSE, batchVector = NULL)
 }
 \arguments{
 \item{kexp}{a repeat kexp over stages}
