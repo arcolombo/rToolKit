@@ -10,6 +10,7 @@
 \alias{metadata,wgcnaDbLite-method}
 \alias{modulesBy,wgcnaDbLite-method}
 \alias{pathways,qusageDbLite-method}
+\alias{pickPathway,qusageDbLite-method}
 \alias{qusageDbLite-class}
 \alias{show,wgcnaDbLite-method}
 \alias{traitsBy,wgcnaDbLite-method}
@@ -40,6 +41,9 @@
 \S4method{goEnrich}{wgcnaDbLite}(x, Module.color = NULL, p.value = 0.05)
 
 \S4method{listModuleColors}{wgcnaDbLite}(x, ...)
+
+\S4method{pickPathway}{qusageDbLite}(x, Module.color = NULL, p.value = 0.05,
+  keyWord = NULL)
 }
 \arguments{
 \item{x}{wgcnaDblite SQL-lite database instance}
@@ -59,6 +63,8 @@
 \item{tx.Biotype}{enter hte module color if you want the full module enrichment, or a tx.biotype for a fixed trait}
 
 \item{contrast}{either phsc or blast}
+
+\item{keyWord}{the name must match what is in the pathways list}
 
 \item{x}{this is the SQLite db}
 
@@ -99,6 +105,14 @@
 \item{x}{wgcnaDblite SQL-lite database instance}
 
 \item{...}{additional parameters releated to annotation database}
+
+\item{x}{this is the SQLite db}
+
+\item{Module.color}{this is a selected table in the db, a module color}
+
+\item{contrast}{either phsc or blast}
+
+\item{p.value}{numeric threshold}
 }
 \description{
 A parent class for wgcna databases including annotations
@@ -116,6 +130,8 @@ pathways will return the qusage enrichment pathway descriptions for a given modu
 kexpEnrich will return the qusage enrichment pathway descriptions for a given entire kexp, not module specific, but every gene in te kexp. The contrast is to gather the enrichment data for the comparison either pHSC.vs.LSC (comparison=phsc) or Blast.vs.LSC (comparison=blast)  [lower case only!]
 
 goEnrich will return the WGCNA experimental enrichment pathway descriptions for a given  gene level kexp, module specific. The contrast is to gather the enrichment data for the comparison is go [lower case only!]
+
+pickPathway will return the qusage enrichment pathway descriptions for a given module color and a given function that matches the keyword search in the overal module.   the contrast is to gather the enrichment data for the comparison either pHSC.vs.LSC (comparison=phsc) or Blast.vs.LSC (comparison=blast)  [lower case only!]
 }
 \section{Slots}{
 

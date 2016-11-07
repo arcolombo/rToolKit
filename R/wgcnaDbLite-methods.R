@@ -290,4 +290,41 @@ setMethod("listModuleColors", "wgcnaDbLite", function(x, ...) { # {{{
 
 
 
+
+setGeneric("pickPathway",function(x,Module.color=NULL,p.value=NULL,keyWord=NULL) standardGeneric("pickPathway"))
+
+
+
+
+#' @rdname wgcnaDbLite-class
+#' @description pickPathway will return the qusage enrichment pathway descriptions for a given module color and a given function that matches the keyword search in the overal module.   the contrast is to gather the enrichment data for the comparison either pHSC.vs.LSC (comparison=phsc) or Blast.vs.LSC (comparison=blast)  [lower case only!]
+#' @param x this is the SQLite db
+#' @param Module.color this is a selected table in the db, a module color 
+#' @param contrast  either phsc or blast
+#' @param p.value numeric threshold
+#' @param keyWord the name must match what is in the pathways list 
+#' @export
+setMethod("pickPathway", "qusageDbLite", function(x,Module.color=NULL,p.value=0.05,keyWord=NULL) {
+
+
+  ##FIX ME: safety check for the input color using dbListTables,  signature
+  allcolors<-dbListTables(dbconn(x))
+  stopifnot(Module.color%in%allcolors ==TRUE)
+
+  #drivers are defined as the most significantly cross correlated genes
+
+  sql<-paste0("select pathway_name, logFC, pvalue, FDR from ",Module.color," where colorKey='",Module.color,"'")
+  res<-as.data.frame(dbGetQuery(dbconn(x),sql))
+  res<-res[which(as.numeric(res$pvalue)<p.value),]
+  res2<-res[grep(keyWord,res$pathway_name,ignore.case=TRUE),]
+  if(nrow(res2)>0){
+  res3<-data.frame(res2,moduleTotal=nrow(res),keyWord_Percentage=(nrow(res2)/nrow(res)),color=Module.color)
+  }else if(nrow(res2)==0){
+  res3<-data.frame(pathway_name=NA,logFC=NA,pvalue=NA,FDR=NA,moduleTotal=nrow(res),keyWord_Percentage=0,color=Module.color)
+  }
+  return(res3)
+
+ })
+
+
 ###FIX ME: add a consensus pathways function

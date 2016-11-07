@@ -56,7 +56,8 @@ powerThresholdAnalysis<-function(lnames=NULL,datExpr=NULL,how="gene"){
    text(sft$fitIndices[,1], sft$fitIndices[,5],
      labels=powers,cex=cex1,col="red");
   dev.off()
-
+print(sft)
+write.csv(sft,file="powerAnalysis.csv")
 return(selectedPower)
 
 } ##main

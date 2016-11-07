@@ -13,7 +13,8 @@ qusageTablesFromWGCNA(kexp, verbose = TRUE, dbname = "wgcnaDBLite.sqlite",
   "h.all.v5.1.symbols.gmt"), how = c("cpm", "tpm"),
   species = c("Homo.sapiens", "Mus.musculus"), comparison1 = "pHSC",
   comparison2 = "Blast", controls = "LSC", paired = TRUE,
-  batchNormalize = FALSE, batchVector = NULL, comparisonNumber = 1)
+  batchNormalize = FALSE, batchVector = NULL, comparisonNumber = 1,
+  skipWithinEnrichment = TRUE, qusageDbName = "qusageDbLite")
 
 qusageDbLiteMetadata(kexp, packageName, species = NULL, Ensmbl, how = how)
 }
@@ -47,6 +48,8 @@ qusageDbLiteMetadata(kexp, packageName, species = NULL, Ensmbl, how = how)
 \item{batchVector}{this is the batch vector. the length of the batch vector must match the number of columns. there are not any checks to validate the batch effect factors, user dependent input}
 
 \item{comparisonNumber}{integer 1 or 2.  this integer reflects how many pairwise comparisons needed.  for time series analysis, it is sometimes desired to test for enrichment at N different time points,  intial-comparison1 , and intial-comparison2. qusage will be called to compare the comparisonNumber pairs}
+
+\item{skipWithinEnrichment}{boolean, if true then only the gene modules are tested for pathway activation. if false then each biotype module iwth the highest significant genes correlating to the specific biotype module are additionally tested for pathway activation.}
 
 \item{packageName}{the name of the annotation package to be built}
 

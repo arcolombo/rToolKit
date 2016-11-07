@@ -6,19 +6,25 @@
 \usage{
 wgcna(kexp, read.cutoff = 2, minBranch = 2, whichWGCNA = c("single",
   "block"), entrezOnly = FALSE, species = c("Homo.sapiens", "Mus.musculus"),
-  selectedPower = NULL, intBiotypes = c("Alu", "DNA transposon",
-  "Endogenous Retrovirus", "ERV1", "ERV3", "ERVK", "ERVL", "L1", "L2",
-  "LTR Retrotransposon", "Satellite"), useAllBiotypes = FALSE,
-  tmm.norm = TRUE, useBiCor = TRUE, how = c("cpm", "tpm"),
-  batchNormalize = FALSE, batchVector = NULL)
+  selectedPower = NULL, intBiotypes = c("acromeric", "centromeric", "CR1",
+  "Alu", "DNA transposon", "Endogenous Retrovirus", "ERV1", "ERV3", "ERVK",
+  "ERVL", "hAT", "HSFAU", "L1", "L2", "LTR Retrotransposon", "Eutr1", "Merlin",
+  "PiggyBac", "Pseudogene", "Repetitive element", "satellite", "snRNA", "SVA",
+  "TcMar", "telo", "Transposable Element", "Satellite"),
+  useAllBiotypes = FALSE, tmm.norm = TRUE, useBiCor = TRUE,
+  how = c("cpm", "tpm"), batchNormalize = FALSE, batchVector = NULL,
+  design = NULL)
 
 wgcna(kexp, read.cutoff = 2, minBranch = 2, whichWGCNA = c("single",
   "block"), entrezOnly = FALSE, species = c("Homo.sapiens", "Mus.musculus"),
-  selectedPower = NULL, intBiotypes = c("Alu", "DNA transposon",
-  "Endogenous Retrovirus", "ERV1", "ERV3", "ERVK", "ERVL", "L1", "L2",
-  "LTR Retrotransposon", "Satellite"), useAllBiotypes = FALSE,
-  tmm.norm = TRUE, useBiCor = TRUE, how = c("cpm", "tpm"),
-  batchNormalize = FALSE, batchVector = NULL)
+  selectedPower = NULL, intBiotypes = c("acromeric", "centromeric", "CR1",
+  "Alu", "DNA transposon", "Endogenous Retrovirus", "ERV1", "ERV3", "ERVK",
+  "ERVL", "hAT", "HSFAU", "L1", "L2", "LTR Retrotransposon", "Eutr1", "Merlin",
+  "PiggyBac", "Pseudogene", "Repetitive element", "satellite", "snRNA", "SVA",
+  "TcMar", "telo", "Transposable Element", "Satellite"),
+  useAllBiotypes = FALSE, tmm.norm = TRUE, useBiCor = TRUE,
+  how = c("cpm", "tpm"), batchNormalize = FALSE, batchVector = NULL,
+  design = NULL)
 }
 \arguments{
 \item{kexp}{a repeat kexp over stages}
