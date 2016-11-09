@@ -138,8 +138,9 @@ message(paste0("found lnames"))
                 cex.lab.y=.7,
                 colors.lab.y=1.3,
                 main = paste0("Module-Repeat ",how," Biotype relationships"))
-  draw(weight)
-  draw(unweight)
+      draw(weight+weighted.activation.direction)
+
+   draw(unweight+Activation.direction)
    dev.off()
  }
 
