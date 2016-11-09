@@ -229,8 +229,11 @@ setMethod("pathways", "qusageDbLite", function(x,Module.color=NULL,tx.Biotype=NU
   stopifnot(Module.color%in%allcolors ==TRUE)
 
   #drivers are defined as the most significantly cross correlated genes
-  
-  sql<-paste0("select pathway_name, logFC, pvalue, FDR from ",Module.color," where colorKey='",Module.color,"'"," and bioKey='",tx.Biotype,"'"," and contrastKey='",contrast,"'")
+  if(is.null(contrast)==FALSE){
+  sql<-paste0("select pathway_name, logFC, pvalue, FDR, contrastKey from ",Module.color," where colorKey='",Module.color,"'"," and bioKey='",tx.Biotype,"'"," and contrastKey='",contrast,"'")
+  }else{
+   sql<-paste0("select pathway_name, logFC, pvalue, FDR, contrastKey from ",Module.color," where colorKey='",Module.color,"'"," and bioKey='",tx.Biotype,"'")
+ }
   res<-as.data.frame(dbGetQuery(dbconn(x),sql))
   res<-res[which(as.numeric(res$pvalue)<p.value),]
   return(res)
@@ -247,10 +250,16 @@ setGeneric("kexpEnrich",function(x,contrast=NULL,p.value=NULL) standardGeneric("
 #' @param p.value  significanse alpha threshold
 #' @export
 setMethod("kexpEnrich", "qusageDbLite", function(x,contrast=NULL,p.value=0.05) {
- sql<-paste0("select * from kexp where colorKey='kexp' and bioKey='kexp' and contrastKey='",contrast,"'")
+ 
+  if(is.null(contrast)==FALSE){
+  sql<-paste0("select * from kexp where colorKey='kexp' and bioKey='kexp' and contrastKey='",contrast,"'")
+  }else{
+  sql<-paste0("select * from kexp where colorKey='kexp' and bioKey='kexp'")
+  }
   res<-as.data.frame(dbGetQuery(dbconn(x),sql))
   res<-res[which(res$p.Value<p.value),]
-  return(res)
+  colnames(res)<-c("row_names","pathway_name","logFC","pvalue","FDR","colorKey","bioKey","contrastKey")
+  return(res[,!grepl("row_names",colnames(res))] )
 
  })
 
@@ -291,7 +300,7 @@ setMethod("listModuleColors", "wgcnaDbLite", function(x, ...) { # {{{
 
 
 
-setGeneric("pickPathway",function(x,Module.color=NULL,p.value=NULL,keyWord=NULL) standardGeneric("pickPathway"))
+setGeneric("pickPathway",function(x,p.value=NULL,keyWord=NULL,contrast=NULL) standardGeneric("pickPathway"))
 
 
 
@@ -304,25 +313,35 @@ setGeneric("pickPathway",function(x,Module.color=NULL,p.value=NULL,keyWord=NULL)
 #' @param p.value numeric threshold
 #' @param keyWord the name must match what is in the pathways list 
 #' @export
-setMethod("pickPathway", "qusageDbLite", function(x,Module.color=NULL,p.value=0.05,keyWord=NULL) {
-
-
+setMethod("pickPathway", "qusageDbLite", function(x,p.value=0.05,keyWord=NULL,contrast=NULL) {
   ##FIX ME: safety check for the input color using dbListTables,  signature
-  allcolors<-dbListTables(dbconn(x))
-  stopifnot(Module.color%in%allcolors ==TRUE)
-
+  allcolors<-listModuleColors((x))
+  df<-list()
   #drivers are defined as the most significantly cross correlated genes
-
-  sql<-paste0("select pathway_name, logFC, pvalue, FDR from ",Module.color," where colorKey='",Module.color,"'")
-  res<-as.data.frame(dbGetQuery(dbconn(x),sql))
-  res<-res[which(as.numeric(res$pvalue)<p.value),]
-  res2<-res[grep(keyWord,res$pathway_name,ignore.case=TRUE),]
-  if(nrow(res2)>0){
-  res3<-data.frame(res2,moduleTotal=nrow(res),keyWord_Percentage=(nrow(res2)/nrow(res)),color=Module.color)
-  }else if(nrow(res2)==0){
-  res3<-data.frame(pathway_name=NA,logFC=NA,pvalue=NA,FDR=NA,moduleTotal=nrow(res),keyWord_Percentage=0,color=Module.color)
+  for(colR in allcolors){  
+     if(colR!="kexp"){
+    pathd<-pathways((x),Module.color=colR,tx.Biotype=colR,contrast=contrast) }else if(colR=="kexp"){
+  pathd<-kexpEnrich((x),contrast=contrast)  
   }
-  return(res3)
+   ##ranks the absolutre logFC increasing direction
+   pathd$ranking<-rank(abs(pathd$logFC))
+   pathd$module.size<-nrow(pathd)
+   pathd$query.size<-NA
+   pathd$rankTotal<-sum(pathd$ranking)
+
+  if(any(grepl(keyWord,pathd$pathway_name,ignore.case=TRUE))){
+   ##subset
+   res<-pathd[grep(keyWord,pathd$pathway_name,ignore.case=TRUE),]
+   marginal<-data.frame(pathway_name=keyWord,logFC=sum(res$logFC),pvalue=sum(res$pvalue),FDR=sum(res$FDR),contrastKey="total",ranking=sum(res$ranking),module.size=unique(res$module.size),query.size=nrow(res),rankTotal=unique(res$rankTotal),row.names="Total")
+   query.match<-rbind(res,marginal)
+    }else{
+# query.match<-data.frame(pathway_name=NA,logFC=NA,pvalue=NA,FDR=NA,contrastKey=NA,ranking=0,module.size=nrow(pathd),query.size=0,rankTotal=unique(pathd$rankTotal))
+  next 
+    }
+  df[[colR]]<-query.match
+  }##colR loop
+   
+  return(df)
 
  })
 
