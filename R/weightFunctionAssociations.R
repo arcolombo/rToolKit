@@ -3,11 +3,14 @@
 #' @param db the wgcnaDbName
 #' @param qdb the qusageDbLite name
 #' @param functionKeyWords this is a single character that will be grep'd from the list of pathway modules 
+#' @import ComplexHeatmap
 #' @export
 #' @return a data frame with the queried keyword in every module and pathway information
-weightFunctionAssociations<-function(lnames,rnames,read.cutoff=2,recalc=FALSE,how=how,dbName=NULL,qdbName=NULL,keyWords=NULL){
+weightFunctionAssociations<-function(lnames,rnames,recalc=FALSE,how=how,dbName=NULL,qdbName=NULL,keyWords=NULL){
  
-   df<-pickPathway(qusageDbLite(qdb),keyWord=keyWords)
+   df<-pickPathway(qusageDbLite(qdbName),keyWord=keyWords)
+   csvName<-paste0(gsub(" ","_",how),"_functionAssoc.csv")
+   lapply(df,function(x) write.table(data.frame(x),file=csvName,append=TRUE,sep=',',row.names=FALSE,col.names=TRUE))
   print(df)
   ###This requires that rnames has the columns renamed txBiotypes that lead the module
   ### this ranks the correlation matrix by the rank of the pathway function queried.  this rewards correlations to highly ranked pathway query functions, and should penalize slighly low ranked correlations to low ranked pathway query functions.  normalizes the module pathway size.
@@ -62,8 +65,17 @@ message(paste0("found lnames"))
   rTraitCor<-rTraitCor[,colnames(rTraitCor)%in%names(moduleTraitCor)]
   }
   corrMap<-bicor(t(moduleTraitCor),t(rTraitCor))
+  corrMap.pvalue<-corPvalueStudent(corrMap,nrow(corrMap))
   weightedAssociation<-(corrMap*(ranking.weight)) #should penalize low weights and reward high weights
+   large<-which(weightedAssociation>1)
+   small<-which(weightedAssociation< ( -1) )
+   wind<-weightedAssociation
+   wind[large]<-1
+   wind[small]<-(-1)  
+ weighted.pvalue<-corPvalueStudent(wind,nrow(weightedAssociation))
 
+
+    #####
   ha_mix_top=HeatmapAnnotation(density_line = anno_density(weightedAssociation,
                                             type = "line"),
                               heatmap = anno_density(weightedAssociation,
@@ -71,12 +83,53 @@ message(paste0("found lnames"))
   weighted.activation.direction<-Heatmap(asinh(activation.direction*ranking.weight),name="Activation Direction",show_row_names=FALSE)
 
     weight<-Heatmap(asinh(weightedAssociation),
+                   col = colorRamp2(c(-1, 0, 1), c("blue", "white", "red")),
                   name = "asinh(weight)",
                   top_annotation = ha_mix_top,
                   top_annotation_height = unit(3, "cm"),
                   column_names_gp=gpar(fontsize=8),
-                  column_title=paste0("Weighted Module ",how))
-    draw(weight+weighted.activation.direction)
+                  column_title=paste0("Weighted Module ",how),
+                  cell_fun=function(j,i,x,y,w,h,col){
+                  wind<-weightedAssociation
+                  wind[large]<-1
+                  wind[small]<-(-1)
+                  weighted.pvalue<-corPvalueStudent(wind,nrow(weightedAssociation))
+                  if(weighted.pvalue[i,j]<0.06){
+                   grid.text(sprintf("%.3f", weighted.pvalue[i,j]),x,y)
+                  }
+                   grid.rect(x,y,w,h,gp=gpar(fill=NA,col="black"))
+                  })
+
+
+  
+  draw(weight+weighted.activation.direction)
+ readkey()
+ ###########
+ ###unweighted associations 
+
+ unweighted_mix_top=HeatmapAnnotation(density_line = anno_density(corrMap,
+                                            type = "line"),
+                              heatmap = anno_density(corrMap,
+                                            type = "heatmap"),width=unit(4,"cm"))
+
+ unweight<-Heatmap(asinh(corrMap),
+                  col = colorRamp2(c(-1, 0, 1), c("blue", "white", "red")),
+                  name = "asinh(cor)",
+                  top_annotation = unweighted_mix_top,
+                  top_annotation_height = unit(3, "cm"),
+                  column_names_gp=gpar(fontsize=8),
+                  column_title=paste0("unWeighted Module ",how),
+                 cell_fun=function(j,i,x,y,w,h,col){
+                  if(corPvalueStudent(corrMap,nrow(corrMap))[i,j]<0.06){
+                   grid.text(sprintf("%.3f", corPvalueStudent(corrMap,nrow(corrMap))[i,j]),x,y)
+                  }
+                   grid.rect(x,y,w,h,gp=gpar(fill=NA,col="black"))
+                  })
+   unweighted.activation.direction<-Heatmap(asinh(activation.direction),name="Activation Direction",show_row_names=FALSE)
+
+
+
+    draw(unweight+unweighted.activation.direction)
    readkey()
  ###SO FAR SO GOOD>>> Fix rest.
 
@@ -124,6 +177,7 @@ message(paste0("found lnames"))
                 colors.lab.y=1.3,
                 main = paste0("Module-Repeat ",how," Biotype relationships"))
       draw(weight+weighted.activation.direction)
+    draw(unweight+unweighted.activation.direction)
    dev.off()
  
 }

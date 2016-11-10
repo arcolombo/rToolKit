@@ -328,11 +328,11 @@ setMethod("pickPathway", "qusageDbLite", function(x,p.value=0.05,keyWord=NULL,co
    pathd$module.size<-nrow(pathd)
    pathd$query.size<-NA
    pathd$rankTotal<-sum(pathd$ranking)
-
+   pathd$color<-colR
   if(any(grepl(keyWord,pathd$pathway_name,ignore.case=TRUE))){
    ##subset
    res<-pathd[grep(keyWord,pathd$pathway_name,ignore.case=TRUE),]
-   marginal<-data.frame(pathway_name=keyWord,logFC=sum(res$logFC),pvalue=sum(res$pvalue),FDR=sum(res$FDR),contrastKey="total",ranking=sum(res$ranking),module.size=unique(res$module.size),query.size=nrow(res),rankTotal=unique(res$rankTotal),row.names="Total")
+   marginal<-data.frame(pathway_name=keyWord,logFC=sum(res$logFC),pvalue=sum(res$pvalue),FDR=sum(res$FDR),contrastKey="total",ranking=sum(res$ranking),module.size=unique(res$module.size),query.size=nrow(res),rankTotal=unique(res$rankTotal),color=colR,row.names="Total")
    query.match<-rbind(res,marginal)
     }else{
 # query.match<-data.frame(pathway_name=NA,logFC=NA,pvalue=NA,FDR=NA,contrastKey=NA,ranking=0,module.size=nrow(pathd),query.size=0,rankTotal=unique(pathd$rankTotal))
