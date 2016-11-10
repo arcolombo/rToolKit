@@ -42,8 +42,8 @@
 
 \S4method{listModuleColors}{wgcnaDbLite}(x, ...)
 
-\S4method{pickPathway}{qusageDbLite}(x, Module.color = NULL, p.value = 0.05,
-  keyWord = NULL)
+\S4method{pickPathway}{qusageDbLite}(x, p.value = 0.05, keyWord = NULL,
+  contrast = NULL)
 }
 \arguments{
 \item{x}{wgcnaDblite SQL-lite database instance}

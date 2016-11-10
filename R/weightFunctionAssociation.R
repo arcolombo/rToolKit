@@ -6,14 +6,14 @@
 #' @export
 #' @return a data frame with the queried keyword in every module and pathway information
 weightFunctionAssociations<-function(lnames,rnames,read.cutoff=2,recalc=FALSE,how=how,dbName=NULL,qdbName=NULL,keyWords=NULL){
- #task search through all the geneModules for key Words and aggregate the logFc into analysis.
+ 
    df<-pickPathway(qusageDbLite(qdb),keyWord=keyWords)
   print(df)
-  ###need to get the gene ~ repeat correlation matrix
-  ### weight by rank/module
-  ###
+  ###This requires that rnames has the columns renamed txBiotypes that lead the module
+  ### this ranks the correlation matrix by the rank of the pathway function queried.  this rewards correlations to highly ranked pathway query functions, and should penalize slighly low ranked correlations to low ranked pathway query functions.  normalizes the module pathway size.
+  ### averages the logFC in the query, assumes that the query will return multiple similar pathways, so averages the queries into an average function logFC (activity direction) 
   ranking.weight<-sapply(df,function(x) x[grep("Total",rownames(x)),]$ranking/x[grep("Total",rownames(x)),]$module.size)
-  activation.direction<-sapply(df,function(x) x[grep("Total",rownames(x)),]$logFC/x[grep("Total",rownames(x)),]$module.size)
+  activation.direction<-sapply(df,function(x) x[grep("Total",rownames(x)),]$logFC/x[grep("Total",rownames(x)),]$query.size)
 
 
 if(is.null(lnames)==TRUE){
@@ -55,8 +55,12 @@ message(paste0("found lnames"))
   moduleTraitPvalue<-moduleTraitPvalue[id2 ,]
 
 
-  rTraitCor<-rnames[["traitCorRenamed"]]
+  rTraitCor<-rnames[["traitCorRenamed"]] 
+   if(ncol(as.data.frame(moduleTraitCor))>1){
   rTraitCor<-rTraitCor[,colnames(rTraitCor)%in%colnames(moduleTraitCor)]
+  }else if(ncol(as.data.frame(moduleTraitCor))==1){
+  rTraitCor<-rTraitCor[,colnames(rTraitCor)%in%names(moduleTraitCor)]
+  }
   corrMap<-bicor(t(moduleTraitCor),t(rTraitCor))
   weightedAssociation<-(corrMap*(ranking.weight)) #should penalize low weights and reward high weights
 
