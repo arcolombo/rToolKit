@@ -4,6 +4,8 @@
 #' @param qdb the qusageDbLite name
 #' @param functionKeyWords this is a single character that will be grep'd from the list of pathway modules 
 #' @import ComplexHeatmap
+#' @import WGCNA
+#' @import circlize
 #' @export
 #' @return a data frame with the queried keyword in every module and pathway information
 weightFunctionAssociations<-function(lnames,rnames,recalc=FALSE,how=how,dbName=NULL,qdbName=NULL,keyWords=NULL){
@@ -32,6 +34,8 @@ message(paste0("found lnames"))
 
 
   names(ranking.weight)<-paste0("ME",names(ranking.weight)) ##structure must have MEcolor
+   names(activation.direction)<-paste0("ME",names(activation.direction)) ##structure must have MEcolor
+
   bwModuleColors<-lnames[["moduleColors"]]
   MEs<-lnames[["MEs"]]
   datExpr<-lnames[["datExpr"]]
@@ -56,7 +60,8 @@ message(paste0("found lnames"))
   id2<-match(names(ranking.weight),rownames(moduleTraitPvalue))
   moduleTraitCor<-moduleTraitCor[id,]
   moduleTraitPvalue<-moduleTraitPvalue[id2 ,]
-
+  moduleTraitCor<-moduleTraitCor[!is.na(rownames(moduleTraitCor)),]
+  moduleTraitPvalue<-moduleTraitPvalue[!is.na(rownames(moduleTraitPvalue)),]
 
   rTraitCor<-rnames[["traitCorRenamed"]] 
    if(ncol(as.data.frame(moduleTraitCor))>1){
@@ -66,16 +71,42 @@ message(paste0("found lnames"))
   }
   corrMap<-bicor(t(moduleTraitCor),t(rTraitCor))
   corrMap.pvalue<-corPvalueStudent(corrMap,nrow(corrMap))
+  ranking.weight<-ranking.weight[names(ranking.weight)%in%rownames(corrMap)]
+  activation.direction<-activation.direction[names(activation.direction)%in%rownames(corrMap)]
   weightedAssociation<-(corrMap*(ranking.weight)) #should penalize low weights and reward high weights
-   large<-which(weightedAssociation>1)
-   small<-which(weightedAssociation< ( -1) )
-   wind<-weightedAssociation
-   wind[large]<-1
-   wind[small]<-(-1)  
- weighted.pvalue<-corPvalueStudent(wind,nrow(weightedAssociation))
 
+   ###
+ #######this uses the correlation test statistic however the weighted correlations are not [0,1] where the positive weights reward correlations.  so we take the abs(1-r^2) which does not return complex numbers.
+ ##however we must multiply by 2 since we lose information about direction of sings.  and can still use the student t-distribution 
+   asymp.T<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/(2*sqrt(abs(1-weightedAssociation^2))) 
+   weighted.pvalue<- 2 * pt(abs(asymp.T), nSamples - 2, lower.tail = FALSE)
 
-    #####
+   pdf(paste0("Method_",how,"_Comparisons_Weighted_Correlations.pdf"))
+   asymp.T<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/(2*sqrt(abs(1-weightedAssociation^2)))
+   weighted.pvalue<- 2 * pt(abs(asymp.T), nSamples - 2, lower.tail = FALSE)
+   hist(weighted.pvalue,main="weighted pvalues")
+  asymp.T2<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/(sqrt((1-weightedAssociation^2)))
+   weighted.pvalue2<- 2 * pt(abs(asymp.T2), nSamples - 2, lower.tail = FALSE)
+   hist(weighted.pvalue2,main="normal correlation pvalues (weights>1 removed)")
+ 
+  large<-which(weightedAssociation>1)
+  small<-which(weightedAssociation< ( -1) )
+  wind<-weightedAssociation
+  wind[large]<-1
+  wind[small]<-(-1)  
+  weighted.pvalue3<-corPvalueStudent(wind,nrow(wind))
+  hist(weighted.pvalue3,main="windsorized weighted pvalues")
+  dev.off()
+ ####################
+  ###winsor method... does okay
+  # large<-which(weightedAssociation>1)
+  # small<-which(weightedAssociation< ( -1) )
+  # wind<-weightedAssociation
+  # wind[large]<-1
+  # wind[small]<-(-1)  
+  # weighted.pvalue<-corPvalueStudent(wind,nrow(weightedAssociation))
+#############
+
   ha_mix_top=HeatmapAnnotation(density_line = anno_density(weightedAssociation,
                                             type = "line"),
                               heatmap = anno_density(weightedAssociation,
@@ -90,10 +121,8 @@ message(paste0("found lnames"))
                   column_names_gp=gpar(fontsize=8),
                   column_title=paste0("Weighted Module ",how),
                   cell_fun=function(j,i,x,y,w,h,col){
-                  wind<-weightedAssociation
-                  wind[large]<-1
-                  wind[small]<-(-1)
-                  weighted.pvalue<-corPvalueStudent(wind,nrow(weightedAssociation))
+                  asymp.T<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/sqrt(abs(1-weightedAssociation^2))
+                 weighted.pvalue<- 2 * pt(abs(asymp.T), nSamples - 2, lower.tail = FALSE)
                   if(weighted.pvalue[i,j]<0.06){
                    grid.text(sprintf("%.3f", weighted.pvalue[i,j]),x,y)
                   }

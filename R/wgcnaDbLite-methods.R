@@ -321,7 +321,9 @@ setMethod("pickPathway", "qusageDbLite", function(x,p.value=0.05,keyWord=NULL,co
   for(colR in allcolors){  
      if(colR!="kexp"){
     pathd<-pathways((x),Module.color=colR,tx.Biotype=colR,contrast=contrast) }else if(colR=="kexp"){
-  pathd<-kexpEnrich((x),contrast=contrast)  
+  pathd<-kexpEnrich((x),contrast=contrast) 
+  pathd<-pathd[,!grepl("colorKey",colnames(pathd))]
+  pathd<-pathd[,!grepl("bioKey",colnames(pathd))] 
   }
    ##ranks the absolutre logFC increasing direction
    pathd$ranking<-rank(abs(pathd$logFC))
