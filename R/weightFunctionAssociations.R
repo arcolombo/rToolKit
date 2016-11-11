@@ -96,6 +96,7 @@ message(paste0("found lnames"))
   wind[small]<-(-1)  
   weighted.pvalue3<-corPvalueStudent(wind,nrow(wind))
   hist(weighted.pvalue3,main="windsorized weighted pvalues")
+  hist(corrMap.pvalue,main="Default Standard (Unweighted) |p|<=1")
   dev.off()
  ####################
   ###winsor method... does okay
