@@ -8,11 +8,13 @@
 #' @import circlize
 #' @export
 #' @return a data frame with the queried keyword in every module and pathway information
-weightFunctionAssociations<-function(lnames,rnames,recalc=FALSE,how=how,dbName=NULL,qdbName=NULL,keyWords=NULL){
+weightFunctionAssociations<-function(lnames,rnames,recalc=FALSE,how=how,dbName=NULL,qdbName=NULL,keyWords=NULL,write.out=FALSE){
  
    df<-pickPathway(qusageDbLite(qdbName),keyWord=keyWords)
    csvName<-paste0(gsub(" ","_",how),"_functionAssoc.csv")
+  if(write.out==TRUE){
    lapply(df,function(x) write.table(data.frame(x),file=csvName,append=TRUE,sep=',',row.names=FALSE,col.names=TRUE))
+   }
   print(df)
   ###This requires that rnames has the columns renamed txBiotypes that lead the module
   ### this ranks the correlation matrix by the rank of the pathway function queried.  this rewards correlations to highly ranked pathway query functions, and should penalize slighly low ranked correlations to low ranked pathway query functions.  normalizes the module pathway size.
@@ -74,20 +76,22 @@ message(paste0("found lnames"))
   ranking.weight<-ranking.weight[names(ranking.weight)%in%rownames(corrMap)]
   activation.direction<-activation.direction[names(activation.direction)%in%rownames(corrMap)]
   weightedAssociation<-(corrMap*(ranking.weight)) #should penalize low weights and reward high weights
-
+ ###weighted correlations 
    ###
- #######this uses the correlation test statistic however the weighted correlations are not [0,1] where the positive weights reward correlations.  so we take the abs(1-r^2) which does not return complex numbers.
- ##however we must multiply by 2 since we lose information about direction of sings.  and can still use the student t-distribution 
-   asymp.T<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/(2*sqrt(abs(1-weightedAssociation^2))) 
+ #######this uses the correlation test statistic however the weighted correlations are not [0,1] where the positive weights reward correlations.  so we take the abs(1-r^2/var(rank)) which does not return complex numbers.
+ ##the problem with abs(1-r^2) is that for values >1 it levels off at 2, and may miss these weighted values.
+ ##so by taking abs(1-weight^2/var(ranking.weight))  it pushes the asymptote out by the sd(ranking.weight), thus if the weights are noisy the asympotote shifts further out. which is more conservative.
+ ##if the keyWord query is small, then sd(rank.weight) will be smaller leading to higher FPR.
+ ###this means that for values weighted closer to the sd(ranking.weight) these will have higher p.values so the higher pvalues will be those positively effected by the weights, and it will penalize according to the weights.  where before any r value close to 1 lands in critical region.  weighted pvalues will land in critical regions for any value close to the sd(ranking.weight) which will tend to be value rewarded by weights.
+  
+  print(paste0("weighted center:",sd(ranking.weight)))
+   asymp.T<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/(sqrt(abs(1-weightedAssociation^2/var(ranking.weight)))) 
    weighted.pvalue<- 2 * pt(abs(asymp.T), nSamples - 2, lower.tail = FALSE)
 
    pdf(paste0("Method_",how,"_Comparisons_Weighted_Correlations.pdf"))
-   asymp.T<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/(2*sqrt(abs(1-weightedAssociation^2)))
+   asymp.T<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/(sqrt(abs(1-weightedAssociation^2/var(ranking.weight))))
    weighted.pvalue<- 2 * pt(abs(asymp.T), nSamples - 2, lower.tail = FALSE)
    hist(weighted.pvalue,main="weighted pvalues")
-  asymp.T2<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/(sqrt((1-weightedAssociation^2)))
-   weighted.pvalue2<- 2 * pt(abs(asymp.T2), nSamples - 2, lower.tail = FALSE)
-   hist(weighted.pvalue2,main="normal correlation pvalues (weights>1 removed)")
  
   large<-which(weightedAssociation>1)
   small<-which(weightedAssociation< ( -1) )
