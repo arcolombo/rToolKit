@@ -83,7 +83,7 @@ message(paste0("found lnames"))
  ##so by taking abs(1-weight^2/var(ranking.weight))  it pushes the asymptote out by the sd(ranking.weight), thus if the weights are noisy the asympotote shifts further out. which is more conservative.
  ##if the keyWord query is small, then sd(rank.weight) will be smaller leading to higher FPR.
  ###this means that for values weighted closer to the sd(ranking.weight) these will have higher p.values so the higher pvalues will be those positively effected by the weights, and it will penalize according to the weights.  where before any r value close to 1 lands in critical region.  weighted pvalues will land in critical regions for any value close to the sd(ranking.weight) which will tend to be value rewarded by weights.
-  
+  print(ranking.weight) 
   print(paste0("weighted center:",sd(ranking.weight)))
    asymp.T<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/(sqrt(abs(1-weightedAssociation^2/var(ranking.weight)))) 
    weighted.pvalue<- 2 * pt(abs(asymp.T), nSamples - 2, lower.tail = FALSE)
@@ -117,7 +117,7 @@ message(paste0("found lnames"))
                               heatmap = anno_density(weightedAssociation,
                                             type = "heatmap"),width=unit(4,"cm"))
   weighted.activation.direction<-Heatmap(asinh(activation.direction*ranking.weight),name="Activation Direction",show_row_names=FALSE)
-
+   if(sd(ranking.weight)>0.49){
     weight<-Heatmap(asinh(weightedAssociation),
                    col = colorRamp2(c(-1, 0, 1), c("blue", "white", "red")),
                   name = "asinh(weight)",
@@ -126,15 +126,35 @@ message(paste0("found lnames"))
                   column_names_gp=gpar(fontsize=8),
                   column_title=paste0("Weighted Module ",how),
                   cell_fun=function(j,i,x,y,w,h,col){
-                  asymp.T<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/sqrt(abs(1-weightedAssociation^2))
+                  asymp.T<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/sqrt(abs(1-weightedAssociation^2)/var(ranking.weight))
                  weighted.pvalue<- 2 * pt(abs(asymp.T), nSamples - 2, lower.tail = FALSE)
                   if(weighted.pvalue[i,j]<0.06){
                    grid.text(sprintf("%.3f", weighted.pvalue[i,j]),x,y)
                   }
                    grid.rect(x,y,w,h,gp=gpar(fill=NA,col="black"))
                   })
-
-
+     }else{
+      ###uses windsor method
+   weight<-Heatmap(asinh(weightedAssociation),
+                   col = colorRamp2(c(-1, 0, 1), c("blue", "white", "red")),
+                  name = "asinh(weight)",
+                  top_annotation = ha_mix_top,
+                  top_annotation_height = unit(3, "cm"),
+                  column_names_gp=gpar(fontsize=8),
+                  column_title=paste0("Windsorized Weighted Module ",how),
+                  cell_fun=function(j,i,x,y,w,h,col){
+                        large<-which(weightedAssociation>1)
+                        small<-which(weightedAssociation< ( -1) )
+                        wind<-weightedAssociation
+                        wind[large]<-1
+                        wind[small]<-(-1)  
+                        weighted.pvalue<-corPvalueStudent(wind,nrow(weightedAssociation))
+                   if(weighted.pvalue[i,j]<0.06){
+                   grid.text(sprintf("%.3f", weighted.pvalue[i,j]),x,y)
+                  }
+                   grid.rect(x,y,w,h,gp=gpar(fill=NA,col="black"))
+                  })
+         }
   
   draw(weight+weighted.activation.direction)
  readkey()
