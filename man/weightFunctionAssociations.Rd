@@ -5,7 +5,7 @@
 \title{given the module of interest printed to a csv, we can read that data, and analyze the pathway behavior of specific pathways}
 \usage{
 weightFunctionAssociations(lnames, rnames, recalc = FALSE, how = how,
-  dbName = NULL, qdbName = NULL, keyWords = NULL)
+  dbName = NULL, qdbName = NULL, keyWords = NULL, write.out = FALSE)
 }
 \arguments{
 \item{db}{the wgcnaDbName}
