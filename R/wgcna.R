@@ -11,14 +11,18 @@
 #' @param useAllBiotypes boolean if false then intBiotypes are used, if true than the correlations are checked against all tx_biotypes
 #' @import WGCNA
 #' @import edgeR
-#' @import sva
+#' @import limma
 #' @export
 #' @return images and cluster at the gene and repeat level
 wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE,species=c("Homo.sapiens","Mus.musculus"),selectedPower=NULL,intBiotypes=c("acromeric","centromeric","CR1","Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","hAT","HSFAU","L1","L2","LTR Retrotransposon","Eutr1","Merlin","PiggyBac","Pseudogene","Repetitive element","satellite","snRNA","SVA","TcMar","telo","Transposable Element","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm"),batchNormalize=FALSE,batchVector=NULL,design=NULL){
-  if(batchNormalize==TRUE && is.null(desing)==TRUE){
+  if(batchNormalize==TRUE && is.null(design)==TRUE){
    stopifnot(is.null(metadata(kexp)$design)==FALSE)
    design<-metadata(kexp)$design
   }
+  if(batchNormalize==TRUE && is.null(batchVector)==TRUE){
+ stopifnot(is.null(metadata(kexp)$batch)==FALSE)
+   batchVector<-metadata(kexp)$batch
+ }
    how<-match.arg(how,c("cpm","tpm"))
   ##prepare data
   whichWGCNA<-match.arg(whichWGCNA,c("single","block"))
@@ -48,10 +52,48 @@ wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),en
     rpm<-log2(1+rpm)
     cpm<-log2(1+cpm)
     }else if(batchNormalize==TRUE){
-   ##task: input kexp, design, batchVector
+   ##task: input kexp, metadata$design, metadata$batch
    ##the caller will batch normalize WITH design matrix
-   ##output: log2 batch cpm, re-convert into CPM, final output is batch correct CPM values tx_id
+   ##output: log2 batch cpm, re-convert into CPM, collapse tx_id normalized into gene bundles CPM ,final output is batch correct CPM values tx_id
   ##taks for this branch is to collapse tx_id into gene_id (CPM), and tx_biotype(cpm)
+   cpm<-collapseBundles(kexp,"tx_id",read.cutoff=read.cutoff)
+   d<-DGEList(counts=cpm)
+   d<-calcNormFactors(d)
+   log.cpm<-cpm(d,log=TRUE,normalize.lib.sizes=TRUE) #log2
+    ##removeBatch requires log2
+   logCPM<-removeBatchEffect(log.cpm,batch=batchVector,design=design)
+   CPM<-logCPM^2
+   ####now split gene and repeats
+ 
+    bundleable <- !is.na(mcols(rowRanges(kexp))[["gene_id"]])
+    feats<-rowRanges(kexp)[bundleable] 
+    feats<-feats[rownames(CPM),]
+    bundleable<-!is.na(mcols(feats)[["gene_id"]])
+  cts <- split.data.frame(CPM[bundleable, ], mcols(feats)[["gene_id"]])
+  cts <- cts[ sapply(cts, function(x) max(x) >= read.cutoff) ]
+  cts <- lapply(cts, function(x) x[ rowSums(x) >= read.cutoff, ])
+ bundled <- do.call(rbind, lapply(cts,
+                                   function(x)
+                                     if(!is.null(nrow(x))) colSums(x) else x))
+   ####split genes and repeats
+  cpm.norm<-bundled[grepl("^ENS",rownames(bundled)),]
+  rpm.norm<-bundled[!grepl("^ENS",rownames(bundled)),]
+  rpm.norm<-rpm.norm[!grepl("^ERCC",rownames(rpm.norm)),] ##repeat batch free tx
+  ##########collapse batch free repeat transcripts into tx_biotype aggregates
+    bundleable <- !is.na(mcols(rowRanges(kexp))[["tx_biotype"]])
+    feats<-rowRanges(kexp)[bundleable]
+    feats<-feats[rownames(rpm.norm),]
+    bundleable<-!is.na(mcols(feats)[["tx_biotype"]])
+  rts <- split.data.frame(rpm.norm[bundleable, ], mcols(feats)[["tx_biotype"]])
+  rts <- rts[ sapply(rts, function(x) max(x) >= read.cutoff) ]
+  rts <- lapply(rts, function(x) x[ rowSums(x) >= read.cutoff, ])
+ tx.bundled <- do.call(rbind, lapply(rts,
+                                   function(x)
+                                     if(!is.null(nrow(x))) colSums(x) else x))
+
+  cpm<-log2(1+cpm.norm)
+  rpm<-log2(1+tx.bundled)
+  ############collapse by gene_id
   }##batch
   }else if(how=="tpm"){
   cpm<-collapseTpm(kexp,"gene_id",read.cutoff=read.cutoff)

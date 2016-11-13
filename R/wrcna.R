@@ -19,6 +19,12 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
    stopifnot(is.null(metadata(kexp)$design)==FALSE)
    design<-metadata(kexp)$design
   }
+   if(batchNormalize==TRUE && is.null(batchVector)==TRUE){
+ stopifnot(is.null(metadata(kexp)$batch)==FALSE)
+   batchVector<-metadata(kexp)$batch
+ }
+
+
    how<-match.arg(how,c("cpm","tpm"))
    byWhich<-"repeat"
   ##prepare data
@@ -28,6 +34,7 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
 
 
   if(how=="cpm"){
+   if(batchNormalize==FALSE){
   cpm<-collapseBundles(rexp,"tx_id",read.cutoff=read.cutoff)
   cpm<-cpm[!grepl("^ERCC",rownames(cpm)),]
   cpm<-cpm[!grepl("^ENS",rownames(cpm)),]
@@ -44,14 +51,54 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
   rdm.norm<-cpm(rd,normalized.lib.sizes=TRUE,log=FALSE)
   rpm<-rdm.norm
   rdm.norm<-NULL
-   if(batchNormalize==TRUE){
-     stopifnot(is.null(batchVector)==FALSE)
-     stopifnot(length(batchVector)==ncol(kexp))##the batchVector nomenclature must match the length of columns.
+    } #tmm norm
+  cpm<-log2(1+cpm)
+  rpm<-log2(1+rpm)
+  }else if(batchNormalize==TRUE){
+ ##task: input kexp, metadata$design, metadata$batch
+   ##the caller will batch normalize WITH design matrix
+   ##output: log2 batch cpm, re-convert into CPM, collapse tx_id normalized into gene bundles CPM ,final output is batch correct CPM values tx_id
+  ##taks for this branch is to collapse tx_id into gene_id (CPM), and tx_biotype(cpm)
+  stopifnot(length(batchVector)==ncol(kexp))##the batchVector nomenclature must match the length of columns.
      ##takes TMM normalized and batch corrects
-     batch.cpm<-removeBatchEffect(log2(1+cpm),batch=batchVector,design=design)
-     batch.rpm<-removeBatchEffect(log2(1+rpm),batch=batchVector,design=design)
-      }
-     }#tmm.norm
+   cpm<-collapseBundles(kexp,"tx_id",read.cutoff=read.cutoff)
+   d<-DGEList(counts=cpm)
+   d<-calcNormFactors(d)
+   log.cpm<-cpm(d,log=TRUE,normalize.lib.sizes=TRUE) #log2
+    ##removeBatch requires log2 of entire data set
+   logCPM<-removeBatchEffect(log.cpm,batch=batchVector,design=design)
+   CPM<-logCPM^2
+   ####now split repeats tnx and tx_biotypes
+
+    bundleable <- !is.na(mcols(rowRanges(kexp))[["tx_id"]])
+    feats<-rowRanges(kexp)[bundleable]
+    feats<-feats[rownames(CPM),]
+    bundleable<-!is.na(mcols(feats)[["tx_id"]])
+  cts <- split.data.frame(CPM[bundleable, ], mcols(feats)[["tx_id"]])
+  cts <- cts[ sapply(cts, function(x) max(x) >= read.cutoff) ]
+  cts <- lapply(cts, function(x) x[ rowSums(x) >= read.cutoff, ])
+ bundled <- do.call(rbind, lapply(cts,
+                                   function(x)
+                                     if(!is.null(nrow(x))) colSums(x) else x))
+   ####split genes and repeats
+  cpm.norm<-bundled[!grepl("^ENS",rownames(bundled)),]
+  cpm.norm<-cpm.norm[!grepl("^ERCC",rownames(cpm.norm)),]
+ 
+  ##########collapse batch free repeat transcripts into tx_biotype aggregates
+    bundleable <- !is.na(mcols(rowRanges(kexp))[["tx_biotype"]])
+    feats<-rowRanges(kexp)[bundleable]
+    feats<-feats[rownames(cpm.norm),]
+    bundleable<-!is.na(mcols(feats)[["tx_biotype"]])
+  rts <- split.data.frame(cpm.norm[bundleable, ], mcols(feats)[["tx_biotype"]])
+  rts <- rts[ sapply(rts, function(x) max(x) >= read.cutoff) ]
+  rts <- lapply(rts, function(x) x[ rowSums(x) >= read.cutoff, ])
+ tx.bundled <- do.call(rbind, lapply(rts,
+                                   function(x)
+                                     if(!is.null(nrow(x))) colSums(x) else x))
+
+  cpm<-log2(1+cpm.norm)
+  rpm<-log2(1+tx.bundled)
+      } #batch
   }else if(how=="tpm"){
   cpm<-collapseTpm(rexp,"gene_id",read.cutoff=read.cutoff)
   cpm<-cpm[!grepl("^ERCC",rownames(cpm)),]
@@ -61,21 +108,9 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
   cpm<-log2(1+cpm)
   rpm<-log2(1+rpm) ##log2 transform of repeats.
   }
-  if(batchNormalize==FALSE){
-  cpm<-log2(1+cpm) 
-  rpm<-log2(1+rpm) ##log2 transform of repeats.
-  }else if(batchNormalize==TRUE){
-   cpm<-batch.cpm
-    rpm<-batch.rpm
-    ### filter NaNs
-    id<-which(is.na(cpm))
-    cpm[id]<-1.0
-    rid<-which(is.na(rpm))
-    rpm[rid]<-1.0   
-    }
+  
   datExpr0<-t(cpm)
-
-   gsg<-goodSamplesGenes(datExpr0,verbose=3)
+  gsg<-goodSamplesGenes(datExpr0,verbose=3)
   ##rows must be SAMPLES columns repeats
   
   if(useAllBiotypes==FALSE&&byWhich=="repeat"){
