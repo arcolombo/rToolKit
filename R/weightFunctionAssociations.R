@@ -6,6 +6,8 @@
 #' @import ComplexHeatmap
 #' @import WGCNA
 #' @import circlize
+#' @import gridExtra
+#' @import ggplot2
 #' @export
 #' @return a data frame with the queried keyword in every module and pathway information
 weightFunctionAssociations<-function(lnames,rnames,recalc=FALSE,how=how,dbName=NULL,qdbName=NULL,keyWords=NULL,write.out=FALSE){
@@ -85,48 +87,87 @@ message(paste0("found lnames"))
  ###this means that for values weighted closer to the sd(ranking.weight) these will have higher p.values so the higher pvalues will be those positively effected by the weights, and it will penalize according to the weights.  where before any r value close to 1 lands in critical region.  weighted pvalues will land in critical regions for any value close to the sd(ranking.weight) which will tend to be value rewarded by weights.
   print(ranking.weight) 
   print(paste0("weighted center:",sd(ranking.weight)))
-   asymp.T<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/(sqrt(abs(1-weightedAssociation^2/var(ranking.weight)))) 
+   asymp.T<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/(2*sqrt(abs(1-weightedAssociation^2/var(ranking.weight)))) 
    weighted.pvalue<- 2 * pt(abs(asymp.T), nSamples - 2, lower.tail = FALSE)
 
-   pdf(paste0("Method_",how,"_Comparisons_Weighted_Correlations.pdf"))
-   asymp.T<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/(sqrt(abs(1-weightedAssociation^2/var(ranking.weight))))
-   weighted.pvalue<- 2 * pt(abs(asymp.T), nSamples - 2, lower.tail = FALSE)
-   hist(weighted.pvalue,main="weighted pvalues")
+  xy<-data.frame(w=as.vector(weightedAssociation),t=as.vector(asymp.T),p=as.vector(weighted.pvalue))
+ colR<-factor(c(rep("signf",length(which(xy$p<0.05))),rep("not.Signf", length(which(xy$p>=0.05)))))
+ colR[which(xy$p<0.05)]<-factor("signf")
+ colR[which(xy$p>=0.05)]<-factor("not.Signf")
+ xy2<-cbind(xy,colR)
+
+ pp<-ggplot(data=xy,aes(x=w,y=t,colour=colR))+geom_point()+geom_line(color='black',alpha=0.4)+ggtitle("Weighted Correlation Pvalues")
  
-  large<-which(weightedAssociation>1)
-  small<-which(weightedAssociation< ( -1) )
-  wind<-weightedAssociation
-  wind[large]<-1
-  wind[small]<-(-1)  
-  weighted.pvalue3<-corPvalueStudent(wind,nrow(wind))
-  hist(weighted.pvalue3,main="windsorized weighted pvalues")
+
+#####normal unweighted call
+  asymp.Cor.T<-sqrt(nrow(corrMap)-2)*corrMap/sqrt(1-corrMap^2)
+  cor.pvalue<-2*pt(abs(asymp.Cor.T),nSamples-2,lower.tail=FALSE)
+ XY<-data.frame(w=as.vector(corrMap),t=as.vector(asymp.Cor.T),p=as.vector(cor.pvalue))
+ colR2<-factor(c(rep("signf",length(which(XY$p<0.05))),rep("not.Signf", length(which(XY$p>=0.05)))))
+ colR2[which(XY$p<0.05)]<-factor("signf")
+ colR2[which(XY$p>=0.05)]<-factor("not.Signf")
+ XY2<-cbind(XY,colR2)
+
+ pp2<-ggplot(data=XY,aes(x=w,y=t,colour=colR2))+geom_point()+geom_line(color='black',alpha=0.4)+ggtitle("UnWeighted Correlation PValues")
+  #######
+
+ ##windsorized
+      large<-which(weightedAssociation>1)
+      small<-which(weightedAssociation< ( -1) )
+     wind<-weightedAssociation
+     wind[large]<-1
+     wind[small]<-(-1)
+   
+
+  asymp.W<-sqrt(nrow(wind)-2)*wind/(sqrt(1-wind^2))
+   wind.pvalue<- 2 * pt(abs(asymp.W), nSamples - 2, lower.tail = FALSE)
+
+  wxy<-data.frame(w=as.vector(wind),t=as.vector(asymp.W),p=as.vector(wind.pvalue))
+ colW<-factor(c(rep("signf",length(which(wxy$p<0.05))),rep("not.Signf", length(which(wxy$p>=0.05)))))
+ colW[which(wxy$p<0.05)]<-factor("signf")
+ colW[which(wxy$p>=0.05)]<-factor("not.Signf")
+ wxy2<-cbind(wxy,colW)
+
+ ppw<-ggplot(data=wxy2,aes(x=w,y=t,colour=colW))+geom_point()+geom_line(color='black',alpha=0.4)+ggtitle("Windsorized Correlation Pvalues")
+
+
+
+########3
+
+
+  grid.arrange(pp,pp2,ppw,nrow=2,ncol=2)
+  readkey()
+   
+ par(mfrow=c(2,2))
+   hist(weighted.pvalue,main="Weighted Values")
+   hist(corrMap.pvalue,main="Default Standard (Unweighted) |p|<=1")
+   hist(wind.pvalue,main="Windsorized weighted values |p|<=1")
+  readkey()
+
+
+   pdf(paste0("Method_",how,"_Comparisons_Weighted_Correlations.pdf"))
+  grid.arrange(pp,pp2,ppw,nrow=2,ncol=2)
+  hist(weighted.pvalue,main="weighted pvalues")
   hist(corrMap.pvalue,main="Default Standard (Unweighted) |p|<=1")
+  hist(wind.pvalue,main="Windsorized Weighted Values |p|<=1")
   dev.off()
  ####################
-  ###winsor method... does okay
-  # large<-which(weightedAssociation>1)
-  # small<-which(weightedAssociation< ( -1) )
-  # wind<-weightedAssociation
-  # wind[large]<-1
-  # wind[small]<-(-1)  
-  # weighted.pvalue<-corPvalueStudent(wind,nrow(weightedAssociation))
-#############
 
   ha_mix_top=HeatmapAnnotation(density_line = anno_density(weightedAssociation,
                                             type = "line"),
                               heatmap = anno_density(weightedAssociation,
                                             type = "heatmap"),width=unit(4,"cm"))
   weighted.activation.direction<-Heatmap(asinh(activation.direction*ranking.weight),name="Activation Direction",show_row_names=FALSE)
-   if(sd(ranking.weight)>0.49){
+   if(sd(ranking.weight)>0.99){
     weight<-Heatmap(asinh(weightedAssociation),
                    col = colorRamp2(c(-1, 0, 1), c("blue", "white", "red")),
                   name = "asinh(weight)",
                   top_annotation = ha_mix_top,
                   top_annotation_height = unit(3, "cm"),
-                  column_names_gp=gpar(fontsize=8),
+                  column_names_gp=gpar(fontsize=10),
                   column_title=paste0("Weighted Module ",how),
                   cell_fun=function(j,i,x,y,w,h,col){
-                  asymp.T<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/sqrt(abs(1-weightedAssociation^2)/var(ranking.weight))
+                  asymp.T<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/(2*sqrt(abs(1-weightedAssociation^2/var(ranking.weight))))
                  weighted.pvalue<- 2 * pt(abs(asymp.T), nSamples - 2, lower.tail = FALSE)
                   if(weighted.pvalue[i,j]<0.06){
                    grid.text(sprintf("%.3f", weighted.pvalue[i,j]),x,y)
@@ -140,7 +181,7 @@ message(paste0("found lnames"))
                   name = "asinh(weight)",
                   top_annotation = ha_mix_top,
                   top_annotation_height = unit(3, "cm"),
-                  column_names_gp=gpar(fontsize=8),
+                  column_names_gp=gpar(fontsize=10),
                   column_title=paste0("Windsorized Weighted Module ",how),
                   cell_fun=function(j,i,x,y,w,h,col){
                         large<-which(weightedAssociation>1)
@@ -193,7 +234,7 @@ message(paste0("found lnames"))
 
  stopifnot(dim(textMatrix)==dim(moduleTraitCor))
 
- par(mar = c(6, 10, 3, 3));
+ par(mfrow=c(1,1),mar = c(6, 10, 3, 3));
  plot.new()
   labeledHeatmap(Matrix=moduleTraitCor,
 ,                xLabels=names(datTraits),
