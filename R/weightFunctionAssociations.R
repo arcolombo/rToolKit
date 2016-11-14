@@ -10,9 +10,10 @@
 #' @import ggplot2
 #' @export
 #' @return a data frame with the queried keyword in every module and pathway information
-weightFunctionAssociations<-function(lnames,rnames,recalc=FALSE,how=how,dbName=NULL,qdbName=NULL,keyWords=NULL,write.out=FALSE){
- 
-   df<-pickPathway(qusageDbLite(qdbName),keyWord=keyWords)
+weightFunctionAssociations<-function(lnames,rnames,recalc=FALSE,how=how,dbname=NULL,qdbname=NULL,keyWords=NULL,write.out=FALSE){
+    dbName<-dbname
+    qdbName<-qdbname
+   df<-pickPathway(qusageDbLite(qdbname),keyWord=keyWords)
    csvName<-paste0(gsub(" ","_",how),"_functionAssoc.csv")
   if(write.out==TRUE){
    lapply(df,function(x) write.table(data.frame(x),file=csvName,append=TRUE,sep=',',row.names=FALSE,col.names=TRUE))
@@ -22,7 +23,7 @@ weightFunctionAssociations<-function(lnames,rnames,recalc=FALSE,how=how,dbName=N
   ### this ranks the correlation matrix by the rank of the pathway function queried.  this rewards correlations to highly ranked pathway query functions, and should penalize slighly low ranked correlations to low ranked pathway query functions.  normalizes the module pathway size.
   ### averages the logFC in the query, assumes that the query will return multiple similar pathways, so averages the queries into an average function logFC (activity direction) 
   ranking.weight<-sapply(df,function(x) x[grep("Total",rownames(x)),]$ranking/x[grep("Total",rownames(x)),]$module.size)
-  activation.direction<-sapply(df,function(x) x[grep("Total",rownames(x)),]$logFC/x[grep("Total",rownames(x)),]$query.size)
+  activation.direction<-sapply(df,function(x) as.numeric(x[grep("Total",rownames(x)),]$logFC)/as.numeric(x[grep("Total",rownames(x)),]$query.size))
 
 
 if(is.null(lnames)==TRUE){
@@ -66,8 +67,11 @@ message(paste0("found lnames"))
   moduleTraitPvalue<-moduleTraitPvalue[id2 ,]
   moduleTraitCor<-moduleTraitCor[!is.na(rownames(moduleTraitCor)),]
   moduleTraitPvalue<-moduleTraitPvalue[!is.na(rownames(moduleTraitPvalue)),]
-
+   if(is.null(rnames[["traitCorRenamed"]])==FALSE){
   rTraitCor<-rnames[["traitCorRenamed"]] 
+  }else{
+  rTraitCor<-rnames[["moduleTraitCor"]]
+  }
    if(ncol(as.data.frame(moduleTraitCor))>1){
   rTraitCor<-rTraitCor[,colnames(rTraitCor)%in%colnames(moduleTraitCor)]
   }else if(ncol(as.data.frame(moduleTraitCor))==1){
@@ -75,6 +79,7 @@ message(paste0("found lnames"))
   }
   corrMap<-bicor(t(moduleTraitCor),t(rTraitCor))
   corrMap.pvalue<-corPvalueStudent(corrMap,nrow(corrMap))
+  corrMap.pvalue[which(is.na(corrMap.pvalue))]<-1
   ranking.weight<-ranking.weight[names(ranking.weight)%in%rownames(corrMap)]
   activation.direction<-activation.direction[names(activation.direction)%in%rownames(corrMap)]
   weightedAssociation<-(corrMap*(ranking.weight)) #should penalize low weights and reward high weights
@@ -90,13 +95,17 @@ message(paste0("found lnames"))
    asymp.T<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/(2*sqrt(abs(1-weightedAssociation^2/var(ranking.weight)))) 
    weighted.pvalue<- 2 * pt(abs(asymp.T), nSamples - 2, lower.tail = FALSE)
 
-  xy<-data.frame(w=as.vector(weightedAssociation),t=as.vector(asymp.T),p=as.vector(weighted.pvalue))
+  xy<-data.frame(w=as.vector(weightedAssociation),t=as.vector(asymp.T),p=as.vector(weighted.pvalue),stringsAsFactors=FALSE)
  colR<-factor(c(rep("signf",length(which(xy$p<0.05))),rep("not.Signf", length(which(xy$p>=0.05)))))
+  if(length(which(xy$p<0.05))>0){
  colR[which(xy$p<0.05)]<-factor("signf")
+  }
+ if(length(which(xy$p>=0.05))>0){
  colR[which(xy$p>=0.05)]<-factor("not.Signf")
+  }
  xy2<-cbind(xy,colR)
 
- pp<-ggplot(data=xy,aes(x=w,y=t,colour=colR))+geom_point()+geom_line(color='black',alpha=0.4)+ggtitle("Weighted Correlation Pvalues")
+ pp<-ggplot(data=xy2,aes(x=w,y=t,colour=colR))+geom_point()+geom_line(color='black',alpha=0.4)+ggtitle(paste0("Weighted Correlation sd=",sd(ranking.weight)," N=",length(names(df)) ) )
  
 
 #####normal unweighted call
@@ -104,11 +113,16 @@ message(paste0("found lnames"))
   cor.pvalue<-2*pt(abs(asymp.Cor.T),nSamples-2,lower.tail=FALSE)
  XY<-data.frame(w=as.vector(corrMap),t=as.vector(asymp.Cor.T),p=as.vector(cor.pvalue))
  colR2<-factor(c(rep("signf",length(which(XY$p<0.05))),rep("not.Signf", length(which(XY$p>=0.05)))))
+
+ if(length(which(XY$p<0.05))>0){
  colR2[which(XY$p<0.05)]<-factor("signf")
+  }
+ if(length(which(XY$p>=0.05))>0){
  colR2[which(XY$p>=0.05)]<-factor("not.Signf")
+ }
  XY2<-cbind(XY,colR2)
 
- pp2<-ggplot(data=XY,aes(x=w,y=t,colour=colR2))+geom_point()+geom_line(color='black',alpha=0.4)+ggtitle("UnWeighted Correlation PValues")
+ pp2<-ggplot(data=XY2,aes(x=w,y=t,colour=colR2))+geom_point()+geom_line(color='black',alpha=0.4)+ggtitle(paste0("UnWeighted Correlation d=",sd(ranking.weight)," N=",length(names(df)) ) )
   #######
 
  ##windsorized
@@ -121,12 +135,17 @@ message(paste0("found lnames"))
 
   asymp.W<-sqrt(nrow(wind)-2)*wind/(sqrt(1-wind^2))
    wind.pvalue<- 2 * pt(abs(asymp.W), nSamples - 2, lower.tail = FALSE)
-
+   wind.pvalue[is.na(wind.pvalue)]<-1
   wxy<-data.frame(w=as.vector(wind),t=as.vector(asymp.W),p=as.vector(wind.pvalue))
  colW<-factor(c(rep("signf",length(which(wxy$p<0.05))),rep("not.Signf", length(which(wxy$p>=0.05)))))
+
+ if(length(which(wxy$p<0.05))>0){
  colW[which(wxy$p<0.05)]<-factor("signf")
+  }
+ if(length(which(wxy$p>=0.05))>0){
  colW[which(wxy$p>=0.05)]<-factor("not.Signf")
- wxy2<-cbind(wxy,colW)
+  }
+  wxy2<-cbind(wxy,colW)
 
  ppw<-ggplot(data=wxy2,aes(x=w,y=t,colour=colW))+geom_point()+geom_line(color='black',alpha=0.4)+ggtitle("Windsorized Correlation Pvalues")
 
@@ -189,7 +208,10 @@ message(paste0("found lnames"))
                         wind<-weightedAssociation
                         wind[large]<-1
                         wind[small]<-(-1)  
-                        weighted.pvalue<-corPvalueStudent(wind,nrow(weightedAssociation))
+                    asymp.W<-sqrt(nrow(wind)-2)*wind/(sqrt(1-wind^2))
+         weighted.pvalue<- 2 * pt(abs(asymp.W), nSamples - 2, lower.tail = FALSE)
+            weighted.pvalue[is.na(weighted.pvalue)]<-1
+
                    if(weighted.pvalue[i,j]<0.06){
                    grid.text(sprintf("%.3f", weighted.pvalue[i,j]),x,y)
                   }
@@ -215,8 +237,11 @@ message(paste0("found lnames"))
                   column_names_gp=gpar(fontsize=8),
                   column_title=paste0("unWeighted Module ",how),
                  cell_fun=function(j,i,x,y,w,h,col){
-                  if(corPvalueStudent(corrMap,nrow(corrMap))[i,j]<0.06){
-                   grid.text(sprintf("%.3f", corPvalueStudent(corrMap,nrow(corrMap))[i,j]),x,y)
+               asymp.Cor.T<-sqrt(nrow(corrMap)-2)*corrMap/sqrt(1-corrMap^2)
+          cor.pvalue<-2*pt(abs(asymp.Cor.T),nSamples-2,lower.tail=FALSE)
+                 cor.pvalue[which(is.na(cor.pvalue))]<-1
+                  if(cor.pvalue[i,j]<0.06){
+                   grid.text(sprintf("%.3f", cor.pvalue[i,j]),x,y)
                   }
                    grid.rect(x,y,w,h,gp=gpar(fill=NA,col="black"))
                   })

@@ -234,8 +234,12 @@ setMethod("pathways", "qusageDbLite", function(x,Module.color=NULL,tx.Biotype=NU
   }else{
    sql<-paste0("select pathway_name, logFC, pvalue, FDR, contrastKey from ",Module.color," where colorKey='",Module.color,"'"," and bioKey='",tx.Biotype,"'")
  }
-  res<-as.data.frame(dbGetQuery(dbconn(x),sql))
+  res<-data.frame(dbGetQuery(dbconn(x),sql))
+  res<-res[which(res$pathway_name!="NA"),]
   res<-res[which(as.numeric(res$pvalue)<p.value),]
+  class(res$pvalue)<-"numeric"
+  class(res$logFC)<-"numeric"
+  class(res$FDR)<-"numeric"
   return(res)
 
  })
@@ -320,13 +324,17 @@ setMethod("pickPathway", "qusageDbLite", function(x,p.value=0.05,keyWord=NULL,co
   #drivers are defined as the most significantly cross correlated genes
   for(colR in allcolors){  
      if(colR!="kexp"){
-    pathd<-pathways((x),Module.color=colR,tx.Biotype=colR,contrast=contrast) }else if(colR=="kexp"){
+    pathd<-pathways((x),Module.color=colR,tx.Biotype=colR,contrast=contrast)
+    if(nrow(pathd)==0){
+    next
+    }
+    }else if(colR=="kexp"){
   pathd<-kexpEnrich((x),contrast=contrast) 
   pathd<-pathd[,!grepl("colorKey",colnames(pathd))]
   pathd<-pathd[,!grepl("bioKey",colnames(pathd))] 
   }
    ##ranks the absolutre logFC increasing direction
-   pathd$ranking<-rank(abs(pathd$logFC))
+   pathd$ranking<-rank(abs(as.numeric(pathd$logFC)))
    pathd$module.size<-nrow(pathd)
    pathd$query.size<-NA
    pathd$rankTotal<-sum(pathd$ranking)
@@ -334,7 +342,7 @@ setMethod("pickPathway", "qusageDbLite", function(x,p.value=0.05,keyWord=NULL,co
   if(any(grepl(keyWord,pathd$pathway_name,ignore.case=TRUE))){
    ##subset
    res<-pathd[grep(keyWord,pathd$pathway_name,ignore.case=TRUE),]
-   marginal<-data.frame(pathway_name=keyWord,logFC=sum(res$logFC),pvalue=sum(res$pvalue),FDR=sum(res$FDR),contrastKey="total",ranking=sum(res$ranking),module.size=unique(res$module.size),query.size=nrow(res),rankTotal=unique(res$rankTotal),color=colR,row.names="Total")
+   marginal<-data.frame(pathway_name=keyWord,logFC=sum(as.numeric(res$logFC)),pvalue=sum(as.numeric(res$pvalue)),FDR=sum(as.numeric(res$FDR)),contrastKey="total",ranking=sum(as.numeric(res$ranking)),module.size=unique(res$module.size),query.size=nrow(res),rankTotal=unique(res$rankTotal),color=colR,row.names="Total")
    query.match<-rbind(res,marginal)
     }else{
 # query.match<-data.frame(pathway_name=NA,logFC=NA,pvalue=NA,FDR=NA,contrastKey=NA,ranking=0,module.size=nrow(pathd),query.size=0,rankTotal=unique(pathd$rankTotal))
