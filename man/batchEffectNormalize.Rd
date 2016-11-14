@@ -2,15 +2,26 @@
 % Please edit documentation in R/batchEffectNormalize.R
 \name{batchEffectNormalize}
 \alias{batchEffectNormalize}
-\title{uses combat to normalize data}
+\title{uses limma to normalize data}
 \usage{
-batchEffectNormalize(kexp, batch = NULL, design = NULL, read.cutoff = 2,
-  byWhich = c("gene_id", "tx_id"), byLevel = c("gene", "repeat"))
+batchEffectNormalize(kexp, batchVector = NULL, design = NULL,
+  read.cutoff = 2, collapseByLevel = c("gene_id", "gene_name"))
+}
+\arguments{
+\item{kexp}{a kallisto experiment}
+
+\item{batchVector}{batch factor}
+
+\item{design}{design matrix of treatment groups without batch covariate}
+
+\item{read.cutoff}{floor threshold}
+
+\item{byLevel}{gene currently supported}
 }
 \value{
-batch cpm log2 transformed. and a pdf to show results.
+list of batch free log2 cpm and batch free repeat biotypes log2 cpm
 }
 \description{
-can be called to use edgeR batchEffect removal
+this is used by qusageTablesFromWGCNA to call batch normalized enrichment.  this returns two levels of batch free log2 cpm gene_id or gene_name. for qusageTablesFromWGCNA calls the correct level is gene_name.  gene_id can be used in wgcna/wrcna however not currently implemented.  if collapseLevel is gene_id then this outputs a list of batch free gene_id log2 CPM and batch free tx_biotype log2 CPM
 }
 

@@ -14,7 +14,8 @@ qusageTablesFromWGCNA(kexp, verbose = TRUE, dbname = "wgcnaDBLite.sqlite",
   species = c("Homo.sapiens", "Mus.musculus"), comparison1 = "pHSC",
   comparison2 = "Blast", controls = "LSC", paired = TRUE,
   batchNormalize = FALSE, batchVector = NULL, comparisonNumber = 1,
-  skipWithinEnrichment = TRUE, qusageDbName = "qusageDbLite")
+  skipWithinEnrichment = TRUE, qusageDbName = "qusageDbLite",
+  read.cutoff = 2)
 
 qusageDbLiteMetadata(kexp, packageName, species = NULL, Ensmbl, how = how)
 }
@@ -61,6 +62,9 @@ qusageDbLiteMetadata(kexp, packageName, species = NULL, Ensmbl, how = how)
 a qusageDbLite db
 
 a data.frame of metadata suitable for cramming into the database
+}
+\description{
+this will enrichment all the gene modules and supports batch correction gene module enrichment.  also enriches the drivers in each module that are top correlated with each biotype; all data trait enrichments does not currently support batch normalization
 }
 \section{Functions}{
 \itemize{
