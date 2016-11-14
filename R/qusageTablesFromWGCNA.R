@@ -1,4 +1,5 @@
 #' @title qusage enrichme modules returned from WGCNA.  the goal is to then select a MSigDB gmt and take the module.tx_biotype of interest and create a corresponding qusage enrichment database.
+#' @description this will enrichment all the gene modules and supports batch correction gene module enrichment.  also enriches the drivers in each module that are top correlated with each biotype; all data trait enrichments does not currently support batch normalization
 #' @param kexp the kexp should have pHSC, LSC and blast.  
 #' @param verbose boolean for std out
 #' @param dbname this is the db name for wgcnaDbLite with correlation db
@@ -19,7 +20,7 @@
 #' @import TxDbLite
 #' @export
 #' @return a qusageDbLite db
-qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",version="1.0.0",Module.color="brown",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),how=c("cpm","tpm"),species=c("Homo.sapiens","Mus.musculus"),comparison1="pHSC",comparison2="Blast",controls="LSC",paired=TRUE,batchNormalize=FALSE,batchVector=NULL,comparisonNumber=1,skipWithinEnrichment=TRUE,qusageDbName="qusageDbLite" ){
+qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",version="1.0.0",Module.color="brown",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),how=c("cpm","tpm"),species=c("Homo.sapiens","Mus.musculus"),comparison1="pHSC",comparison2="Blast",controls="LSC",paired=TRUE,batchNormalize=FALSE,batchVector=NULL,comparisonNumber=1,skipWithinEnrichment=TRUE,qusageDbName="qusageDbLite",read.cutoff=2 ){
 
 ##task: this will take a full kexp and first normalize then collapse by gene_name then log2 transform or tpm normalize and pass into qusageRun.R to handle the pre-proccessing for qusage call.  the output should be module.biotype.enrich specific data.  then write to a db. 
  ##important note: it is tempting to merely use collapseBundles(kexp,"gene_name") and pipe into qusage HOWEVER QUSAGE REQUIRES NORMALIZED LOG2 XR. collapseBundles will only use the raw counts(kexp) bundle gene_name counts.  here we *****MUST******* use tmm normalized or Tpm calls.
@@ -40,10 +41,6 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
     if(how=="cpm"){
   ##TMM normalize
   full_counts<-collapseBundles(kexp,"gene_id")
- # dge<-DGEList(counts=counts)
- # dge<-calcNormFactors(dge)
- # expr<-cpm(dge,log=FALSE)
- # counts<-log2(1+expr) ##enirhcment on log2 is required
   } else{
   ##TPM Normalize
   full_counts<-collapseTpm(kexp,"gene_id")
@@ -84,25 +81,27 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
    ##module kexp
   module.kexp<-kexp[rowRanges(kexp)$gene_id%in%rownames(module.counts),]
    if(how=="cpm"){
+   if(batchNormalize==FALSE){
    counts<-collapseBundles(module.kexp,"gene_name")
    counts<-counts[,which(colSums(counts)>1)]
    dge<-DGEList(counts=counts)
    dge<-calcNormFactors(dge)
    expr<-cpm(dge,normalized.lib.sizes=TRUE,log=FALSE)
-   if(batchNormalize==TRUE){
+   }else if(batchNormalize==TRUE){
      stopifnot(is.null(batchVector)==FALSE)
      stopifnot(length(batchVector)==ncol(kexp))##the batchVector nomenclature must match the length of columns.
      ##takes TMM normalized and batch corrects
-     batch.cpm<-removeBatchEffect(expr,batch=batchVector)
+     batch.free<-batchEffectNormalize(kexp,batch=batchVector,design=design,read.cutoff=read.cutoff,collapseByLevel="gene_name")
+     expr<-batch.free[["cpm"]] ##log2 batch free gene cpm
+    # expr.rpm<-batch.free[["rpm"]] ##log2 batch free repeat biotypes
+     counts<-collapseBundles(module.kexp,"gene_name")
+
+     module.id<-match(rownames(counts),rownames(expr))
+     counts<-expr[module.id,]
       }
    if(batchNormalize==FALSE){ 
   counts<-log2(1+expr) ##enirhcment on log2 is required
-  }else if(batchNormalize==TRUE){
-   counts<-log2(1+batch.cpm)
-    ### filter NaNs
-    id<-which(is.na(counts))
-    counts[id]<-1.0
-    }
+     }
   } else {
   counts<-collapseTpm(module.kexp,"gene_name")
   counts<-log2(1+counts)
@@ -189,31 +188,38 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
     ## collapse by gene name and then normalize moduleKexp.  as opposed to normalizing first and then mapping to gene names.
   module.trait.kexp<-kexp[rowRanges(kexp)$gene_id%in%rownames(module.trait.counts),]
    if(how=="cpm"){
+     if(batchNormalize==FALSE){
    module.trait.counts<-collapseBundles(module.trait.kexp,"gene_name")
    module.trait.counts<-module.trait.counts[,which(colSums(module.trait.counts)>1)]
+   }else{
+    stop("All Data Trait Driver Enrichment does not currently support batch corrections...\n")
+#  stopifnot(is.null(batchVector)==FALSE)
+ #    stopifnot(length(batchVector)==ncol(kexp))##the batchVector nomenclature must match the length of columns.
+     ##takes TMM normalized and batch corrects
+  #   batch.free<-batchEffectNormalize(kexp,batch=batchVector,design=design,read.cutoff=read.cutoff,collapseByLevel="gene_name")
+   #  expr<-batch.free[["cpm"]] ##log2 batch free gene cpm
+    # expr.rpm<-batch.free[["rpm"]] ##log2 batch free repeat biotypes
+    # counts<-collapseBundles(module.trait.kexp,"gene_name")
+
+    # module.id<-match(rownames(counts),rownames(expr))
+    # counts<-expr[module.id,]
+    }
    if(nrow(module.trait.counts)<=8){
    next
    }
    trait.dge<-DGEList(counts=module.trait.counts)
    trait.dge<-calcNormFactors(trait.dge)
    trait.expr<-cpm(trait.dge,normalized.lib.sizes=TRUE,log=FALSE)
-   if(batchNormalize==TRUE){
-   stopifnot(is.null(batchVector)==FALSE)
-   stopifnot(length(batchVector)==ncol(kexp))
-   batch.cpm.trait<-removeBatchEffect(trait.expr,batch=batchVector)
-   module.trait.counts<-log2(1+batch.cpm.trait)
-   id.trait<-which(is.na(module.trait.counts))
-   module.trait.counts[id.trait]<-1.0
-    }else if(batchNormalize==FALSE){
-     module.trait.counts<-log2(1+trait.expr) ##enirhcment on log2 is required
-    }
-   } else {
+     } else {
   module.trait.counts<-collapseTpm(module.trait.kexp,"gene_name")
+   }#tpm
    if(nrow(module.trait.counts)<=8){
     next
    }
+   if(batchNormalize==FALSE){
   module.trait.counts<-log2(1+module.trait.counts)
    }
+
    ##split the count data by stage
    comparison1.trait.id<-grep(paste0(comparison1,"_"),colnames(module.trait.counts))
    controls.trait.id<-grep(paste0(controls,"_"),colnames(module.trait.counts))
@@ -258,14 +264,10 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
                                     colorKey=allcolors[i],
                                     bioKey=allTraits[j],
                                     contrastKey=tolower(comparison2))
-
-       }
-   
-      qusage_module.trait<-rbind(qusage_trait.run1,qusage_trait.run2)
-  
-      qusage_module<-rbind(qusage_module,qusage_module.trait)
-
-  } ##end of j allTrait loop
+      }
+     qusage_module.trait<-rbind(qusage_trait.run1,qusage_trait.run2)
+     qusage_module<-rbind(qusage_module,qusage_module.trait)
+   } ##end of j allTrait loop
  }##boolean to skip within enrichment calls
   if(verbose) cat("Writing Module Enrichment Database...\n")
 
@@ -287,11 +289,15 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
      stopifnot(is.null(batchVector)==FALSE)
      stopifnot(length(batchVector)==ncol(kexp))##the batchVector nomenclature must match the length of columns.
      ##takes TMM normalized and batch corrects
-     full.batch.cpm<-removeBatchEffect(expr,batch=batchVector)
-     full_counts<-log2(1+full.batch.cpm)
-     full.id<-which(is.na(full_counts))
-     full_counts[full.id]<-1.0
-      }else if(batchNormalize==FALSE){
+  
+     ##takes TMM normalized and batch corrects
+     batch.free.kexp<-batchEffectNormalize(kexp,batch=batchVector,design=design,read.cutoff=read.cutoff,collapseByLevel="gene_name")
+     expr.kexp<-batch.free.kexp[["cpm"]] ##log2 batch free gene cpm
+    # expr.rpm<-batch.free[["rpm"]] ##log2 batch free repeat biotypes
+     counts<-collapseBundles(kexp,"gene_name")
+     module.id<-match(rownames(counts),rownames(expr.kexp))
+     full_counts<-expr.kexp[module.id,]
+       }else if(batchNormalize==FALSE){
      full_counts<-log2(1+expr) ##enirhcment on log2 is required
     }
   } else{
