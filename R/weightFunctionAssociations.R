@@ -8,6 +8,8 @@
 #' @import circlize
 #' @import gridExtra
 #' @import ggplot2
+#' @import fitdistrplus
+#' @import logspline
 #' @export
 #' @return a data frame with the queried keyword in every module and pathway information
 weightFunctionAssociations<-function(lnames,rnames,recalc=FALSE,how=how,dbname=NULL,qdbname=NULL,keyWords=NULL,write.out=FALSE){
@@ -107,7 +109,29 @@ message(paste0("found lnames"))
 
  pp<-ggplot(data=xy2,aes(x=w,y=t,colour=colR))+geom_point()+geom_line(color='black',alpha=0.4)+ggtitle(paste0("Weighted Correlation sd=",sd(ranking.weight)," N=",length(names(df)) ) )
  
+###plot normal fit
+###the weighted association is a phase shift of a correlation values.
+weighted.fit<-fitdist(as.vector(weightedAssociation),"norm")
+plot(weighted.fit)
+readkey()
+n.sims<-50000
 
+
+  stats <- replicate(n.sims, { r<-rnorm(n=100,
+  mean=weighted.fit$estimate["mean"],
+  sd=weighted.fit$estimate["sd"])
+  as.numeric(ks.test(r,"pnorm",mean=weighted.fit$estimate["mean"],sd=weighted.fit$estimate["sd"])$statistic)})
+
+  fit<-logspline(stats)
+  weighted.sim.pvalue<-1-plogspline(ks.test(as.vector(weightedAssociation),
+          "pnorm",
+          mean=weighted.fit$estimate["mean"],
+          sd=weighted.fit$estimate["sd"])$statistic,
+          fit)
+par(mfrow=c(1,1))
+plot(ecdf(stats), las = 1, main = paste0("KS-test simulation Weighted p.value:",weighted.sim.pvalue), col = "darkorange", lwd = 1.7)
+ readkey()
+#####
 #####normal unweighted call
   asymp.Cor.T<-sqrt(nrow(corrMap)-2)*corrMap/sqrt(1-corrMap^2)
   cor.pvalue<-2*pt(abs(asymp.Cor.T),nSamples-2,lower.tail=FALSE)
@@ -122,9 +146,31 @@ message(paste0("found lnames"))
  }
  XY2<-cbind(XY,colR2)
 
- pp2<-ggplot(data=XY2,aes(x=w,y=t,colour=colR2))+geom_point()+geom_line(color='black',alpha=0.4)+ggtitle(paste0("UnWeighted Correlation d=",sd(ranking.weight)," N=",length(names(df)) ) )
+ pp2<-ggplot(data=XY2,aes(x=w,y=t,colour=colR2))+geom_point()+geom_line(color='black',alpha=0.4)+ggtitle("Unweighted Correlation Pvalues" )
   #######
+####plot unweighted fit
+unweighted.fit<-fitdist(as.vector(corrMap),"norm")
+plot(unweighted.fit)
+readkey()
 
+  unweight.stats <- replicate(n.sims, { r<-rnorm(n=100,
+  mean=unweighted.fit$estimate["mean"],
+  sd=unweighted.fit$estimate["sd"])
+  as.numeric(ks.test(r,"pnorm",mean=unweighted.fit$estimate["mean"],sd=unweighted.fit$estimate["sd"])$statistic)})
+
+  unweight.fit<-logspline(unweight.stats)
+  unweighted.sim.pvalue<-1-plogspline(ks.test(as.vector(corrMap),
+          "pnorm",
+          mean=unweighted.fit$estimate["mean"],
+          sd=unweighted.fit$estimate["sd"])$statistic,
+          unweight.fit)
+par(mfrow=c(1,1))
+plot(ecdf(unweight.stats), las = 1, main = paste0("KS-test simulation Unweighted p.value:",unweighted.sim.pvalue), col = "darkorange", lwd = 1.7)
+ readkey()
+
+
+
+########
  ##windsorized
       large<-which(weightedAssociation>1)
       small<-which(weightedAssociation< ( -1) )
@@ -148,10 +194,30 @@ message(paste0("found lnames"))
   wxy2<-cbind(wxy,colW)
 
  ppw<-ggplot(data=wxy2,aes(x=w,y=t,colour=colW))+geom_point()+geom_line(color='black',alpha=0.4)+ggtitle("Windsorized Correlation Pvalues")
+######windsorized fit
+windy.fit<-fitdist(as.vector(wind),"norm")
+plot(windy.fit)
+readkey()
+
+ wind.stats <- replicate(n.sims, { r<-rnorm(n=100,
+  mean=windy.fit$estimate["mean"],
+  sd=windy.fit$estimate["sd"])
+  as.numeric(ks.test(r,"pnorm",mean=windy.fit$estimate["mean"],sd=windy.fit$estimate["sd"])$statistic)})
+
+  win.fit<-logspline(wind.stats)
+  wind.sim.pvalue<-1-plogspline(ks.test(as.vector(wind),
+          "pnorm",
+          mean=windy.fit$estimate["mean"],
+          sd=windy.fit$estimate["sd"])$statistic,
+          win.fit)
+par(mfrow=c(1,1))
+plot(ecdf(wind.stats), las = 1, main = paste0("KS-test simulation Windsorized p.value:",wind.sim.pvalue), col = "darkorange", lwd = 1.7)
+ readkey()
 
 
 
-########3
+
+############
 
 
   grid.arrange(pp,pp2,ppw,nrow=2,ncol=2)
@@ -169,15 +235,24 @@ message(paste0("found lnames"))
   hist(weighted.pvalue,main="weighted pvalues")
   hist(corrMap.pvalue,main="Default Standard (Unweighted) |p|<=1")
   hist(wind.pvalue,main="Windsorized Weighted Values |p|<=1")
-  dev.off()
+   plot(weighted.fit)
+   plot(unweighted.fit)
+   plot(windy.fit)
+  plot(ecdf(stats), las = 1, main = paste0("KS-test simulation Weighted p.value:",weighted.sim.pvalue), col = "darkorange", lwd = 1.7)
+  plot(ecdf(unweight.stats), las = 1, main = paste0("KS-test simulation Unweighted p.value:",unweighted.sim.pvalue), col = "darkorange", lwd = 1.7)
+  plot(ecdf(wind.stats), las = 1, main = paste0("KS-test simulation Windsorized p.value:",wind.sim.pvalue), col = "darkorange", lwd = 1.7)
+ dev.off()
  ####################
 
   ha_mix_top=HeatmapAnnotation(density_line = anno_density(weightedAssociation,
                                             type = "line"),
                               heatmap = anno_density(weightedAssociation,
                                             type = "heatmap"),width=unit(4,"cm"))
-  weighted.activation.direction<-Heatmap(asinh(activation.direction*ranking.weight),name="Activation Direction",show_row_names=FALSE)
-   if(sd(ranking.weight)>0.99){
+  weighted.activation.direction<-Heatmap(asinh(activation.direction*ranking.weight),
+ name="Activation Direction",
+ col=colorRamp2(c(min(asinh(activation.direction)),0,max(asinh(activation.direction))),c("black","purple","yellow")),
+ show_row_names=FALSE)
+  
     weight<-Heatmap(asinh(weightedAssociation),
                    col = colorRamp2(c(-1, 0, 1), c("blue", "white", "red")),
                   name = "asinh(weight)",
@@ -193,9 +268,9 @@ message(paste0("found lnames"))
                   }
                    grid.rect(x,y,w,h,gp=gpar(fill=NA,col="black"))
                   })
-     }else{
+  
       ###uses windsor method
-   weight<-Heatmap(asinh(weightedAssociation),
+   windsorized.heat<-Heatmap(asinh(weightedAssociation),
                    col = colorRamp2(c(-1, 0, 1), c("blue", "white", "red")),
                   name = "asinh(weight)",
                   top_annotation = ha_mix_top,
@@ -217,10 +292,13 @@ message(paste0("found lnames"))
                   }
                    grid.rect(x,y,w,h,gp=gpar(fill=NA,col="black"))
                   })
-         }
+         
   
   draw(weight+weighted.activation.direction)
  readkey()
+draw(windsorized.heat+weighted.activation.direction)
+ readkey()
+
  ###########
  ###unweighted associations 
 
@@ -245,7 +323,10 @@ message(paste0("found lnames"))
                   }
                    grid.rect(x,y,w,h,gp=gpar(fill=NA,col="black"))
                   })
-   unweighted.activation.direction<-Heatmap(asinh(activation.direction),name="Activation Direction",show_row_names=FALSE)
+   unweighted.activation.direction<-Heatmap(asinh(activation.direction),
+        name="Activation Direction",
+  col=colorRamp2(c(min(asinh(activation.direction)),0,max(asinh(activation.direction))),c("black","purple","yellow")),     
+            show_row_names=FALSE)
 
 
 
@@ -297,6 +378,7 @@ message(paste0("found lnames"))
                 colors.lab.y=1.3,
                 main = paste0("Module-Repeat ",how," Biotype relationships"))
       draw(weight+weighted.activation.direction)
+   draw(windsorized.heat+weighted.activation.direction)
     draw(unweight+unweighted.activation.direction)
    dev.off()
  
