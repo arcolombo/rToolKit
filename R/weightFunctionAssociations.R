@@ -23,7 +23,7 @@ weightFunctionAssociations<-function(lnames,rnames,recalc=FALSE,how=how,dbname=N
   print(df)
   ###This requires that rnames has the columns renamed txBiotypes that lead the module
   ### this ranks the correlation matrix by the rank of the pathway function queried.  this rewards correlations to highly ranked pathway query functions, and should penalize slighly low ranked correlations to low ranked pathway query functions.  normalizes the module pathway size.
-  ### averages the logFC in the query, assumes that the query will return multiple similar pathways, so averages the queries into an average function logFC (activity direction) 
+ 
   ranking.weight<-sapply(df,function(x) x[grep("Total",rownames(x)),]$ranking/x[grep("Total",rownames(x)),]$module.size)
   activation.direction<-sapply(df,function(x) as.numeric(x[grep("Total",rownames(x)),]$logFC)/as.numeric(x[grep("Total",rownames(x)),]$query.size))
 
@@ -84,40 +84,72 @@ message(paste0("found lnames"))
   corrMap.pvalue[which(is.na(corrMap.pvalue))]<-1
   ranking.weight<-ranking.weight[names(ranking.weight)%in%rownames(corrMap)]
   activation.direction<-activation.direction[names(activation.direction)%in%rownames(corrMap)]
-  weightedAssociation<-(corrMap*(ranking.weight)) #should penalize low weights and reward high weights
+ ##instead of using the ranking.weight raw score find out where they fit onto a normal distribution. and scale appropriately
+  ##the log(data) helps normalize the data transform into normality.  
+  ##FIX ME: ensure/enforce that the data transform works? 
+  
+ normal.scaled.weights<-pnorm(log(ranking.weight),mean=mean(log(ranking.weight)),sd=sd(log(ranking.weight)),lower.tail=TRUE)
+  #print(shapiro.test(normal.scaled.weights))
+  ####optimize the weights to be normal and the weightedAssoc to be normal
+  ###loop through the bottom, top pairs of percentils, testing normality, while adjusting both ends balanced
+
+ adj.per<-normal.scaled.weights
+ for(i in 0:(as.integer(max(rank(adj.per))/2)-1) ){
+ adj.per[which(rank(adj.per)==max(rank(adj.per))-i)]<-adj.per[which(rank(adj.per)==max(rank(adj.per)-i)) ]+0.09
+  adj.per[which(rank(adj.per)==min(rank(adj.per))+i ) ]<-adj.per[which(rank(adj.per)==min(rank(adj.per))+i )]-0.09
+  if(adj.per[which(rank(adj.per)==min(rank(adj.per))+i) ]<0){
+  adj.per[which(rank(adj.per)==min(rank(adj.per))+i ) ]<-abs(1-adj.per[which(rank(adj.per)==max(rank(adj.per))-i ) ])
+ }
+  if(shapiro.test(adj.per)$p.value>0.06 && shapiro.test(corrMap*adj.per)$p.value>=0.05){
+  message("adjusted weights are normal")
+  print(adj.per) 
+  normal.scaled.weights<-adj.per
+   }else{
+   message("not using adjusted weights")
+    normal.scaled.weights<-pnorm(log(ranking.weight),mean=mean(log(ranking.weight)),sd=sd(log(ranking.weight)),lower.tail=TRUE)
+  print(normal.scaled.weights)
+   print(shapiro.test(normal.scaled.weights))
+  }
+  ##update based on shapiro test
+ #print(i)
+}##loop
+  weightedAssociation<-(corrMap*(normal.scaled.weights)) #should penalize low weights and reward high weights
+  if(write.out==TRUE){
+  write.csv(weightedAssociation,file=paste0("weightedCorrelations_",gsub(" ","_",how),".csv"))
+  write.csv(normal.scaled.weights,file=paste0("weights_",gsub(" ","_",how),".csv"))
+ }
  ###weighted correlations 
-   ###
- #######this uses the correlation test statistic however the weighted correlations are not [0,1] where the positive weights reward correlations.  so we take the abs(1-r^2/var(rank)) which does not return complex numbers.
- ##the problem with abs(1-r^2) is that for values >1 it levels off at 2, and may miss these weighted values.
- ##so by taking abs(1-weight^2/var(ranking.weight))  it pushes the asymptote out by the sd(ranking.weight), thus if the weights are noisy the asympotote shifts further out. which is more conservative.
- ##if the keyWord query is small, then sd(rank.weight) will be smaller leading to higher FPR.
- ###this means that for values weighted closer to the sd(ranking.weight) these will have higher p.values so the higher pvalues will be those positively effected by the weights, and it will penalize according to the weights.  where before any r value close to 1 lands in critical region.  weighted pvalues will land in critical regions for any value close to the sd(ranking.weight) which will tend to be value rewarded by weights.
-  print(ranking.weight) 
-  print(paste0("weighted center:",sd(ranking.weight)))
-   asymp.T<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/(2*sqrt(abs(1-weightedAssociation^2/var(ranking.weight)))) 
-   weighted.pvalue<- 2 * pt(abs(asymp.T), nSamples - 2, lower.tail = FALSE)
+ ###the normal scaled weights balances the weight adjustments for each polar quantile.  this will likely help preserve normality in the data. the products of two normal data sets will not necessarily be normal, but will tend to be normal more often than not depending on how strong both datas are normal.  
+  ##this method will iteratively update the scaled weights **only if*** they pass the shapiro test
+  ###FIX ME: should consider scaling by the connected-ness of the modules.
+  ###FIX ME: should consider iterating this processes across related pathways
+  ###
+   
+ #  asymp.T<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/(2*sqrt(abs(1-weightedAssociation^2/var(ranking.weight)))) 
+ asymp.T<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/sqrt(1-weightedAssociation^2)
+ 
+  weighted.pvalue<- 2 * pt(abs(asymp.T), nSamples - 2, lower.tail = FALSE)
 
   xy<-data.frame(w=as.vector(weightedAssociation),t=as.vector(asymp.T),p=as.vector(weighted.pvalue),stringsAsFactors=FALSE)
- colR<-factor(c(rep("signf",length(which(xy$p<0.05))),rep("not.Signf", length(which(xy$p>=0.05)))))
-  if(length(which(xy$p<0.05))>0){
- colR[which(xy$p<0.05)]<-factor("signf")
+ colR<-factor(c(rep("signf",length(which(xy$p<0.08))),rep("not.Signf", length(which(xy$p>=0.08)))))
+  if(length(which(xy$p<0.08))>0){
+ colR[which(xy$p<0.08)]<-factor("signf")
   }
- if(length(which(xy$p>=0.05))>0){
- colR[which(xy$p>=0.05)]<-factor("not.Signf")
+ if(length(which(xy$p>=0.08))>0){
+ colR[which(xy$p>=0.08)]<-factor("not.Signf")
   }
  xy2<-cbind(xy,colR)
 
- pp<-ggplot(data=xy2,aes(x=w,y=t,colour=colR))+geom_point()+geom_line(color='black',alpha=0.4)+ggtitle(paste0("Weighted Correlation sd=",sd(ranking.weight)," N=",length(names(df)) ) )
+ pp<-ggplot(data=xy2,aes(x=w,y=t,colour=colR))+geom_point()+geom_line(color='black',alpha=0.4)+ggtitle(paste0("Weighted Correlation Shapiro=",shapiro.test(weightedAssociation)$p.value," N=",length(names(df)) ) )
  
 ###plot normal fit
 ###the weighted association is a phase shift of a correlation values.
+#weighted.fit<-fitdist(as.vector(weightedAssociation),"t",df=nSamples-2)
 weighted.fit<-fitdist(as.vector(weightedAssociation),"norm")
 plot(weighted.fit)
 readkey()
-n.sims<-50000
-
-
-  stats <- replicate(n.sims, { r<-rnorm(n=100,
+n.sims<-20000
+  stats <- replicate(n.sims, { r<-rnorm(n=length(weightedAssociation),
   mean=weighted.fit$estimate["mean"],
   sd=weighted.fit$estimate["sd"])
   as.numeric(ks.test(r,"pnorm",mean=weighted.fit$estimate["mean"],sd=weighted.fit$estimate["sd"])$statistic)})
@@ -132,6 +164,8 @@ par(mfrow=c(1,1))
 plot(ecdf(stats), las = 1, main = paste0("KS-test simulation Weighted p.value:",weighted.sim.pvalue), col = "darkorange", lwd = 1.7)
  readkey()
 #####
+
+
 #####normal unweighted call
   asymp.Cor.T<-sqrt(nrow(corrMap)-2)*corrMap/sqrt(1-corrMap^2)
   cor.pvalue<-2*pt(abs(asymp.Cor.T),nSamples-2,lower.tail=FALSE)
@@ -146,14 +180,14 @@ plot(ecdf(stats), las = 1, main = paste0("KS-test simulation Weighted p.value:",
  }
  XY2<-cbind(XY,colR2)
 
- pp2<-ggplot(data=XY2,aes(x=w,y=t,colour=colR2))+geom_point()+geom_line(color='black',alpha=0.4)+ggtitle("Unweighted Correlation Pvalues" )
+ pp2<-ggplot(data=XY2,aes(x=w,y=t,colour=colR2))+geom_point()+geom_line(color='black',alpha=0.4)+ggtitle(paste0("Unweighted Correlation Shapiro:",signif(shapiro.test(corrMap)$p.value,2) ))
   #######
 ####plot unweighted fit
 unweighted.fit<-fitdist(as.vector(corrMap),"norm")
 plot(unweighted.fit)
 readkey()
 
-  unweight.stats <- replicate(n.sims, { r<-rnorm(n=100,
+  unweight.stats <- replicate(n.sims, { r<-rnorm(n=length(corrMap),
   mean=unweighted.fit$estimate["mean"],
   sd=unweighted.fit$estimate["sd"])
   as.numeric(ks.test(r,"pnorm",mean=unweighted.fit$estimate["mean"],sd=unweighted.fit$estimate["sd"])$statistic)})
@@ -171,13 +205,15 @@ plot(ecdf(unweight.stats), las = 1, main = paste0("KS-test simulation Unweighted
 
 
 ########
- ##windsorized
-      large<-which(weightedAssociation>1)
-      small<-which(weightedAssociation< ( -1) )
-     wind<-weightedAssociation
+ ##winsorized
+   win.weights<-ranking.weight
+    x<-corrMap*win.weights
+      large<-which(x>1)
+      small<-which(x< ( -1) )
+     wind<-x
      wind[large]<-1
      wind[small]<-(-1)
-   
+     
 
   asymp.W<-sqrt(nrow(wind)-2)*wind/(sqrt(1-wind^2))
    wind.pvalue<- 2 * pt(abs(asymp.W), nSamples - 2, lower.tail = FALSE)
@@ -193,7 +229,7 @@ plot(ecdf(unweight.stats), las = 1, main = paste0("KS-test simulation Unweighted
   }
   wxy2<-cbind(wxy,colW)
 
- ppw<-ggplot(data=wxy2,aes(x=w,y=t,colour=colW))+geom_point()+geom_line(color='black',alpha=0.4)+ggtitle("Windsorized Correlation Pvalues")
+ ppw<-ggplot(data=wxy2,aes(x=w,y=t,colour=colW))+geom_point()+geom_line(color='black',alpha=0.4)+ggtitle(paste0("Windsorized Correlation Shapiro:",signif(shapiro.test(wind)$p.value,2) ))
 ######windsorized fit
 windy.fit<-fitdist(as.vector(wind),"norm")
 plot(windy.fit)
@@ -224,23 +260,24 @@ plot(ecdf(wind.stats), las = 1, main = paste0("KS-test simulation Windsorized p.
   readkey()
    
  par(mfrow=c(2,2))
-   hist(weighted.pvalue,main="Weighted Values")
-   hist(corrMap.pvalue,main="Default Standard (Unweighted) |p|<=1")
-   hist(wind.pvalue,main="Windsorized weighted values |p|<=1")
+   hist(weighted.pvalue,main=paste0("Weighted Values Shapiro:",signif(shapiro.test(weightedAssociation)$p.value,2)))
+   hist(corrMap.pvalue,main=paste0("Standard Unweighted Shapiro:",signif(shapiro.test(corrMap)$p.value,2)) )
+   hist(wind.pvalue,main=paste0("Winsorized Shapiro:",signif(shapiro.test(wind)$p.value,2) ))
   readkey()
 
 
    pdf(paste0("Method_",how,"_Comparisons_Weighted_Correlations.pdf"))
+  hist(weighted.pvalue,main=paste0("Weighted Values Shapiro:",signif(shapiro.test(weightedAssociation)$p.value,2)))
+   hist(corrMap.pvalue,main=paste0("Standard Unweighted Shapiro:",signif(shapiro.test(corrMap)$p.value,2)) )
+   hist(wind.pvalue,main=paste0("Winsorized Shapiro:",signif(shapiro.test(wind)$p.value,2) ))
   grid.arrange(pp,pp2,ppw,nrow=2,ncol=2)
-  hist(weighted.pvalue,main="weighted pvalues")
-  hist(corrMap.pvalue,main="Default Standard (Unweighted) |p|<=1")
-  hist(wind.pvalue,main="Windsorized Weighted Values |p|<=1")
+
    plot(weighted.fit)
    plot(unweighted.fit)
    plot(windy.fit)
-  plot(ecdf(stats), las = 1, main = paste0("KS-test simulation Weighted p.value:",weighted.sim.pvalue), col = "darkorange", lwd = 1.7)
-  plot(ecdf(unweight.stats), las = 1, main = paste0("KS-test simulation Unweighted p.value:",unweighted.sim.pvalue), col = "darkorange", lwd = 1.7)
-  plot(ecdf(wind.stats), las = 1, main = paste0("KS-test simulation Windsorized p.value:",wind.sim.pvalue), col = "darkorange", lwd = 1.7)
+  plot(ecdf(stats), las = 1, main = paste0("KS-test simulation Weighted p.value:",signif(weighted.sim.pvalue,1)), col = "darkorange", lwd = 1.7)
+  plot(ecdf(unweight.stats), las = 1, main = paste0("KS-test simulation Unweighted p.value:",signif(unweighted.sim.pvalue,1)), col = "darkorange", lwd = 1.7)
+  plot(ecdf(wind.stats), las = 1, main = paste0("KS-test simulation Windsorized p.value:",signif(wind.sim.pvalue,1)), col = "darkorange", lwd = 1.7)
  dev.off()
  ####################
 
@@ -261,16 +298,17 @@ plot(ecdf(wind.stats), las = 1, main = paste0("KS-test simulation Windsorized p.
                   column_names_gp=gpar(fontsize=10),
                   column_title=paste0("Weighted Module ",how),
                   cell_fun=function(j,i,x,y,w,h,col){
-                  asymp.T<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/(2*sqrt(abs(1-weightedAssociation^2/var(ranking.weight))))
+                  asymp.T<-sqrt(nrow(weightedAssociation)-2)*weightedAssociation/(sqrt((1-weightedAssociation^2)))
                  weighted.pvalue<- 2 * pt(abs(asymp.T), nSamples - 2, lower.tail = FALSE)
-                  if(weighted.pvalue[i,j]<0.06){
+                  if(weighted.pvalue[i,j]<0.09){
                    grid.text(sprintf("%.3f", weighted.pvalue[i,j]),x,y)
                   }
                    grid.rect(x,y,w,h,gp=gpar(fill=NA,col="black"))
                   })
   
       ###uses windsor method
-   windsorized.heat<-Heatmap(asinh(weightedAssociation),
+      
+   winsorized.heat<-Heatmap(asinh(wind),
                    col = colorRamp2(c(-1, 0, 1), c("blue", "white", "red")),
                   name = "asinh(weight)",
                   top_annotation = ha_mix_top,
@@ -278,17 +316,9 @@ plot(ecdf(wind.stats), las = 1, main = paste0("KS-test simulation Windsorized p.
                   column_names_gp=gpar(fontsize=10),
                   column_title=paste0("Windsorized Weighted Module ",how),
                   cell_fun=function(j,i,x,y,w,h,col){
-                        large<-which(weightedAssociation>1)
-                        small<-which(weightedAssociation< ( -1) )
-                        wind<-weightedAssociation
-                        wind[large]<-1
-                        wind[small]<-(-1)  
-                    asymp.W<-sqrt(nrow(wind)-2)*wind/(sqrt(1-wind^2))
-         weighted.pvalue<- 2 * pt(abs(asymp.W), nSamples - 2, lower.tail = FALSE)
-            weighted.pvalue[is.na(weighted.pvalue)]<-1
-
-                   if(weighted.pvalue[i,j]<0.06){
-                   grid.text(sprintf("%.3f", weighted.pvalue[i,j]),x,y)
+                  weighted.Pvalue<-corPvalueStudent(wind,length(wind)-2)
+                   if(weighted.Pvalue[i,j]<0.06){
+                   grid.text(sprintf("%.3f", weighted.Pvalue[i,j]),x,y)
                   }
                    grid.rect(x,y,w,h,gp=gpar(fill=NA,col="black"))
                   })
@@ -296,7 +326,7 @@ plot(ecdf(wind.stats), las = 1, main = paste0("KS-test simulation Windsorized p.
   
   draw(weight+weighted.activation.direction)
  readkey()
-draw(windsorized.heat+weighted.activation.direction)
+draw(winsorized.heat+weighted.activation.direction)
  readkey()
 
  ###########
@@ -316,7 +346,7 @@ draw(windsorized.heat+weighted.activation.direction)
                   column_title=paste0("unWeighted Module ",how),
                  cell_fun=function(j,i,x,y,w,h,col){
                asymp.Cor.T<-sqrt(nrow(corrMap)-2)*corrMap/sqrt(1-corrMap^2)
-          cor.pvalue<-2*pt(abs(asymp.Cor.T),nSamples-2,lower.tail=FALSE)
+          cor.pvalue<-2*pt(abs(asymp.Cor.T),length(corrMap)-2,lower.tail=FALSE)
                  cor.pvalue[which(is.na(cor.pvalue))]<-1
                   if(cor.pvalue[i,j]<0.06){
                    grid.text(sprintf("%.3f", cor.pvalue[i,j]),x,y)
@@ -378,7 +408,7 @@ draw(windsorized.heat+weighted.activation.direction)
                 colors.lab.y=1.3,
                 main = paste0("Module-Repeat ",how," Biotype relationships"))
       draw(weight+weighted.activation.direction)
-   draw(windsorized.heat+weighted.activation.direction)
+   draw(winsorized.heat+weighted.activation.direction)
     draw(unweight+unweighted.activation.direction)
    dev.off()
  
