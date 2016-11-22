@@ -175,7 +175,13 @@ if (!gsg$allOK)
 # Re-cluster samples
   sampleTree2 = hclust(dist(datExpr), method = "average")
   # Convert traits to a color representation: white means low, red means high, grey means missing entry
-  traitColors = numbers2colors(datTraits, signed = FALSE);
+   if(useAllBiotypes==FALSE){
+   stopifnot(all(intBiotypes%in%colnames(datTraits))==TRUE)
+   datTraits<-datTraits[,match(intBiotypes,colnames(datTraits))]
+   traitColors<-numbers2colors(datTraits[,match(intBiotypes,colnames(datTraits))],signed=FALSE)
+   }else{
+   traitColors = numbers2colors(datTraits, signed = FALSE);
+   }
 # Plot the sample dendrogram and the colors underneath.
   plotDendroAndColors(sampleTree2, traitColors,
                     groupLabels = names(datTraits), 
