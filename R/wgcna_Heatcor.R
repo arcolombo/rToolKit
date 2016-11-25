@@ -12,7 +12,9 @@
 #' @import dendsort
 #' @export
 #' @return images of eigengenes
-wgcna_Heatcor<-function(lnames=NULL,read.cutoff=2,plotDot=FALSE,recalc=FALSE,targets=NULL,how=how,reOrder=TRUE){
+wgcna_Heatcor<-function(lnames=NULL,read.cutoff=2,plotDot=FALSE,recalc=FALSE,targets=NULL,how=how,reOrder=TRUE,pathwaysToPick=c("immune","inflammation","apoptotic","death","kappab","wound"),pathPairing=c(1,1,2,2,3,4),qdbname=NULL){
+
+stopifnot(length(pathwaysToPick)==length(pathPairing))
  
 if(is.null(lnames)==TRUE){
 cat("Please call wgcna.R prior calling a heatmap...\n")
@@ -55,17 +57,52 @@ message(paste0("found lnames"))
  moduleTraitPvalue.id<-match(rownames(moduleTraitCor),rownames(moduleTraitPvalue))
  moduleTraitPvalue<-moduleTraitPvalue[moduleTraitPvalue.id,]
  
+ ###label the rows of the heatmap by numbers
+
+
+ ###color code the rownames based on pathPairing
+ ##add a legened
+ ##create  a sub plot that shows the pathwaysToPick specific module Heatmap Correlations with altered significance level.
+xN<-list()
+for(i in 1:length(pathwaysToPick)){
+xnam<-names(pickPathway(qusageDbLite(qdbname),keyWord=pathwaysToPick[i])[sapply(pickPathway(qusageDbLite(qdbname),keyWord=pathwaysToPick[i]),function(x) nrow(x)>2)])
+xN[[i]]<-xnam
+names(xN)[i]<-pathwaysToPick[i]
+}
+xN<-xN[sapply(xN,function(x) length(x)>0)]
+###row Annotation left side
+df_annot<-data.frame(module=rownames(moduleTraitCor))
+rownames(df_annot)<-rownames(moduleTraitCor)
+for(i in 1:length(names(xN))){
+
+df_annot<-cbind(df_annot,-1)
+colnames(df_annot)[i+1]<-names(xN)[i]
+
+ df_annot[ rownames(df_annot)%in% paste0("ME", xN[[i]]  )  ,i+1  ]<-1
+}
+ df_annot$module<-NULL
+ modA<-HeatmapAnnotation(df=df_annot,which="row")
+####
+
+
   par(mar = c(6, 10, 3, 3));
  # Display the correlation values within a heatmap plot
   plot.new()
   if(reOrder==TRUE){
   x.pv<-pvclust(moduleTraitCor,nboot=100)
   
-  print(Heatmap(moduleTraitCor,cluster_columns=x.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Module-Repeat ",how," Biotype relationships")))
+  heatCor<-Heatmap(moduleTraitCor,cluster_columns=x.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Module-Repeat ",how," Biotype relationships"))
+  print(modA+heatCor)
   } else{
- print(Heatmap(moduleTraitCor,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Module-Repeat ",how," Biotype relationships")))
+ heatCor<-Heatmap(moduleTraitCor,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Module-Repeat ",how," Biotype relationships"))
+  print(modA+heatCor)
   }
   readkey()
+
+#####add Heatcor of row annotation subset.  
+### adjust p.values 
+### change the rownames of the heatmap to 1:n numerics as the last step. 
+
 
   colorDF<-sapply(MEs,function(x) median(x))
   colorDF<-colorDF[order(colorDF,decreasing=TRUE)]
@@ -80,12 +117,20 @@ message(paste0("found lnames"))
     par(mar = c(6, 10, 3, 3));
     if(reOrder==TRUE){
      x.pv<-pvclust(moduleTraitCor,nboot=100)
-     print(Heatmap(moduleTraitCor,cluster_columns=x.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Module-Repeat ",how," Biotype relationships")))
+     heatCor<-Heatmap(moduleTraitCor,cluster_columns=x.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Module-Repeat ",how," Biotype relationships"))
+  print(modA+heatCor)
    } else{
-   print(Heatmap(moduleTraitCor,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Module-Repeat ",how," Biotype relationships")))
+   heatCor<-Heatmap(moduleTraitCor,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Module-Repeat ",how," Biotype relationships"))   
+    print(modA+heatCor)
   }
   plot(colorDF,main="Median Correlation Per Module")
   axis(1,at=1:length(colorDF),labels=names(colorDF),las=2)
   dev.off()
  }
-}
+
+
+
+} ###main
+
+
+

@@ -94,22 +94,22 @@ message(paste0("found lnames"))
   ###loop through the bottom, top pairs of percentils, testing normality, while adjusting both ends balanced
 
  adj.per<-normal.scaled.weights
- for(i in 0:(as.integer(max(rank(adj.per))/2)-1) ){
+ for(i in 1:as.integer(length(order(rank(adj.per)))/2)){
 
-   max.id<-which(rank(adj.per)==max(rank(adj.per))-i)
-   min.id<-which(rank(adj.per)==min(rank(adj.per))+i )
+   max.id<-order(rank(adj.per),decreasing=TRUE)[i]
+   min.id<-order(rank(adj.per),decreasing=FALSE)[i]
    message(paste0("i ",i))
    for(k in 2:6){
     X<-adj.per
    message(paste0("k ",k))
-   if(i==0){
+   if(i==1){
     ##100% and 0% quantile
     step1<-abs(X[max.id ]-1)/k
     step2<-abs(X[min.id ]-0)/k
-   }else if(i>0){ 
+   }else if(i>1){ 
     ##middle percentiles
-     step1<-abs(X[max.id ]-X[which(rank(X)==max(rank(X)-i+1))])/k
-    step2<-abs(X[min.id ]-X[which(rank(X)==min(rank(X)+i -1))])/k 
+    step1<-abs(X[max.id ]- X[order(rank(X),decreasing=TRUE)[i-1]] )/k
+    step2<-abs(X[min.id ]- X[order(rank(X),decreasing=FALSE)[i-1]] )/k 
        print(paste0("step2: ",step2))
     }
 
