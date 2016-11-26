@@ -12,7 +12,7 @@
 #' @import dendsort
 #' @export
 #' @return images of eigengenes
-wgcna_Heatcor<-function(lnames=NULL,read.cutoff=2,recalc=FALSE,targets=NULL,how=how,pathwaysToPick=c("immune","inflammation","apoptotic","death","kappab","wound"),pathPairing=c(1,1,2,2,3,4),qdbname=NULL){
+wgcna_Heatcor<-function(lnames=NULL,read.cutoff=2,recalc=FALSE,targets=NULL,how=how,pathwaysToPick=c("immune","inflam","apopto","death","kappab","wound"),pathPairing=c(1,1,2,2,3,4),qdbname=NULL){
 ##FIX ME:  add a star for pvalues less than 0.05 in the cell_function Heat
 stopifnot(length(pathwaysToPick)==length(pathPairing))
  
@@ -67,7 +67,7 @@ xN<-list()
 for(i in 1:length(pathwaysToPick)){
   xnam<-names(pickPathway(qusageDbLite(qdbname),keyWord=pathwaysToPick[i]))
   if(length(xnam)>0){
-  xnam<-xnam[sapply(pickPathway(qusageDbLite(qdbname),keyWord=pathwaysToPick[i]),function(x) nrow(x)>2)]
+  xnam<-xnam[sapply(pickPathway(qusageDbLite(qdbname),keyWord=pathwaysToPick[i]),function(x) nrow(x)>=1)]
   
   xN[[i]]<-xnam
   names(xN)[i]<-pathwaysToPick[i]
@@ -96,7 +96,7 @@ colnames(df_annot)[i+1]<-names(xN)[i]
   par(mar = c(6, 10, 3, 3));
  # Display the correlation values within a heatmap plot
   plot.new()
-  if(reOrder==TRUE){
+ if(nrow(moduleTraitCor2)>6){
   x.pv<-pvclust(moduleTraitCor2,nboot=100)
   
   heatCor<-Heatmap(moduleTraitCor2,cluster_columns=x.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Module-Repeat ",how," Biotype relationships"))
@@ -139,7 +139,7 @@ for(i in 1:length(pathwaysToPick)) {
   if(length(df)==0){
   next
  }
- df<-df[sapply(df,function(x) nrow(x)>2)]
+ df<-df[sapply(df,function(x) nrow(x)>=1)]
 
  activation.df<-sapply(df,function(x) as.numeric(x[grep("Total",rownames(x)),]$logFC)/as.numeric(x[grep("Total",rownames(x)),]$query.size))
   names(activation.df)<-paste0("ME",names(activation.df))
@@ -155,7 +155,7 @@ for(i in 1:length(pathwaysToPick)) {
   par(mar = c(6, 10, 3, 3));
  # Display the correlation values within a heatmap plot
   plot.new()
-  if(reOrder==TRUE){
+  if(nrow(mC)>4){
   x.pv2<-pvclust(mC,nboot=200)
 
   heatCor2<-Heatmap(mC,cluster_columns=x.pv2$hclust,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Immune-Related ",how," Biotype relationships"))
