@@ -12,7 +12,7 @@
 #' @import dendsort
 #' @export
 #' @return images of eigengenes
-wgcna_Heatcor<-function(lnames=NULL,read.cutoff=2,recalc=FALSE,targets=NULL,how=how,pathwaysToPick=c("immune","inflam","apopto","death","kappab","wound"),pathPairing=c(1,1,2,2,3,4),qdbname=NULL){
+wgcna_Heatcor<-function(lnames=NULL,rnames=NULL, read.cutoff=2,recalc=FALSE,how=how,pathwaysToPick=c("immune","inflam","apopto","death","kappab","wound"),pathPairing=c(1,1,2,2,3,4),dbname=NULL,qdbname=NULL){
 ##FIX ME:  add a star for pvalues less than 0.05 in the cell_function Heat
 stopifnot(length(pathwaysToPick)==length(pathPairing))
  
@@ -44,10 +44,10 @@ message(paste0("found lnames"))
    moduleTraitCor<-lnames[["moduleTraitCor"]]
    moduleTraitPvalue<-lnames[["moduleTraitPvalue"]]
    }
-  if(is.null(targets)==FALSE) {
-  moduleTraitCor<-moduleTraitCor[rownames(moduleTraitCor)%in%targets,]
-  moduleTraitPvalue<-moduleTraitPvalue[rownames(moduleTraitPvalue)%in%targets,]
- }
+ # if(is.null(targets)==FALSE){
+ # moduleTraitCor<-moduleTraitCor[rownames(moduleTraitCor)%in%targets,]
+ # moduleTraitPvalue<-moduleTraitPvalue[rownames(moduleTraitPvalue)%in%targets,]
+# }
  # if(orderBiotype=="L1"){
  #moduleTraitCor<-moduleTraitCor[order(moduleTraitCor[,grep("L1",colnames(moduleTraitCor))],decreasing=TRUE),]
 # } else if(orderBiotype=="Alu"){
@@ -67,7 +67,7 @@ xN<-list()
 for(i in 1:length(pathwaysToPick)){
   xnam<-names(pickPathway(qusageDbLite(qdbname),keyWord=pathwaysToPick[i]))
   if(length(xnam)>0){
-  xnam<-xnam[sapply(pickPathway(qusageDbLite(qdbname),keyWord=pathwaysToPick[i]),function(x) nrow(x)>=1)]
+  xnam<-xnam[sapply(pickPathway(qusageDbLite(qdbname),keyWord=pathwaysToPick[i]),function(x) median(x[which(rownames(x) !="Total"),"ranking"])>40)    ]
   
   xN[[i]]<-xnam
   names(xN)[i]<-pathwaysToPick[i]
@@ -88,7 +88,7 @@ colnames(df_annot)[i+1]<-names(xN)[i]
  df_annot$module<-NULL
  key.id1<-match(rownames(df_annot),key$module)
  rownames(df_annot)<-key$id[key.id1]
- modA<-HeatmapAnnotation(df=df_annot,which="row")
+ modA<-HeatmapAnnotation(df=df_annot,which="row" )
 ####
   moduleTraitCor2<-moduleTraitCor
   key.id2<-match(rownames(moduleTraitCor2),key$module)
@@ -139,7 +139,7 @@ for(i in 1:length(pathwaysToPick)) {
   if(length(df)==0){
   next
  }
- df<-df[sapply(df,function(x) nrow(x)>=1)]
+ df<-df[sapply(df,function(x) median(x[which(rownames(x) !="Total"),"ranking"])>40)  ]
 
  activation.df<-sapply(df,function(x) as.numeric(x[grep("Total",rownames(x)),]$logFC)/as.numeric(x[grep("Total",rownames(x)),]$query.size))
   names(activation.df)<-paste0("ME",names(activation.df))
@@ -167,6 +167,53 @@ for(i in 1:length(pathwaysToPick)) {
   readkey()
 #######
 
+
+ if(is.null(rnames[["traitCorRenamed"]])==FALSE){
+  rTraitCor<-rnames[["traitCorRenamed"]]
+  }else{
+  rTraitCor<-rnames[["moduleTraitCor"]]
+  }
+   if(ncol(as.data.frame(moduleTraitCor))>1){
+  rTraitCor<-rTraitCor[,colnames(rTraitCor)%in%colnames(moduleTraitCor)]
+  }else if(ncol(as.data.frame(moduleTraitCor))==1){
+  rTraitCor<-rTraitCor[,colnames(rTraitCor)%in%names(moduleTraitCor)]
+  }
+  corrMap<-bicor(t(moduleTraitCor),t(rTraitCor))
+  corrMap.pvalue<-corPvalueStudent(corrMap,ncol(corrMap))
+  corrMap.pvalue[which(is.na(corrMap.pvalue))]<-1
+
+
+
+ ####
+  corrMap2<-corrMap
+  key.id2<-match(rownames(corrMap2),key$module)
+  rownames(corrMap2)<-key$id[key.id2]
+  par(mar = c(6, 10, 3, 3));
+ # Display the correlation values within a heatmap plot
+  plot.new()
+  cor.pv<-pvclust(corrMap2,nboot=100)
+ map.heatCor<-Heatmap(corrMap2,cluster_columns=cor.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="correlation(x)", column_title = paste0("Repeat Level ",how," Module relationships"))
+  print(modA+map.heatCor)
+
+###########
+
+##summary module repeat 
+ corrMap.sub<-corrMap2
+ key.id3<-match(rownames(mC),rownames(corrMap.sub))
+ corrMap.sub<-corrMap.sub[key.id3,]
+ if(nrow(corrMap.sub)>4){
+  sub.pv<-pvclust(corrMap.sub,nboot=200)
+
+  sub.heatCor2<-Heatmap(corrMap.sub,cluster_columns=sub.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="correlation(x)", column_title = paste0("Immune-Related ",how," Module relationships"))
+  print(modB+sub.heatCor2+activation.Heat)
+  } else{
+ heatCor<-Heatmap(moduleTraitCor,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Immune-Related ",how," Biotype relationships"))
+  print(modB+sub.heatCor2+activation.Heat)
+  }
+  readkey()
+#############
+
+
 ### adjust p.values 
 ### change the rownames of the heatmap to 1:n numerics as the last step. 
 
@@ -176,6 +223,8 @@ for(i in 1:length(pathwaysToPick)) {
     par(mar = c(6, 10, 3, 3));
      print(modA+heatCor)
     print(modB+heatCor2+activation.Heat)
+    print(modA+map.heatCor)
+    print(modB+sub.heatCor2+activation.Heat)
    dev.off()
  
 
