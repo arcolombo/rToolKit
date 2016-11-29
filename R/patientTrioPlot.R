@@ -16,7 +16,7 @@ patientTrioPlot<-function(kexp,stage1="pHSC",stage2="LSC",stage3="Blast",printWh
  tpm<-collapseTpm(rexp,"tx_biotype") ##36 repeat classes collapsed
  ##now for each repeat class and for each pairs, plot a connected dot plot
   pair.tpm<-t(tpm)
-  
+  pair.tpm<-log2(1+pair.tpm)  
   for(cols in colnames(pair.tpm)){ 
   #grab first
   paird<-pair.tpm[grep(pairs[1],rownames(pair.tpm)),grep(cols,colnames(pair.tpm))]
@@ -29,33 +29,60 @@ patientTrioPlot<-function(kexp,stage1="pHSC",stage2="LSC",stage3="Blast",printWh
   colnames(df)<-pairs[j]
   rownames(df)<-c(stage1,stage2,stage3)
   DF<-cbind(DF,df)
-  } 
+  }
+ m<-as.matrix(DF)
+y<-c(as.vector(m[1,]),as.vector(m[2,]),as.vector(m[3,]))
+  group<-c(rep(1,7),rep(2,7),rep(3,7))
+  data=data.frame(y=y,group=factor(group))
+  fit<-lm(y~group,data)
+ ANOVA<-anova(fit)
+  anova.pvalue<-ANOVA[1,5]
+ pair.T<-pairwise.t.test(data$y,data$group,p.adj='bonferroni')
+ pair.pHSC.LSC<-pair.T$p.value[1,1]
+ pair.Blast.LSC<-pair.T$p.value[2,2]
+ pair.Blast.pHSC<-pair.T$p.value[2,1]
+  pairWise.DF<-data.frame(anova=anova.pvalue,pHSC.v.LSC=pair.pHSC.LSC,Blast.v.LSC=pair.Blast.LSC,Blast.v.pHSC=pair.Blast.pHSC)
      par(xaxt="n")
-    matplot(DF, type = c("b"),pch=1,col = 1:ncol(DF),main=paste0(cols," TPM Repeat Expression"),ylab="TPM" ) #plot
-   legend("topright",legend=colnames(DF),col=1:ncol(DF),pch=1)
+    matplot(DF, type = c("b"),pch=1,col = c("black","green","orange","red","purple","blue","magenta")  ,main=paste0(cols," TPM Repeat Expression/Test"),ylab="Log TPM" ) #plot
+   legend("topright",legend=colnames(DF),col=c("black","green","orange","red","purple","blue","magenta") ,pch=0.8)
   axis(1,at=seq(1,3,1),labels=FALSE)
   lablist.x<-c(stage1,stage2,stage3)
  text(x=seq(1,3,1),par("usr")[3]-0.2,labels=lablist.x,xpd=TRUE,srt=45,pos=1)
+
+ ### anova stats
+ legend("top",legend=paste0(colnames(pairWise.DF),": ",signif(pairWise.DF,1)),pch=1,title="Adj.P.Values" )
+ 
+ 
+
+
+
+ ###
+
   readkey()
    leadTitle<-gsub("/","",cols)
    leadTitle<-gsub(" ","_",leadTitle)
    if(printWhat=="pdf"){
    pdf(paste0(leadTitle,"patientTrio_RepeatPlot.pdf"))
-   par(xaxt="n")
-   matplot(DF, type = c("b"),pch=1,col = 1:ncol(DF),main=paste0(cols," TPM Repeat Expression"),ylab="TPM" ) #plot
-   legend("topright",legend=colnames(DF),col=1:ncol(DF),pch=1)
-   axis(1,at=seq(1,3,1),labels=FALSE)
-   lablist.x<-c(stage1,stage2,stage3)
-   text(x=seq(1,3,1),par("usr")[3]-0.2,labels=lablist.x,xpd=TRUE,srt=45,pos=1)
+    par(xaxt="n")
+    matplot(DF, type = c("b"),pch=1,col = c("black","green","orange","red","purple","blue","magenta")  ,main=paste0(cols," TPM Repeat Expression/Test"),ylab="Log TPM" ) #plot
+   legend("topright",legend=colnames(DF),col=c("black","green","orange","red","purple","blue","magenta") ,pch=0.8)
+  axis(1,at=seq(1,3,1),labels=FALSE)
+  lablist.x<-c(stage1,stage2,stage3)
+ text(x=seq(1,3,1),par("usr")[3]-0.2,labels=lablist.x,xpd=TRUE,srt=45,pos=1)
+
+ ### anova stats
+ legend("top",legend=paste0(colnames(pairWise.DF),": ",signif(pairWise.DF,1)),pch=1,title="Adj.P.Values" )
   dev.off()
   }else{
    jpeg(paste0(leadTitle,"patientTrio_RepeatPlot.jpeg"))
-   par(xaxt="n")
-   matplot(DF, type = c("b"),pch=1,col = 1:ncol(DF),main=paste0(cols," TPM Repeat Expression"),ylab="TPM" ) #plot
-   legend("topright",legend=colnames(DF),col=1:ncol(DF),pch=1)
-   axis(1,at=seq(1,3,1),labels=FALSE)
-   lablist.x<-c(stage1,stage2,stage3)
-   text(x=seq(1,3,1),par("usr")[3]-0.2,labels=lablist.x,xpd=TRUE,srt=45,pos=1)
+ par(xaxt="n")
+    matplot(DF, type = c("b"),pch=1,col = c("black","green","orange","red","purple","blue","magenta")  ,main=paste0(cols," TPM Repeat Expression/Test"),ylab="Log TPM" ) #plot
+   legend("topright",legend=colnames(DF),col=c("black","green","orange","red","purple","blue","magenta") ,pch=0.8)
+  axis(1,at=seq(1,3,1),labels=FALSE)
+  lablist.x<-c(stage1,stage2,stage3)
+ text(x=seq(1,3,1),par("usr")[3]-0.2,labels=lablist.x,xpd=TRUE,srt=45,pos=1)
+ ### anova stats
+ legend("top",legend=paste0(colnames(pairWise.DF),": ",signif(pairWise.DF,1)),pch=1,title="Adj.P.Values" )
   dev.off()
     }##Jpeg
   } ##tx biotypes
