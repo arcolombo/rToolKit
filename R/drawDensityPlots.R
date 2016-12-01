@@ -2,6 +2,7 @@
 #' @param kexp this is the non-stage level kexp for 3 stages 
 #' @import arkas
 #' @import ggplot2
+#' @export
 drawDensityPlots<-function(kexp){
 
 
