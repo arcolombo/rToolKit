@@ -36,18 +36,19 @@ labels<-unlist(lapply(cN,function(x) x[1]))
 
 contrast<-paste0(comparison,"-",controls)
 
- pairs<-unlist(lapply(cN,function(x) x[2]))
+   pairs<-unlist(lapply(cN,function(x) x[2]))
    pairs.id<-match(toupper(pairs),toupper(pairs))
-geneSets<-read.gmt(paste0(geneSetPath,geneSet))
+   geneSets<-read.gmt(paste0(geneSetPath,geneSet))
 
  qs.pHSC.results<-qusage(expr2,labels,contrast,geneSets,pairVector=pairs.id)
   ##pathway indices : inflam  903, immune 394,410 ,wound 831, mapK 865,494, 
+  if(showPlots==TRUE){
    plot(qs.pHSC.results)
    title(paste0("Global Pathway ",comparison,"-",controls))
    readkey()
-  
+   }
 
- x<-qsTable(qs.pHSC.results,number=950)
+ x<-qsTable(qs.pHSC.results,number=1000)
  if(showPlots==TRUE){
   for(i in keyWords  ){
   #in
@@ -106,11 +107,8 @@ shortTitle<-paste0(shortTitle[1],"_",shortTitle[2],"_",shortTitle[3] )
   } ##individual path
 }## merged  
 }##show plots
-plot(qs.pHSC.results)
-   title(paste0("Global Pathway ",comparison,"-",controls))
 
-
-
+############PDF PLOT#################################################
  pdf(paste0("Qusage_Plotting_Results_",contrast,".pdf"))
    plot(qs.pHSC.results)
    title(paste0("Global Pathway ",contrast))
@@ -172,7 +170,9 @@ shortTitle<-paste0(shortTitle[1],"_",shortTitle[2],"_",shortTitle[3] )
    } ##individual path
  } ##merged 
   dev.off()
-
+####################PDF PLOTTING##################################
  print("done.\n")
  save(qs.pHSC.results,file=paste0(comparison,".vs.",controls,".qusageResults_CPM.RData"),compress=TRUE)
+ return(x)
+
 }#main

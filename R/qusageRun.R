@@ -30,7 +30,7 @@ qusageRun<-function(cnts_mt=NULL,gmt.path="~/Documents/Arkas-Paper-Data/MSigDB/M
  qs.results<-qusage(cnts_pL3,labels,contrast,geneSets,pairVector=pairs.id)
   } else{
   qs.results<-qusage(cnts_pL3,labels,contrast,geneSets)
-  }
+    }
   #print(contrast)
   #print(qsTable(qs.results,number=40 ))
   if(plotTable==TRUE){
@@ -42,5 +42,8 @@ qusageRun<-function(cnts_mt=NULL,gmt.path="~/Documents/Arkas-Paper-Data/MSigDB/M
     plot(qs.results)  
   dev.off()
   }
-  return(qsTable(qs.results,number=40))
+  qs.out<-qsTable(qs.results,number=1000)
+   qs.out<-qs.out[!is.na(qs.out[,2]),]
+
+  return(qs.out)
 } ##main
