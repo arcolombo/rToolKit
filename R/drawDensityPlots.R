@@ -9,6 +9,7 @@ drawDensityPlots<-function(kexp){
 kexp1<-kexp2Group(kexp,"pHSC","LSC")
 design<-metadata(kexp1)$design
 gwa1<-repeatWiseAnalysis(kexp1,design=design,adjustBy="none")
+ write.csv(gwa1$top,file="repeatWiseAnalysis.pHSC.v.LSC.csv")
  pHSC<-gwa1$top$logFC[which(gwa1$top$logFC>0)]
 lsc<-gwa1$top$logFC[which(gwa1$top$logFC<=0)]
 lines1=c(rep("pHSC",length(pHSC)),rep("LSC",length(lsc)))
@@ -25,6 +26,8 @@ dat1<-data.frame(logFC=c(pHSC,LSC=lsc),Stage=lines1)
 
  kexp2<-kexp2Group(kexp,"Blast","LSC")
  gwa<-repeatWiseAnalysis(kexp2,design=metadata(kexp2)$design,adjustBy="none")
+ write.csv(gwa$top,file="repeatWiseAnalysis.Blast.v.LSC.csv")
+
  blast<-gwa$top$logFC[which(gwa$top$logFC>0)]
  lsc<-gwa$top$logFC[which(gwa$top$logFC<=0)]
  lines=c(rep("Blast",length(blast)),rep("LSC",length(lsc)))

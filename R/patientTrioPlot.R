@@ -15,6 +15,7 @@ patientTrioPlot<-function(kexp,stage1="pHSC",stage2="LSC",stage3="Blast",printWh
  pairs<-unique(sapply(strsplit(pairs,"_"),function(x) x[2]))
  tpm<-collapseTpm(rexp,"tx_biotype") ##36 repeat classes collapsed
  ##now for each repeat class and for each pairs, plot a connected dot plot
+  write.csv(tpm,file="TxBiotype-Repeat-Matched_Triplicates.TPM.PatientTrioPlots.csv")
   pair.tpm<-t(tpm)
   pair.tpm<-log2(1+pair.tpm)  
   for(cols in colnames(pair.tpm)){ 
