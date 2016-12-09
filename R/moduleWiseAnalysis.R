@@ -38,7 +38,7 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
   geneModules<-match.arg(geneModules,allcolors)
   repeatColors<-dbListTables(dbconn(wgcnaDbLite(wrcnaDbName)))
   stopifnot(all(repeatModules%in%repeatColors)==TRUE)
-  
+  key.id<-which(paste0("ME",geneModules)==colnames(MEs))  
   
   gene.color<-modulesBy(wgcnaDbLite(wgcnaDbName),Module.color=geneModules)
   repeat.module.list<-lapply(repeatModules,function(x) modulesBy(wgcnaDbLite(wrcnaDbName),Module.color=x))
@@ -64,13 +64,13 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
   pathWays<-data.frame(pathway=geneModules,data="NA")
   }
   print(pathWays)
-  write.csv(pathWays ,file=paste0(geneModules,"_",how,"_moduleWiseAnalysis.csv"))
+  write.csv(pathWays ,file=paste0(geneModules,"_",key.id,"_",how,"_moduleWiseAnalysis.csv"))
   readkey()
   }else{
   #if no qusage contrasts, call goEnrich and print out the fixed color module
   goenriched<-goEnrich(wgcnaDbLite(wgcnaDbName),Module.color=geneModules)
   print(goenriched)
-  write.csv(as.data.frame(goenriched) ,file=paste0(geneModules,"_",how,"_GOmoduleWiseAnalysis.csv"))
+  write.csv(as.data.frame(goenriched) ,file=paste0(geneModules,"_",key.id,"_",how,"_GOmoduleWiseAnalysis.csv"))
   readkey()
   } 
   ##find kexp expression values for each
@@ -109,10 +109,11 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
 
   color.ID<-which(paste0("ME",geneModules)==colnames(MEs))
  ### barplot of sample module eigen values for a given module
+  if(openDevice==TRUE){
   dev.new()
   par(mar=c(4,10,4,4))
   barplot(MEs[,color.ID],horiz=T,names.arg=rownames(MEs),cex.names=0.8,las=1,main=paste0(geneModules," gene Module Eigen"),space=1)
- 
+  
   for(colR in repeatModules){
   dev.new()
     par(mar=c(4,10,4,4))
@@ -123,6 +124,7 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
   barplot(rMEs[,ME.id],horiz=T,names.arg=colnames(kexp),cex.names=0.8,las=1,main=paste0(colR," Repeat Module EigenValue cor=", bicor(rMEs[,ME.id],MEs[,color.ID])),space=1)
    }
   readkey()
+  }
   ##the bar plots of the eigenvalues for repeats that are highly correlated to the gene moduleEigenvalue should have co-expression with similiar covariance 
   if(openDevice==TRUE){
   ###heatmap of module genes
@@ -142,7 +144,7 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
 
  
  ### PRINT TO PDF########3
-  pdf(paste0(geneModules,"_",how,"_",enrichmentCaller,"_EigenValueAnalysis.pdf"))
+  pdf(paste0(geneModules,"_",key.id,"_",how,"_",enrichmentCaller,"_EigenValueAnalysis.pdf"))
   par(mar=c(4,10,4,4))
    barplot(MEs[,color.ID],horiz=T,names.arg=rownames(MEs),cex.names=0.6,las=1,main=paste0(geneModules," gene Module Eigen"),space=1)
     for(colR in repeatModules){
