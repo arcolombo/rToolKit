@@ -12,6 +12,8 @@
 #' @export
 drawHeatmap<-function(kexp,tags=NULL,annotations=TRUE,byType=c("counts","tpm"),cutoff=2){
     stopifnot(is.null(tags)==FALSE)
+    
+   
    byType<-match.arg(byType,c("counts","tpm"))
     if(byType=="tpm"){
    rpt.tpm<-collapseTpm(kexp,"tx_id")
@@ -24,7 +26,7 @@ drawHeatmap<-function(kexp,tags=NULL,annotations=TRUE,byType=c("counts","tpm"),c
  df.rpt<-df.rpt[rownames(df.rpt)%in%rpt.targets,]
   rpt.mt<-df.rpt
   rpt.mt<-as.matrix(rpt.mt)
-
+ dev.new()
   if(nrow(rpt.mt)>=20){
   rpt.pv<-pvclust(log(1+rpt.mt),nboot=100)
   rpt.dend<-dendsort(hclust(dist(log(1+rpt.mt))),isReverse=TRUE)
@@ -42,12 +44,25 @@ drawHeatmap<-function(kexp,tags=NULL,annotations=TRUE,byType=c("counts","tpm"),c
           name="rpt_family",
           width=unit(5,"mm"))
  draw(rh.rpt+rh.rpt2+rh.rpt3)
+ readkey()
+ pdf(paste0("Repeat_Heatmap_",byType,".pdf"))
+  print(rh.rpt+rh.rpt2+rh.rpt3)
+  dev.off()
  } else {
   rh.rpt<-Heatmap(log(1+rpt.mt),
                   name="log(1+tpm)",
                  column_title=paste0("Top Repeats P.Val cut ",cutoff),
                  row_names_gp=gpar(fontsize=6),
                  column_names_gp=gpar(fontsize=8))
-   }
-readkey()
+   
+ draw(rh.rpt)
+  readkey()
+ pdf(paste0("Repeat_Heatmap_",byType,".pdf"))
+  print(rh.rpt)
+  dev.off()
+  }
+
+print("done.")
+
+
 }#{{{main
