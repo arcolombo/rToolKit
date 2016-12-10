@@ -13,7 +13,7 @@
 drawHeatmap<-function(kexp,tags=NULL,annotations=TRUE,byType=c("counts","tpm"),cutoff=2){
     stopifnot(is.null(tags)==FALSE)
     
-   
+   write.csv(tags,file="repeat_top_tags.csv")
    byType<-match.arg(byType,c("counts","tpm"))
     if(byType=="tpm"){
    rpt.tpm<-collapseTpm(kexp,"tx_id")
