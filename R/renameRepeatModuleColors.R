@@ -27,6 +27,7 @@ renameRepeatModuleColors<-function(rnames=NULL,rdbName="wrcnaDbLite.cpm.6.sqlite
   repeat.key<-data.frame(leading.terms=unlist(newNames))
   repeat.key$leading.terms<-gsub(" ","_",repeat.key$leading.terms)
   write.csv(repeat.key,file="repeatModule.key.renamedLeadingBiotypes.correlations.csv")
+  write.csv(moduleTraitCor,file="repeatModule.colors.Correlations.Biotypes.csv")
   ##now to rename the correct object with the key
   #FIX ME: not sure which object to rename.  wish to rename the object used in moduleWiseAnalysis so that the output of module wise analysis prints out
   ##gene module - row number that matches the wgcna_Heatcor

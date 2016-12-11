@@ -262,7 +262,7 @@ setMethod("kexpEnrich", "qusageDbLite", function(x,contrast=NULL,p.value=0.05) {
   }
   res<-as.data.frame(dbGetQuery(dbconn(x),sql))
   res<-res[which(res$p.Value<p.value),]
-  colnames(res)<-c("row_names","pathway_name","logFC","pvalue","FDR","colorKey","bioKey","contrastKey")
+  colnames(res)<-c("pathway_name","logFC","pvalue","FDR","colorKey","bioKey","contrastKey")
   return(res[,!grepl("row_names",colnames(res))] )
 
  })

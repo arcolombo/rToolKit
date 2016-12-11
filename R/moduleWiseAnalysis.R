@@ -113,6 +113,11 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
   module.cpm<-cpm[cpm.id,] 
   module.cpm<-module.cpm[!is.na(rownames(module.cpm)),]
   stopifnot(all(rownames(module.cpm)%in%gene.color$gene_id))
+  ##write out the MEs data used in bar plotting
+  write.csv(MEs,file=paste0("All.Gene.ModuleEigenValues.perSample.expression.summarization.csv"))
+ rMEs2<-rMEs
+  rownames(rMEs2)<-rownames(MEs)
+  write.csv(rMEs2,file="All.Repeat.ModuleEigenValues.perSample.repeat.expression.summary.csv")
 
   color.ID<-which(paste0("ME",geneModules)==colnames(MEs))
  ### barplot of sample module eigen values for a given module
@@ -120,7 +125,7 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
   dev.new()
   par(mar=c(4,10,4,4))
   barplot(MEs[,color.ID],horiz=T,names.arg=rownames(MEs),cex.names=0.8,las=1,main=paste0(geneModules," (",key.id,") Gene Module Eigenvalues"),space=1)
-  write.csv(MEs,file=paste0("All.Gene.ModuleEigenValues.perSample.expression.summarization.csv"))
+
   for(colR in repeatModules){
   dev.new()
     par(mar=c(4,10,4,4),cex.main=0.9)
@@ -132,9 +137,7 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
    
  }
   readkey()
-  rMEs2<-rMEs
-  rownames(rMEs2)<-rownames(MEs)
-  write.csv(rMEs2,file="All.Repeat.ModuleEigenValues.perSample.repeat.expression.summary.csv")
+
   }
   ##the bar plots of the eigenvalues for repeats that are highly correlated to the gene moduleEigenvalue should have co-expression with similiar covariance 
   if(openDevice==TRUE){

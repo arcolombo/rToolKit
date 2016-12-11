@@ -1,11 +1,14 @@
 #' @title produces a correlation map given wgcna network data using a different library ComplexHeatmap
-#' @description after calling wgcna the datExpr and module colors are used to create a correlation map image with the columns ordered.
+#' @description after calling wgcna the datExpr and module colors are used to create a correlation map image with the columns ordered. This will produce the HeatCorrelation association table with the pathway information alongside.  this will also produce the repeat module renaming call to print the summary of repeat module tables as a repeat correlation summary.
 #' @param lnames this is the results from wgcna.R
 #' @param read.cutoff  integer for min cutoff
-#' @param plotDot boolean this plots the median correlation score for each biotypes in a line plot
 #' @param recalc boolean if truen then will recalculate the bicor and pvalues
-#' @param targets this is a character vector of modules of interest to subset the corMap
-#' @param orderBiotype either Alu or L1.
+#' @param how tpm or cpm, this is used to print the heatmap, tpm is better
+#' @param pathwaysToPick this will query the qusageDbLite database for the key pathway character name signature
+#' @param pathPairing vector if pathways are related then they should have matching pairing integers for instance cell death and apoptosis pathways could be paired.
+#' @param dbname  the gene module wgcnaDbLite sqlite database
+#' @param qdbname  the qusageDbLite sqlite database name
+#' @param rdbname the repeat module wrcnaDbLite sqlite database
 #' @import WGCNA
 #' @import ComplexHeatmap
 #' @import pvclust
@@ -13,7 +16,7 @@
 #' @import plyr
 #' @export
 #' @return images of eigengenes
-wgcna_Heatcor<-function(lnames=NULL,rnames=NULL, read.cutoff=2,recalc=FALSE,how=how,pathwaysToPick=c("immune","inflam","apopto","death","kappab","wound"),pathPairing=c(1,1,2,2,3,4),dbname=NULL,qdbname=NULL){
+wgcna_Heatcor<-function(lnames=NULL,rnames=NULL, read.cutoff=2,recalc=FALSE,how=how,pathwaysToPick=c("immune","inflam","apopto","death","kappab","wound"),pathPairing=c(1,1,2,2,3,4),dbname=NULL,qdbname=NULL,rdbname=NULL){
 ##FIX ME:  add a star for pvalues less than 0.05 in the cell_function Heat
 stopifnot(length(pathwaysToPick)==length(pathPairing))
  
@@ -45,15 +48,6 @@ message(paste0("found lnames"))
    moduleTraitCor<-lnames[["moduleTraitCor"]]
    moduleTraitPvalue<-lnames[["moduleTraitPvalue"]]
    }
- # if(is.null(targets)==FALSE){
- # moduleTraitCor<-moduleTraitCor[rownames(moduleTraitCor)%in%targets,]
- # moduleTraitPvalue<-moduleTraitPvalue[rownames(moduleTraitPvalue)%in%targets,]
-# }
- # if(orderBiotype=="L1"){
- #moduleTraitCor<-moduleTraitCor[order(moduleTraitCor[,grep("L1",colnames(moduleTraitCor))],decreasing=TRUE),]
-# } else if(orderBiotype=="Alu"){
-# moduleTraitCor<-moduleTraitCor[order(moduleTraitCor[,grep("Alu",colnames(moduleTraitCor))],decreasing=TRUE),]
-# }
 
  moduleTraitPvalue.id<-match(rownames(moduleTraitCor),rownames(moduleTraitPvalue))
  moduleTraitPvalue<-moduleTraitPvalue[moduleTraitPvalue.id,]
@@ -122,34 +116,34 @@ colnames(df_annot)[i+1]<-names(xN)[i]
 
 #####add Heatcor of row annotation subset. 
 
-toGo<-data.frame(module=unique(unlist(xN)),stringsAsFactors=FALSE)
- mC<-moduleTraitCor[rownames(moduleTraitCor)%in% paste0("ME",toGo$module),]
- mc.id<-match(rownames(mC),key$module)
- rownames(mC)<-key$id[mc.id]
+  toGo<-data.frame(module=unique(unlist(xN)),stringsAsFactors=FALSE)
+  mC<-moduleTraitCor[rownames(moduleTraitCor)%in% paste0("ME",toGo$module),]
+  mc.id<-match(rownames(mC),key$module)
+  rownames(mC)<-key$id[mc.id]
 
 
-df_annot2<-data.frame(module=rownames(moduleTraitCor))
-rownames(df_annot2)<-rownames(moduleTraitCor)
-for(i in 1:length(names(xN))){
+  df_annot2<-data.frame(module=rownames(moduleTraitCor))
+  rownames(df_annot2)<-rownames(moduleTraitCor)
+   for(i in 1:length(names(xN))){
 
-df_annot2<-cbind(df_annot2,-1)
-colnames(df_annot2)[i+1]<-names(xN)[i]
+   df_annot2<-cbind(df_annot2,-1)
+   colnames(df_annot2)[i+1]<-names(xN)[i]
 
- df_annot2[ rownames(df_annot2)%in% paste0("ME", xN[[i]]  )  ,i+1  ]<-1
-}
- df_annot2$module<-NULL
- key.id1<-match(rownames(df_annot2),key$module)
- rownames(df_annot2)<-key$id[key.id1]
- df_annot2<-df_annot2[rownames(df_annot2)%in%rownames(mC),]
- modB<-HeatmapAnnotation(df=df_annot2,which="row")
+   df_annot2[ rownames(df_annot2)%in% paste0("ME", xN[[i]]  )  ,i+1  ]<-1
+  }
+  df_annot2$module<-NULL
+  key.id1<-match(rownames(df_annot2),key$module)
+  rownames(df_annot2)<-key$id[key.id1]
+  df_annot2<-df_annot2[rownames(df_annot2)%in%rownames(mC),]
+  modB<-HeatmapAnnotation(df=df_annot2,which="row")
 
 ###add activation direction
-activation.direction<-matrix(data=0,nrow=nrow(mC),ncol=length(names(xN)))
-rownames(activation.direction)<-rownames(mC)
-colnames(activation.direction)<-names(xN)
-for(i in 1:length(pathwaysToPick)) {
- df<-pickPathway(qusageDbLite(qdbname),keyWord=pathwaysToPick[i])
- df<-df[which(names(df)!="kexp")]
+  activation.direction<-matrix(data=0,nrow=nrow(mC),ncol=length(names(xN)))
+  rownames(activation.direction)<-rownames(mC)
+  colnames(activation.direction)<-names(xN)
+  for(i in 1:length(pathwaysToPick)) {
+  df<-pickPathway(qusageDbLite(qdbname),keyWord=pathwaysToPick[i])
+  df<-df[which(names(df)!="kexp")]
   ##print to csv
   activation.output<-ldply(df,data.frame)
   write.csv(activation.output,file=paste0("Activation.Direction.Pathways.",pathwaysToPick[i],"_AcrossModules.csv"  ) )
@@ -193,11 +187,16 @@ for(i in 1:length(pathwaysToPick)) {
   readkey()
 #######
 
-
+ ##traitCorRenamed is the slot for custom renaming of module repeat identity of family
  if(is.null(rnames[["traitCorRenamed"]])==FALSE){
   rTraitCor<-rnames[["traitCorRenamed"]]
   }else{
+  ##FIX ME: if traitCorRenamed is not found call renameScript
+  repeat.key<-renameRepeatModuleColors(rnames=rnames,rdbName=rdbname,wgcnaDbName=dbname,geneModules="black",MEs=MEs)
   rTraitCor<-rnames[["moduleTraitCor"]]
+  rename.id<-match(rownames(rTraitCor),rownames(repeat.key))
+   rownames(rTraitCor)<-repeat.key$leading.terms[rename.id]
+   write.csv(rTraitCor,file="repeat.biotype.correlations.renamedTo.leading.biotypeCorrelations.csv")
   }
    if(ncol(as.data.frame(moduleTraitCor))>1){
   rTraitCor<-rTraitCor[,colnames(rTraitCor)%in%colnames(moduleTraitCor)]
@@ -217,11 +216,11 @@ for(i in 1:length(pathwaysToPick)) {
   rownames(corrMap2)<-key$id[key.id2]
     write.csv(corrMap2,file="Correlation-GeneModules-RepeatModules-Pvalues.csv")
 
-  par(mar = c(6, 10, 3, 3));
+  par(mar = c(10, 10, 3, 3));
  # Display the correlation values within a heatmap plot
   plot.new()
   cor.pv<-pvclust(corrMap2,nboot=100)
- map.heatCor<-Heatmap(corrMap2,cluster_columns=cor.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="correlation(x)", column_title = paste0("Repeat Level ",how," Module (*<0.06)"),cell_fun=function(j,i,x,y,w,h,col){
+ map.heatCor<-Heatmap(corrMap2,cluster_columns=cor.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="correlation(x)",column_names_gp=gpar(fontsize=7.5), column_title = paste0("Repeat Level ",how," Module (*<0.06)"),cell_fun=function(j,i,x,y,w,h,col){
         weighted.Pvalue<-corPvalueStudent(corrMap2,25-2)
                    if(weighted.Pvalue[i,j]<0.06){
                  #  grid.text(sprintf("%.3f", weighted.Pvalue[i,j]),x,y)
@@ -243,7 +242,7 @@ for(i in 1:length(pathwaysToPick)) {
  if(nrow(corrMap.sub)>4){
   sub.pv<-pvclust(corrMap.sub,nboot=200)
 
-  sub.heatCor2<-Heatmap(corrMap.sub,cluster_columns=sub.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="correlation(x)", column_title = paste0("Immune-Related ",how," Module relationships"), 
+  sub.heatCor2<-Heatmap(corrMap.sub,cluster_columns=sub.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="correlation(x)",column_names_gp=gpar(fontsize=7), column_title = paste0("Immune-Related ",how," Module relationships"), 
 cell_fun=function(j,i,x,y,w,h,col){
         weighted.Pvalue<-corPvalueStudent(corrMap.sub,25-2)
                    if(weighted.Pvalue[i,j]<0.06){
@@ -279,7 +278,7 @@ cell_fun=function(j,i,x,y,w,h,col){
 
  
   pdf(paste0("Heat_correlation_",how,"_plots.pdf"),width=12,height=12)
-    par(mar = c(6, 10, 3, 3));
+    par(mar = c(9, 10, 3, 3));
      print(modA+heatCor)
     print(modB+heatCor2+activation.Heat)
     print(modA+map.heatCor)
