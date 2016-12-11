@@ -4,17 +4,19 @@
 \alias{wgcna_Heatcor}
 \title{produces a correlation map given wgcna network data using a different library ComplexHeatmap}
 \usage{
-wgcna_Heatcor(lnames = NULL, read.cutoff = 2, plotDot = FALSE,
-  recalc = FALSE, targets = NULL, how = how, reOrder = TRUE)
+wgcna_Heatcor(lnames = NULL, rnames = NULL, read.cutoff = 2,
+  recalc = FALSE, how = how, pathwaysToPick = c("immune", "inflam",
+  "apopto", "death", "kappab", "wound"), pathPairing = c(1, 1, 2, 2, 3, 4),
+  dbname = NULL, qdbname = NULL)
 }
 \arguments{
 \item{lnames}{this is the results from wgcna.R}
 
 \item{read.cutoff}{integer for min cutoff}
 
-\item{plotDot}{boolean this plots the median correlation score for each biotypes in a line plot}
-
 \item{recalc}{boolean if truen then will recalculate the bicor and pvalues}
+
+\item{plotDot}{boolean this plots the median correlation score for each biotypes in a line plot}
 
 \item{targets}{this is a character vector of modules of interest to subset the corMap}
 
