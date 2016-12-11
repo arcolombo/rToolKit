@@ -1,10 +1,10 @@
 #' @title renames repeat module colors to the top three correlations with biotypes
-#' @description the rnames object is assigned color names, and we want to rename the repeat module colors after the top 3 highest correlated tx_biotype groups to assign an identity.  this will systematically rename the repeat module colors to leading biotype
+#' @description the rnames object is assigned color names, and we want to rename the repeat module colors after the top 3 highest correlated tx_biotype groups to assign an identity.  this will systematically rename the repeat module colors to leading biotype. this script is primarily a helper function to moduleWiseAnalysis that aids in renaming gene modules to the leading correlated biotype families.
 #' @param rnames the object returned from wrcna method
 #' @param return returns rnames object with traitCorRenamed object
 #' @export
-renameRepeatModuleColors<-function(rnames=NULL,rdbName="wrcnaDbLite.cpm.6.sqlite"){
-
+renameRepeatModuleColors<-function(rnames=NULL,rdbName="wrcnaDbLite.cpm.6.sqlite",wgcnaDbName="wgcnaDbLite.cpm.sqlite",geneModules=NULL,MEs=NULL){
+   wrcnaDbName<-rdbName
   rbwModuleColors<-rnames[["moduleColors"]]
   rMEs<-rnames[["MEs"]]
   repeatModules<- listModuleColors(wgcnaDbLite(rdbName))

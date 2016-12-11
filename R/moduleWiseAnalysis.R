@@ -7,7 +7,7 @@
 #' @param qusageDbName this is the sql db of a qusage db. not required if there is a missing qusage db one can call goEnrich for preliminary analyses
 #' @param geneModules this should be single gene module of interest.  we can examine one gene module's association to all the repeat modules.  so geneModule should be a single color character
 #' @param repeatModules this should be the character of all repeat modules
-#' @param repeat.cutoff the cpm floor threshold
+#' @param repeat.cutoff the cpm floor threshold if the cut off filters out elements that were not filtered in the wgcna method call, this will fail.  you must match the read.cutoff in the wgcna data base.
 #' @param how  either cpm or tpm, tpm recommended for heatmap visualizations
 #' @param openDevice boolean if true then the images are opened on a device along with printing to pdf.  should be false for exploring all colors
 #' @import WGCNA
@@ -46,11 +46,9 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
   names(repeat.module.list)<-repeatModules
   ##print out the csv of the repeat correlation matrix 
 
-  ##rename the repeat module colors --> repeat names,  print out the key.
-  ##grab the moduleTraitCor, and pvalue,  take the top 3 and rename repeat module to the top 3, filter p.value.
-
-  ##print out the moduleTriat cor for the specific repeat module this is the key.
-   repeat.key<-renameRepeatModuleColors(rnames=rnames,rdbName=wrcnaDbName)
+ 
+ ##print out the moduleTriat cor for the specific repeat module this is the key.
+   repeat.key<-renameRepeatModuleColors(rnames=rnames,rdbName=wrcnaDbName,wgcnaDbName=wgcnaDbName,geneModules=geneModules,MEs=MEs)
 
 
   if(enrichmentCaller=="qusage"){
@@ -122,7 +120,7 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
   dev.new()
   par(mar=c(4,10,4,4))
   barplot(MEs[,color.ID],horiz=T,names.arg=rownames(MEs),cex.names=0.8,las=1,main=paste0(geneModules," (",key.id,") Gene Module Eigenvalues"),space=1)
-  
+  write.csv(MEs,file=paste0("All.Gene.ModuleEigenValues.perSample.expression.summarization.csv"))
   for(colR in repeatModules){
   dev.new()
     par(mar=c(4,10,4,4),cex.main=0.9)
@@ -131,8 +129,12 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
   ME.id<-grep(paste0("ME",colR),colnames(rMEs))
   stopifnot(all(rownames(module.color)==repeat.module.list[[colR]]$gene_id)==TRUE)
   barplot(rMEs[,ME.id],horiz=T,names.arg=colnames(kexp),cex.names=0.8,las=1,main=paste0(repeat.key[which(rownames(repeat.key)==paste0("ME",colR)),]," Module correlation ~(",key.id,") ",signif(bicor(rMEs[,ME.id],MEs[,color.ID]),3 )) ,space=1)
-   }
+   
+ }
   readkey()
+  rMEs2<-rMEs
+  rownames(rMEs2)<-rownames(MEs)
+  write.csv(rMEs2,file="All.Repeat.ModuleEigenValues.perSample.repeat.expression.summary.csv")
   }
   ##the bar plots of the eigenvalues for repeats that are highly correlated to the gene moduleEigenvalue should have co-expression with similiar covariance 
   if(openDevice==TRUE){
@@ -179,3 +181,5 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
  dev.off()
 
 } ##main
+
+
