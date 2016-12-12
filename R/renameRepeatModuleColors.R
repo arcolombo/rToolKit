@@ -32,6 +32,8 @@ renameRepeatModuleColors<-function(rnames=NULL,rdbName="wrcnaDbLite.cpm.6.sqlite
   #FIX ME: not sure which object to rename.  wish to rename the object used in moduleWiseAnalysis so that the output of module wise analysis prints out
   ##gene module - row number that matches the wgcna_Heatcor
   ##repeat module the repeat module will NOT print out the repeat color, but the leading 3 terms also in the wgcna_Heatcor summary (family) plot. 
+ repeat.key$leading.terms<-gsub("Repetitive_element","Rptv.Elmnt",repeat.key$leading.terms)
+ repeat.key$leading.terms<-gsub("LTR_Retrotransposon","LTR.Rtr.Trnsp",repeat.key$leading.terms)
  print("done.")
  return(repeat.key) 
 }

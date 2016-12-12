@@ -14,9 +14,10 @@
 #' @import pvclust
 #' @import dendsort
 #' @import plyr
+#' @import circlize
 #' @export
 #' @return images of eigengenes
-wgcna_Heatcor<-function(lnames=NULL,rnames=NULL, read.cutoff=2,recalc=FALSE,how=how,pathwaysToPick=c("immune","inflam","apopto","death","kappab","wound"),pathPairing=c(1,1,2,2,3,4),dbname=NULL,qdbname=NULL,rdbname=NULL){
+wgcna_Heatcor<-function(lnames=NULL,rnames=NULL, read.cutoff=1,recalc=FALSE,how=how,pathwaysToPick=c("immune","inflam","apopto","death","kappab","wound"),pathPairing=c(1,1,2,2,3,4),dbname=NULL,qdbname=NULL,rdbname=NULL){
 ##FIX ME:  add a star for pvalues less than 0.05 in the cell_function Heat
 stopifnot(length(pathwaysToPick)==length(pathPairing))
  
@@ -87,6 +88,7 @@ colnames(df_annot)[i+1]<-names(xN)[i]
  rownames(df_annot)<-key$id[key.id1]
  modA<-HeatmapAnnotation(df=df_annot,which="row" )
 ####
+  
   moduleTraitCor2<-moduleTraitCor
   key.id2<-match(rownames(moduleTraitCor2),key$module)
   rownames(moduleTraitCor2)<-key$id[key.id2]
@@ -97,8 +99,9 @@ colnames(df_annot)[i+1]<-names(xN)[i]
   plot.new()
  if(nrow(moduleTraitCor2)>6){
   x.pv<-pvclust(moduleTraitCor2,nboot=100)
-  
-  heatCor<-Heatmap(moduleTraitCor2,cluster_columns=x.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Module-Repeat ",how," Biotype relationships (*<0.06)"),cell_fun=function(j,i,x,y,w,h,col){
+  colnames(moduleTraitCor2)<-gsub("Repetitive element","Rptv. Element",colnames(moduleTraitCor2))
+  colnames(moduleTraitCor2)<-gsub("Endogenous Retrovirus","Endg. Retrovirus",colnames(moduleTraitCor2))
+  heatCor<-Heatmap(moduleTraitCor2,column_names_gp=gpar(fontsize=10),cluster_columns=x.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Module-Repeat ",how," Biotype relationships (*<0.06)"),cell_fun=function(j,i,x,y,w,h,col){
         weighted.Pvalue<-corPvalueStudent(moduleTraitCor2,ncol(moduleTraitCor2)-2)
                    if(weighted.Pvalue[i,j]<0.06){
                  #  grid.text(sprintf("%.3f", weighted.Pvalue[i,j]),x,y)
@@ -120,6 +123,8 @@ colnames(df_annot)[i+1]<-names(xN)[i]
   mC<-moduleTraitCor[rownames(moduleTraitCor)%in% paste0("ME",toGo$module),]
   mc.id<-match(rownames(mC),key$module)
   rownames(mC)<-key$id[mc.id]
+ colnames(mC)<-gsub("Repetitive element","Rptv. Element",colnames(mC))
+  colnames(mC)<-gsub("Endogenous Retrovirus","Endg. Retrovirus",colnames(mC))
 
 
   df_annot2<-data.frame(module=rownames(moduleTraitCor))
@@ -169,7 +174,7 @@ colnames(df_annot)[i+1]<-names(xN)[i]
   if(nrow(mC)>4){
   x.pv2<-pvclust(mC,nboot=200)
 
-  heatCor2<-Heatmap(mC,cluster_columns=x.pv2$hclust,cluster_rows=FALSE,row_names_side="left",name="correlation(x)", column_title = paste0("Immune-Related ",how," (*<0.06)"), cell_fun=function(j,i,x,y,w,h,col){
+  heatCor2<-Heatmap(mC,cluster_columns=x.pv2$hclust,cluster_rows=FALSE,column_names_gp=gpar(fontsize=10),row_names_side="left",name="correlation(x)", column_title = paste0("Immune-Related ",how," (*<0.06)"), cell_fun=function(j,i,x,y,w,h,col){
         weighted.Pvalue<-corPvalueStudent(mC,nrow(mC)-2)
                    if(weighted.Pvalue[i,j]<0.06){
                  #  grid.text(sprintf("%.3f", weighted.Pvalue[i,j]),x,y)
