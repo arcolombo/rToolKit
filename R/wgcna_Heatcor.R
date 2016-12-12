@@ -125,8 +125,9 @@ colnames(df_annot)[i+1]<-names(xN)[i]
   rownames(mC)<-key$id[mc.id]
  colnames(mC)<-gsub("Repetitive element","Rptv. Element",colnames(mC))
   colnames(mC)<-gsub("Endogenous Retrovirus","Endg. Retrovirus",colnames(mC))
-
-
+ write.csv(mC,file="Module-Repeat-CPM-Biotype.relationships.csv")
+ weighted.Pvalue<-corPvalueStudent(mC,nrow(mC)-2)
+  write.csv(weighted.Pvalue,"Module-Repeat-CPM-Biotype-releaitonships.P.value.csv")
   df_annot2<-data.frame(module=rownames(moduleTraitCor))
   rownames(df_annot2)<-rownames(moduleTraitCor)
    for(i in 1:length(names(xN))){
@@ -212,8 +213,8 @@ colnames(df_annot)[i+1]<-names(xN)[i]
   corrMap<-bicor(t(moduleTraitCor),t(rTraitCor))
   corrMap.pvalue<-corPvalueStudent(corrMap,ncol(corrMap))
   corrMap.pvalue[which(is.na(corrMap.pvalue))]<-1
-  write.csv(corrMap,file="Correlation-GeneModules-RepeatModules-Pvalues.csv")
-
+  write.csv(corrMap,file="Correlation-GeneModules-RepeatModules.csv")
+  write.csv(corrMap.pvalue,file="Correlation-GeneModules-RepeatModules.P.values.csv")
 
  ####
   corrMap2<-corrMap
