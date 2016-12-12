@@ -9,7 +9,11 @@
 #' @param repeatModules this should be the character of all repeat modules
 #' @param repeat.cutoff the cpm floor threshold if the cut off filters out elements that were not filtered in the wgcna method call, this will fail.  you must match the read.cutoff in the wgcna data base.
 #' @param how  either cpm or tpm, tpm recommended for heatmap visualizations
+#' @param enrichmentCaller either go or qusage, for some cases go enrichment is an interest to study
+#' @param comparison1 this is the first comparison group the comparison key is in lower case letters 'mds' etc.
+#' @param comparison2 this is the second comparison group, if there is only 1 comparison group, then leave this as "blast"; the method will query the 'blast' contrast and come up with an empty set and discard it.
 #' @param openDevice boolean if true then the images are opened on a device along with printing to pdf.  should be false for exploring all colors
+#' @param p.value  an interger significance alpha level
 #' @import WGCNA
 #' @import edgeR
 #' @import pvclust
@@ -72,7 +76,9 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
   }
   print(pathWays)
   write.csv(pathWays ,file=paste0(geneModules,"_",key.id,"_",how,"_moduleWiseAnalysis.csv"))
-  readkey()
+  if(openDevice==TRUE){
+   readkey()
+   }
   }else{
   #if no qusage contrasts, call goEnrich and print out the fixed color module
   goenriched<-goEnrich(wgcnaDbLite(wgcnaDbName),Module.color=geneModules)
