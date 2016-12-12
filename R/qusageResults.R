@@ -18,7 +18,7 @@ qusageResults<-function(kexp,geneSetPath="~/Documents/Arkas-Paper-Data/MSigDB/Ms
 
  geneSet<-match.arg(MsigDB,c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"))
   ##only controlling for specific comparison types for now  ###FIX ME: generalize
- comparison<-match.arg(comparison,c("pHSC","Blast","RAEB"))
+ comparison<-match.arg(comparison,c("pHSC","Blast","RAEB","MDS"))
    ##for comparisons with 2 groups, trios must exist
   if(comparisonNumber==2){
   kexp1<-kexpByTrio(kexp)

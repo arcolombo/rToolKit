@@ -102,7 +102,7 @@ colnames(df_annot)[i+1]<-names(xN)[i]
   colnames(moduleTraitCor2)<-gsub("Repetitive element","Rptv. Element",colnames(moduleTraitCor2))
   colnames(moduleTraitCor2)<-gsub("Endogenous Retrovirus","Endg. Retrovirus",colnames(moduleTraitCor2))
   heatCor<-Heatmap(moduleTraitCor2,column_names_gp=gpar(fontsize=10),cluster_columns=x.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Module-Repeat ",how," Biotype relationships (*<0.06)"),cell_fun=function(j,i,x,y,w,h,col){
-        weighted.Pvalue<-corPvalueStudent(moduleTraitCor2,ncol(moduleTraitCor2)-2)
+        weighted.Pvalue<-corPvalueStudent(moduleTraitCor2,nSamples)
                    if(weighted.Pvalue[i,j]<0.06){
                  #  grid.text(sprintf("%.3f", weighted.Pvalue[i,j]),x,y)
                     grid.text("*",x,y-0.005 )
@@ -126,7 +126,7 @@ colnames(df_annot)[i+1]<-names(xN)[i]
  colnames(mC)<-gsub("Repetitive element","Rptv. Element",colnames(mC))
   colnames(mC)<-gsub("Endogenous Retrovirus","Endg. Retrovirus",colnames(mC))
  write.csv(mC,file="Module-Repeat-CPM-Biotype.relationships.csv")
- weighted.Pvalue<-corPvalueStudent(mC,nrow(mC)-2)
+ weighted.Pvalue<-corPvalueStudent(mC,nSamples)
   write.csv(weighted.Pvalue,"Module-Repeat-CPM-Biotype-releaitonships.P.value.csv")
   df_annot2<-data.frame(module=rownames(moduleTraitCor))
   rownames(df_annot2)<-rownames(moduleTraitCor)
@@ -176,7 +176,7 @@ colnames(df_annot)[i+1]<-names(xN)[i]
   x.pv2<-pvclust(mC,nboot=200)
 
   heatCor2<-Heatmap(mC,cluster_columns=x.pv2$hclust,cluster_rows=FALSE,column_names_gp=gpar(fontsize=10),row_names_side="left",name="correlation(x)", column_title = paste0("Immune-Related ",how," (*<0.06)"), cell_fun=function(j,i,x,y,w,h,col){
-        weighted.Pvalue<-corPvalueStudent(mC,nrow(mC)-2)
+        weighted.Pvalue<-corPvalueStudent(mC,nSamples)
                    if(weighted.Pvalue[i,j]<0.06){
                  #  grid.text(sprintf("%.3f", weighted.Pvalue[i,j]),x,y)
                     grid.text("*",x,y-0.005 )
@@ -211,7 +211,7 @@ colnames(df_annot)[i+1]<-names(xN)[i]
   }
   write.csv(rTraitCor,file="Correlation-RepeatModules-RepeatBiotypes-Repeat_Module_Correlations.csv")
   corrMap<-bicor(t(moduleTraitCor),t(rTraitCor))
-  corrMap.pvalue<-corPvalueStudent(corrMap,ncol(corrMap))
+  corrMap.pvalue<-corPvalueStudent(corrMap,nSamples)
   corrMap.pvalue[which(is.na(corrMap.pvalue))]<-1
   write.csv(corrMap,file="Correlation-GeneModules-RepeatModules.csv")
   write.csv(corrMap.pvalue,file="Correlation-GeneModules-RepeatModules.P.values.csv")
@@ -227,7 +227,7 @@ colnames(df_annot)[i+1]<-names(xN)[i]
   plot.new()
   cor.pv<-pvclust(corrMap2,nboot=100)
  map.heatCor<-Heatmap(corrMap2,cluster_columns=cor.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="correlation(x)",column_names_gp=gpar(fontsize=7.5), column_title = paste0("Repeat Level ",how," Module (*<0.06)"),cell_fun=function(j,i,x,y,w,h,col){
-        weighted.Pvalue<-corPvalueStudent(corrMap2,25-2)
+        weighted.Pvalue<-corPvalueStudent(corrMap2,nSamples)
                    if(weighted.Pvalue[i,j]<0.06){
                  #  grid.text(sprintf("%.3f", weighted.Pvalue[i,j]),x,y)
                     grid.text("*",x,y-0.005 )
@@ -250,7 +250,7 @@ colnames(df_annot)[i+1]<-names(xN)[i]
 
   sub.heatCor2<-Heatmap(corrMap.sub,cluster_columns=sub.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="correlation(x)",column_names_gp=gpar(fontsize=7), column_title = paste0("Immune-Related ",how," Module relationships"), 
 cell_fun=function(j,i,x,y,w,h,col){
-        weighted.Pvalue<-corPvalueStudent(corrMap.sub,25-2)
+        weighted.Pvalue<-corPvalueStudent(corrMap.sub,nSamples)
                    if(weighted.Pvalue[i,j]<0.06){
                  #  grid.text(sprintf("%.3f", weighted.Pvalue[i,j]),x,y)
                     grid.text("*",x,y-0.005 )
@@ -263,7 +263,7 @@ cell_fun=function(j,i,x,y,w,h,col){
   } else{
  heatCor<-Heatmap(moduleTraitCor,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Immune-Related ",how," Biotype relationships"),
  cell_fun=function(j,i,x,y,w,h,col){
-        weighted.Pvalue<-corPvalueStudent(moduleTraitCor,25-2)
+        weighted.Pvalue<-corPvalueStudent(moduleTraitCor,nSamples)
                    if(weighted.Pvalue[i,j]<0.06){
                  #  grid.text(sprintf("%.3f", weighted.Pvalue[i,j]),x,y)
                     grid.text("*",x,y-0.005 )
