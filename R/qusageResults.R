@@ -1,10 +1,10 @@
 #' @title runs qusage for pairwise or global runs
-#' @description this is a point-wise qusage call not connected to database formations but used for kexp alone. Requires that hte comparison and controls be the leading column name able to be split by kexp2Group
+#' @description this is a point-wise qusage call not connected to database formations but used for kexp alone. Requires that hte comparison and controls be the leading column name able to be split by kexp2Group.  the qusageTables script is used to make a database. this script is used to make specific plots of qusage calls that target specific pathways.
 #' @import qusage
 #' @import arkas
 #' @import edgeR
 #' @export
-qusageResults<-function(kexp,geneSetPath="~/Documents/Arkas-Paper-Data/MSigDB/MsigDb_all/",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),how=c("cpm","tpm"),species=c("Homo.sapiens"),comparison=c("pHSC","Blast"),controls="LSC", keyWords=c("immun","inflam","apopto","death","kappab","wound"),showPlots=FALSE) {
+qusageResults<-function(kexp,geneSetPath="~/Documents/Arkas-Paper-Data/MSigDB/MsigDb_all/",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),how=c("cpm","tpm"),species=c("Homo.sapiens"),comparison=c("pHSC","Blast"),controls="LSC", keyWords=c("immun","inflam","apopto","death","kappab","wound"),showPlots=FALSE,comparisonNumber=1,paired=FALSE,read.cutoff=2) {
  ###the plots picked here must match the pathways picked exactly by heat Cor
  ## pp<- pickPathway(qusageDbLite(qdbname),keyWord="immun")
   ##pp2<-sapply(pp,function(x) unique(x$pathway_name))
@@ -17,12 +17,17 @@ qusageResults<-function(kexp,geneSetPath="~/Documents/Arkas-Paper-Data/MSigDB/Ms
 
 
  geneSet<-match.arg(MsigDB,c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"))
+  ##only controlling for specific comparison types for now  ###FIX ME: generalize
+ comparison<-match.arg(comparison,c("pHSC","Blast","RAEB"))
+   ##for comparisons with 2 groups, trios must exist
+  if(comparisonNumber==2){
+  kexp1<-kexpByTrio(kexp)
+  phsc.lsc<-kexp2Group(kexp1,comparison=comparison,control=controls)
+  }else{ ##if only 1 comparison group
+   phsc.lsc<-kexp2Group(kexp,comparison=comparison,control=controls)
+   }
 
- comparison<-match.arg(comparison,c("pHSC","Blast"))
-kexp1<-kexpByTrio(kexp)
-phsc.lsc<-kexp2Group(kexp1,comparison=comparison,control=controls)
-
-counts<-collapseBundles(phsc.lsc,"gene_name",read.cutoff=6)
+counts<-collapseBundles(phsc.lsc,"gene_name",read.cutoff=read.cutoff)
   ##BSN
  counts<-counts[,which(colSums(counts)>1)]
    dge<-DGEList(counts=counts)
@@ -30,17 +35,20 @@ counts<-collapseBundles(phsc.lsc,"gene_name",read.cutoff=6)
    expr<-cpm(dge,normalized.lib.sizes=TRUE,log=FALSE)
   expr2<-log2(1+expr)
 
-cN<-colnames(expr2)
-cN<-strsplit(cN,"_")
-labels<-unlist(lapply(cN,function(x) x[1]))
+  cN<-colnames(expr2)
+  cN<-strsplit(cN,"_")
+  labels<-unlist(lapply(cN,function(x) x[1]))
 
-contrast<-paste0(comparison,"-",controls)
-
-   pairs<-unlist(lapply(cN,function(x) x[2]))
-   pairs.id<-match(toupper(pairs),toupper(pairs))
+   contrast<-paste0(comparison,"-",controls)
    geneSets<-read.gmt(paste0(geneSetPath,geneSet))
 
- qs.pHSC.results<-qusage(expr2,labels,contrast,geneSets,pairVector=pairs.id)
+   if(paired==TRUE){
+   pairs<-unlist(lapply(cN,function(x) x[2]))
+   pairs.id<-match(toupper(pairs),toupper(pairs))
+   qs.pHSC.results<-qusage(expr2,labels,contrast,geneSets,pairVector=pairs.id)
+  }else if(paired==FALSE){
+   qs.pHSC.results<-qusage(expr2,labels,contrast,geneSets)
+  }
   ##pathway indices : inflam  903, immune 394,410 ,wound 831, mapK 865,494, 
   if(showPlots==TRUE){
    plot(qs.pHSC.results)

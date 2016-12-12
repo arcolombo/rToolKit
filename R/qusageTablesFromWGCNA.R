@@ -72,7 +72,12 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
  for(i in 1:length(allcolors)){
  ######START FOR LOOP HERE allcolors_i 
    wgcna.color<-modulesBy(wgcnaDbLite(dbname),p.value=2,Module.color=allcolors[i])
+   ##the database can create row_names table, but may have turned off.  flagging
+   if(is.null(wgcna.color$row_names)==FALSE){
    color.id<-match(wgcna.color$row_names,rownames(full_counts))
+   } else{
+    color.id<-match(rownames(wgcna.color),rownames(full_counts))
+   }
    stopifnot(all(rownames(full_counts[color.id,] )==wgcna.color$row_names)) ##check
    ##subset module by ENSGID
   module.counts<-full_counts[color.id,]
