@@ -12,9 +12,10 @@ qusageResults(kexp,
   "h.all.v5.1.symbols.gmt"), how = c("cpm", "tpm"),
   species = c("Homo.sapiens"), comparison = c("pHSC", "Blast"),
   controls = "LSC", keyWords = c("immun", "inflam", "apopto", "death",
-  "kappab", "wound"), showPlots = FALSE)
+  "kappab", "wound"), showPlots = FALSE, comparisonNumber = 1,
+  paired = FALSE, read.cutoff = 2)
 }
 \description{
-this is a point-wise qusage call not connected to database formations but used for kexp alone. Requires that hte comparison and controls be the leading column name able to be split by kexp2Group
+this is a point-wise qusage call not connected to database formations but used for kexp alone. Requires that hte comparison and controls be the leading column name able to be split by kexp2Group.  the qusageTables script is used to make a database. this script is used to make specific plots of qusage calls that target specific pathways.
 }
 

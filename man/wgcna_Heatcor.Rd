@@ -4,10 +4,10 @@
 \alias{wgcna_Heatcor}
 \title{produces a correlation map given wgcna network data using a different library ComplexHeatmap}
 \usage{
-wgcna_Heatcor(lnames = NULL, rnames = NULL, read.cutoff = 2,
+wgcna_Heatcor(lnames = NULL, rnames = NULL, read.cutoff = 1,
   recalc = FALSE, how = how, pathwaysToPick = c("immune", "inflam",
   "apopto", "death", "kappab", "wound"), pathPairing = c(1, 1, 2, 2, 3, 4),
-  dbname = NULL, qdbname = NULL)
+  dbname = NULL, qdbname = NULL, rdbname = NULL)
 }
 \arguments{
 \item{lnames}{this is the results from wgcna.R}
@@ -16,16 +16,22 @@ wgcna_Heatcor(lnames = NULL, rnames = NULL, read.cutoff = 2,
 
 \item{recalc}{boolean if truen then will recalculate the bicor and pvalues}
 
-\item{plotDot}{boolean this plots the median correlation score for each biotypes in a line plot}
+\item{how}{tpm or cpm, this is used to print the heatmap, tpm is better}
 
-\item{targets}{this is a character vector of modules of interest to subset the corMap}
+\item{pathwaysToPick}{this will query the qusageDbLite database for the key pathway character name signature}
 
-\item{orderBiotype}{either Alu or L1.}
+\item{pathPairing}{vector if pathways are related then they should have matching pairing integers for instance cell death and apoptosis pathways could be paired.}
+
+\item{dbname}{the gene module wgcnaDbLite sqlite database}
+
+\item{qdbname}{the qusageDbLite sqlite database name}
+
+\item{rdbname}{the repeat module wrcnaDbLite sqlite database}
 }
 \value{
 images of eigengenes
 }
 \description{
-after calling wgcna the datExpr and module colors are used to create a correlation map image with the columns ordered.
+after calling wgcna the datExpr and module colors are used to create a correlation map image with the columns ordered. This will produce the HeatCorrelation association table with the pathway information alongside.  this will also produce the repeat module renaming call to print the summary of repeat module tables as a repeat correlation summary.
 }
 

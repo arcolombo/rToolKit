@@ -32,7 +32,7 @@ moduleWiseAnalysis(kexp, lnames, rnames,
 
 \item{openDevice}{boolean if true then the images are opened on a device along with printing to pdf.  should be false for exploring all colors}
 
-\item{repeat.cutoff}{the cpm floor threshold}
+\item{repeat.cutoff}{the cpm floor threshold if the cut off filters out elements that were not filtered in the wgcna method call, this will fail.  you must match the read.cutoff in the wgcna data base.}
 }
 \description{
 after running wgcna and wrcna we are interested in finding associaitons between one fixed gene with all the repeat modules.  given a fixed module of interest we correlate and test for comparability between every repeat module.  If there is no contrast between the gene modules, i.e. qusage contrasts are not present, then we use the wgcna_goEnrich caller
