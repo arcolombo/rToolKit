@@ -17,7 +17,7 @@
 #' @import circlize
 #' @export
 #' @return images of eigengenes
-wgcna_Heatcor<-function(lnames=NULL,rnames=NULL, read.cutoff=1,recalc=FALSE,how=how,pathwaysToPick=c("immune","inflam","apopto","death","kappab","wound"),pathPairing=c(1,1,2,2,3,4),dbname=NULL,qdbname=NULL,rdbname=NULL){
+wgcna_Heatcor<-function(lnames=NULL,rnames=NULL, read.cutoff=1,recalc=FALSE,how=how,pathwaysToPick=c("immune","inflam","apopto","death","kappab","wound"),pathPairing=c(1,1,2,2,3,4),dbname=NULL,qdbname=NULL,rdbname=NULL,p.value=1,minRank=0){
 ##FIX ME:  add a star for pvalues less than 0.05 in the cell_function Heat
 stopifnot(length(pathwaysToPick)==length(pathPairing))
  
@@ -63,9 +63,9 @@ key<-data.frame(module=rownames(moduleTraitCor),id=seq(1:length(rownames(moduleT
  ##create  a sub plot that shows the pathwaysToPick specific module Heatmap Correlations with altered significance level.
 xN<-list()
 for(i in 1:length(pathwaysToPick)){
-  xnam<-names(pickPathway(qusageDbLite(qdbname),keyWord=pathwaysToPick[i]))
+  xnam<-names(pickPathway(qusageDbLite(qdbname),keyWord=pathwaysToPick[i],p.value=p.value))
   if(length(xnam)>0){
-  xnam<-xnam[sapply(pickPathway(qusageDbLite(qdbname),keyWord=pathwaysToPick[i]),function(x) median(x[which(rownames(x) !="Total"),"ranking"])>40)    ]
+  xnam<-xnam[sapply(pickPathway(qusageDbLite(qdbname),keyWord=pathwaysToPick[i],p.value=p.value),function(x) median(x[which(rownames(x) !="Total"),"ranking"])>minRank)    ]
   
   xN[[i]]<-xnam
   names(xN)[i]<-pathwaysToPick[i]
@@ -101,9 +101,9 @@ colnames(df_annot)[i+1]<-names(xN)[i]
   x.pv<-pvclust(moduleTraitCor2,nboot=100)
   colnames(moduleTraitCor2)<-gsub("Repetitive element","Rptv. Element",colnames(moduleTraitCor2))
   colnames(moduleTraitCor2)<-gsub("Endogenous Retrovirus","Endg. Retrovirus",colnames(moduleTraitCor2))
-  heatCor<-Heatmap(moduleTraitCor2,column_names_gp=gpar(fontsize=10),cluster_columns=x.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Module-Repeat ",how," Biotype relationships (*<0.06)"),cell_fun=function(j,i,x,y,w,h,col){
+  heatCor<-Heatmap(moduleTraitCor2,column_names_gp=gpar(fontsize=10),cluster_columns=x.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Module-Repeat ",how," Biotype relationships (*<0.05)"),cell_fun=function(j,i,x,y,w,h,col){
         weighted.Pvalue<-corPvalueStudent(moduleTraitCor2,nSamples)
-                   if(weighted.Pvalue[i,j]<0.06){
+                   if(weighted.Pvalue[i,j]<0.05){
                  #  grid.text(sprintf("%.3f", weighted.Pvalue[i,j]),x,y)
                     grid.text("*",x,y-0.005 )
                     }
@@ -148,7 +148,7 @@ colnames(df_annot)[i+1]<-names(xN)[i]
   rownames(activation.direction)<-rownames(mC)
   colnames(activation.direction)<-names(xN)
   for(i in 1:length(pathwaysToPick)) {
-  df<-pickPathway(qusageDbLite(qdbname),keyWord=pathwaysToPick[i])
+  df<-pickPathway(qusageDbLite(qdbname),keyWord=pathwaysToPick[i],p.value=p.value)
   df<-df[which(names(df)!="kexp")]
   ##print to csv
   activation.output<-ldply(df,data.frame)
@@ -156,7 +156,7 @@ colnames(df_annot)[i+1]<-names(xN)[i]
   if(length(df)==0){
   next
  }
- df<-df[sapply(df,function(x) median(x[which(rownames(x) !="Total"),"ranking"])>40)  ]
+ df<-df[sapply(df,function(x) median(x[which(rownames(x) !="Total"),"ranking"])>minRank)  ]
 
  activation.df<-sapply(df,function(x) as.numeric(x[grep("Total",rownames(x)),]$logFC)/as.numeric(x[grep("Total",rownames(x)),]$query.size))
   names(activation.df)<-paste0("ME",names(activation.df))
@@ -175,9 +175,9 @@ colnames(df_annot)[i+1]<-names(xN)[i]
   if(nrow(mC)>4){
   x.pv2<-pvclust(mC,nboot=200)
 
-  heatCor2<-Heatmap(mC,cluster_columns=x.pv2$hclust,cluster_rows=FALSE,column_names_gp=gpar(fontsize=10),row_names_side="left",name="correlation(x)", column_title = paste0("Immune-Related ",how," (*<0.06)"), cell_fun=function(j,i,x,y,w,h,col){
+  heatCor2<-Heatmap(mC,cluster_columns=x.pv2$hclust,cluster_rows=FALSE,column_names_gp=gpar(fontsize=10),row_names_side="left",name="correlation(x)", column_title = paste0("Immune-Related ",how," (*<0.05)"), cell_fun=function(j,i,x,y,w,h,col){
         weighted.Pvalue<-corPvalueStudent(mC,nSamples)
-                   if(weighted.Pvalue[i,j]<0.06){
+                   if(weighted.Pvalue[i,j]<0.05){
                  #  grid.text(sprintf("%.3f", weighted.Pvalue[i,j]),x,y)
                     grid.text("*",x,y-0.005 )
                     }
@@ -226,9 +226,9 @@ colnames(df_annot)[i+1]<-names(xN)[i]
  # Display the correlation values within a heatmap plot
   plot.new()
   cor.pv<-pvclust(corrMap2,nboot=100)
- map.heatCor<-Heatmap(corrMap2,cluster_columns=cor.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="correlation(x)",column_names_gp=gpar(fontsize=7.5), column_title = paste0("Repeat Level ",how," Module (*<0.06)"),cell_fun=function(j,i,x,y,w,h,col){
+ map.heatCor<-Heatmap(corrMap2,cluster_columns=cor.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="correlation(x)",column_names_gp=gpar(fontsize=7.5), column_title = paste0("Repeat Level ",how," Module (*<0.05)"),cell_fun=function(j,i,x,y,w,h,col){
         weighted.Pvalue<-corPvalueStudent(corrMap2,nSamples)
-                   if(weighted.Pvalue[i,j]<0.06){
+                   if(weighted.Pvalue[i,j]<0.05){
                  #  grid.text(sprintf("%.3f", weighted.Pvalue[i,j]),x,y)
                     grid.text("*",x,y-0.005 )
                     }
@@ -251,7 +251,7 @@ colnames(df_annot)[i+1]<-names(xN)[i]
   sub.heatCor2<-Heatmap(corrMap.sub,cluster_columns=sub.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="correlation(x)",column_names_gp=gpar(fontsize=7), column_title = paste0("Immune-Related ",how," Module relationships"), 
 cell_fun=function(j,i,x,y,w,h,col){
         weighted.Pvalue<-corPvalueStudent(corrMap.sub,nSamples)
-                   if(weighted.Pvalue[i,j]<0.06){
+                   if(weighted.Pvalue[i,j]<0.05){
                  #  grid.text(sprintf("%.3f", weighted.Pvalue[i,j]),x,y)
                     grid.text("*",x,y-0.005 )
                     }
@@ -264,7 +264,7 @@ cell_fun=function(j,i,x,y,w,h,col){
  heatCor<-Heatmap(moduleTraitCor,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Immune-Related ",how," Biotype relationships"),
  cell_fun=function(j,i,x,y,w,h,col){
         weighted.Pvalue<-corPvalueStudent(moduleTraitCor,nSamples)
-                   if(weighted.Pvalue[i,j]<0.06){
+                   if(weighted.Pvalue[i,j]<0.05){
                  #  grid.text(sprintf("%.3f", weighted.Pvalue[i,j]),x,y)
                     grid.text("*",x,y-0.005 )
                     }

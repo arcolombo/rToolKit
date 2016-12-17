@@ -16,9 +16,10 @@ qusageResults<-function(kexp,geneSetPath="~/Documents/Arkas-Paper-Data/MSigDB/Ms
   ###TO DO: print everything to a table
 
 
- geneSet<-match.arg(MsigDB,c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"))
+# geneSet<-match.arg(MsigDB,c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"))
   ##only controlling for specific comparison types for now  ###FIX ME: generalize
- comparison<-match.arg(comparison,c("pHSC","Blast","RAEB","MDS"))
+ geneSet<-MsigDB
+  comparison<-match.arg(comparison,c("pHSC","Blast","RAEB","MDS"))
    ##for comparisons with 2 groups, trios must exist
   if(comparisonNumber==2){
   kexp1<-kexpByTrio(kexp)
@@ -89,7 +90,7 @@ counts<-collapseBundles(phsc.lsc,"gene_name",read.cutoff=read.cutoff)
  legend("topleft",legend=tp3,col=1:length(tp3),pch=0.8,cex=0.6,bty='n',title=legendTitle)
   readkey()
   for(j in pathIndex){
-  par(mar=c(12,5.3,2,2),mfrow=c(1,2),cex.main=0.44)
+  par(mar=c(12,5.3,2,2),mfrow=c(1,1),cex.main=0.44)
   plotDensityCurves(qs.pHSC.results,path.index=j,xlim=c(-2,2),main=paste0(x[which(rownames(x)== j),1]," ",contrast))
   legend("topleft",legend=signif(x[which(rownames(x)==j),3],2),bty='n',cex=0.6,pch=0.8,title="p.value" )
   plotCIsGenes(qs.pHSC.results,path.index=j, main=paste0(x[which(rownames(x)== j),1]," ",contrast) )

@@ -18,7 +18,9 @@ qusageRun<-function(cnts_mt=NULL,gmt.path="~/Documents/Arkas-Paper-Data/MSigDB/M
    pairs.id<-match(toupper(pairs),toupper(pairs))
   } 
 ##read MSigDB selection from input
-  geneSet<-match.arg(MsigDB,c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"))
+  #geneSet<-match.arg(MsigDB,c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"))
+ # geneSets<-read.gmt(paste0(gmt.path,"/",geneSet))
+  geneSet<-MsigDB
   geneSets<-read.gmt(paste0(gmt.path,"/",geneSet))
   cnts_pL2<-cnts_mt[which(rownames(cnts_mt)!=""),]
   ##collapse duplicated gene names with unique EnsIDs
