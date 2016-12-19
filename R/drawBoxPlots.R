@@ -15,8 +15,22 @@
 #' @import ggplot2
 #' @import grid
 #' @export
-drawBoxPlots<-function(kexp,comparison="pHSC",control="LSC",comparison2="Blast",numberComparisons=1,read.cutoff=3,adjustBy="BH",wilcox.Alternative=c("less","greater"),grob.comparison1=paste0("Median(",control,")<Median(",comparison,") p.value: "),grob.comparison2=paste0("Median(",control,")<Median(",comparison2,") p.value: ") ,testMedians=FALSE  ){
-
+drawBoxPlots<-function(kexp,comparison="pHSC",control="LSC",comparison2="Blast",numberComparisons=1,read.cutoff=3,adjustBy="BH",wilcox.Alternative=c("less","greater"),grob.comparison1=paste0("Median(",control,")<Median(",comparison,") p.value: "),grob.comparison2=paste0("Median(",control,")<Median(",comparison2,") p.value: ") ,testMedians=FALSE,title1=NULL,xlab1=NULL,ylab1,xlab2=NULL  ){
+  if(is.null(title1)==TRUE){
+   title1<-"Differential Expression Boxplot"
+  }
+ 
+  title2<-title1
+ 
+  if(is.null(xlab1)==TRUE){
+  xlab1<-"Stage"
+  }
+  if(is.null(ylab1)==TRUE){
+  ylab1<-"|logFC|"
+  }
+  if(is.null(xlab2)==TRUE){
+  xlab2="Stage"
+  }
 ##the density should be absolute value of log FC overlayed across each other. then a wilcoxon sum test should be done. 
   wilcox.Alternative<-match.arg(wilcox.Alternative,c("less","greater"))
   kexp1<-kexp2Group(kexp,comparison=comparison,control=control)
@@ -38,10 +52,10 @@ drawBoxPlots<-function(kexp,comparison="pHSC",control="LSC",comparison2="Blast",
   print(pp1)
   }else if(testMedians==TRUE){
 
-  my_grob= grobTree(textGrob(paste0(grob.comparison1,wilcox.pvalue ),x=0.7,y=0.95,gp=gpar(col="black",fontsize=10,fontface="italic")))
-  pp1<-(ggplot(dat1,aes(x=Stage,y=logFC,fill=Stage ))+ggtitle(paste0("Differential Repeat Expression |logFC| ",comparison,"-",control))+scale_fill_manual(values=c("green","red"))+stat_boxplot(aes(Stage,logFC),geom='errorbar',linetype=1,width=0.5)+geom_boxplot(aes(Stage,logFC),outlier.colour=NA)+annotation_custom(my_grob,ymax=6,xmax=2) )
-
- pp1<-pp1+geom_point(position=position_jitter(width=0.2),alpha=0.4 )
+#  my_grob= grobTree(textGrob(paste0(grob.comparison1,wilcox.pvalue ),x=0.7,y=0.95,gp=gpar(col="black",fontsize=10,fontface="italic")))
+  pp1<-(ggplot(dat1,aes(x=Stage,y=logFC,fill=Stage ))+ggtitle(paste0(title1," ",comparison,"-",control), subtitle=paste0(grob.comparison1,wilcox.pvalue   ))+scale_fill_manual(values=c("green","red"))+stat_boxplot(aes(Stage,logFC),geom='errorbar',linetype=1,width=0.5)+geom_boxplot(aes(Stage,logFC),outlier.colour=NA))#+annotation_custom(my_grob,ymax=6,xmax=2) )
+pp1<-pp1+xlab(xlab1)+ylab(ylab1)+guides(fill=guide_legend(title="Clonal Stages"))
+ pp1<-pp1+geom_point(position=position_jitter(width=0.2),alpha=0.4,show.legend=FALSE )
   print(pp1)
    }
   readkey()
@@ -55,7 +69,7 @@ drawBoxPlots<-function(kexp,comparison="pHSC",control="LSC",comparison2="Blast",
   wilcox.pvalue2<-signif(wilcox.test(abs(blast),abs(lsc),wilcox.Alternative)$p.value,2)
   lines=c(rep(comparison2,length(blast)),rep(control,length(lsc)) )
   dat<-data.frame(logFC=c(blast,LSC=abs(lsc)),Stage=lines)
-  dat$Stage<- factor(dat$Stage,levels(dat$Stage)[c(which(levels(dat$Stage)==comparison2),which(levels(dat$Stage)==control) )])
+  dat$Stage<- factor(dat$Stage,levels(dat$Stage)[c(which(levels(dat$Stage)==control),which(levels(dat$Stage)==comparison2) )])
 
 
   if(testMedians==FALSE){
@@ -63,9 +77,11 @@ drawBoxPlots<-function(kexp,comparison="pHSC",control="LSC",comparison2="Blast",
    pp<-pp+geom_point(position=position_jitter(width=0.2),alpha=0.4 )
   print(pp)
    }else if(testMedians==TRUE){
-   my_grob= grobTree(textGrob(paste0(grob.comparison2,wilcox.pvalue2 ),x=0.7,y=0.95,gp=gpar(col="black",fontsize=10,fontface="italic")))
-  pp<-(ggplot(dat,aes(x=Stage,y=logFC,fill=Stage ))+ggtitle(paste0("Differential Repeat Expression |logFC| ",comparison2,"-",control))+scale_fill_manual(values=c("lightblue","red"))+stat_boxplot(aes(Stage,logFC),geom='errorbar',linetype=1,width=0.5)+geom_boxplot(aes(Stage,logFC),outlier.colour=NA) + annotation_custom(my_grob,ymax=6,xmax=2 ) )
-  pp<-pp+geom_point(position=position_jitter(width=0.2),alpha=0.4 ) 
+   #my_grob= grobTree(textGrob(paste0(grob.comparison2,wilcox.pvalue2 ),x=0.7,y=0.95,gp=gpar(col="black",fontsize=10,fontface="italic")))
+  pp<-(ggplot(dat,aes(x=Stage,y=logFC,fill=Stage ))+ggtitle(paste0(title2," ",comparison2,"-",control),subtitle=paste0(grob.comparison2,wilcox.pvalue2 ) )+scale_fill_manual(values=c("lightblue","red"))+stat_boxplot(aes(Stage,logFC),geom='errorbar',linetype=1,width=0.5)+geom_boxplot(aes(Stage,logFC),outlier.colour=NA))# + annotation_custom(my_grob,ymax=6,xmax=2 ) )
+  pp<-pp+xlab(xlab2)+ylab(ylab1)+guides(fill=guide_legend(title="Clonal Stages"))
+
+  pp<-pp+geom_point(position=position_jitter(width=0.2),alpha=0.4,show.legend=FALSE ) 
   print(pp)
    }
   
@@ -76,7 +92,7 @@ drawBoxPlots<-function(kexp,comparison="pHSC",control="LSC",comparison2="Blast",
   print(pp)
 dev.off()
  }else{
-  pdf(paste0("Density_Stage_Plots_",comparison,".",control,".pdf"))
+  pdf(paste0("Boxplot_Stage_Plots_",comparison,".",control,".pdf"))
   print(pp1)
   dev.off()
   }
