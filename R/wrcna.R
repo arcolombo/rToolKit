@@ -9,12 +9,13 @@
 #' @param selectedPower  6 usually is good. can rerun if NULL
 #' @param intBiotypes character the tx_biotypes of interest
 #' @param useAllBiotypes boolean if false then intBiotypes are used, if true than the correlations are checked against all tx_biotypes
+#' @param copyNormalize boolean, if true will execute copyNumberNormalize to normalize the repeat biotype counts by the copy number summation of the corresponding family type copy numbers find from repBase.
 #' @import WGCNA
 #' @import edgeR
 #' @import limma
 #' @export
 #' @return images and cluster at the gene and repeat level
-wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),species=c("Homo.sapiens","Mus.musculus"),selectedPower=6, intBiotypes=c("acromeric","centromeric","CR1","Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","hAT","HSFAU","L1","L2","LTR Retrotransposon","Eutr1","Merlin","PiggyBac","Pseudogene","Repetitive element","satellite","snRNA","SVA","TcMar","telo","Transposable Element","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm"), batchNormalize=FALSE,batchVector=NULL,design=NULL){
+wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),species=c("Homo.sapiens","Mus.musculus"),selectedPower=6, intBiotypes=c("acromeric","centromeric","CR1","Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","hAT","HSFAU","L1","L2","LTR Retrotransposon","Eutr1","Merlin","PiggyBac","Pseudogene","Repetitive element","satellite","snRNA","SVA","TcMar","telo","Transposable Element","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm"), batchNormalize=FALSE,batchVector=NULL,design=NULL,copyNormalize=TRUE){
    
    if(batchNormalize==TRUE &&  is.null(design)==TRUE){
    stopifnot(is.null(metadata(kexp)$design)==FALSE)
@@ -36,10 +37,19 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
 
   if(how=="cpm"){
    if(batchNormalize==FALSE){
+    ##FIX ME: add copyNumber normalize flag here.....
+  if(copyNormalize==FALSE){
   cpm<-collapseBundles(rexp,"tx_id",read.cutoff=read.cutoff)
+  }else{
+  cpm<-copyNumberNormalize(rexp,bundleID="tx_id",read.cutoff=read.cutoff)
+    }
   cpm<-cpm[!grepl("^ERCC",rownames(cpm)),]
   cpm<-cpm[!grepl("^ENS",rownames(cpm)),]
+  if(copyNormalize==FALSE){
   rpm<-collapseBundles(rexp,"tx_biotype",read.cutoff=read.cutoff) 
+  }else{
+  rpm<-copyNumberNormalize(rexp,bundleID="tx_biotype",read.cutoff=read.cutoff)
+  }
   rpm<-rpm[!grepl("^ERCC",rownames(rpm)),]
    if(tmm.norm==TRUE){
   d<-DGEList(counts=cpm)
