@@ -13,7 +13,7 @@
 #' @importFrom pvclust pvclust
 #' @import colorRamps
 #' @export
-drawHeatmap<-function(kexp,tags=NULL,annotations=TRUE,byType=c("counts","tpm"),cutoff=2,title1=NULL,tx_biotype_color_master="./tx_biotype_color_master.csv",gene_biotype_color_master="./gene_biotype_color_master.csv"){
+drawHeatmap<-function(kexp,tags=NULL,annotations=TRUE,byType=c("counts","tpm"),cutoff=2,title1=NULL,tx_biotype_color_master=NULL,gene_biotype_color_master=NULL){
     stopifnot(is.null(tags)==FALSE)
     if(is.null(title1)==TRUE){
    title1="Repeat Differential Expression"
@@ -21,34 +21,27 @@ drawHeatmap<-function(kexp,tags=NULL,annotations=TRUE,byType=c("counts","tpm"),c
 
    if(is.null(tx_biotype_color_master)==TRUE){
     ##generate list and print to csv for future
-    tx.color.master<-repeatColorPalette(kexp)
+    tx.color.master<-repeatBiotypeColorPalette(kexp)
    write.csv(tx.color.master,file="tx_biotype_color_master.csv")
-   
    }else{
     ##read in file, if fail to load, regenerate and print to csv
      color.df<-read.csv(tx_biotype_color_master,stringsAsFactors=FALSE,row.names=NULL,col.names=c("txb","palette"))
      ###FIX ME: have the csv enforce a certain structure.  case specific as of now.
       tx.color.master<-color.df$palette
       names(tx.color.master)<-color.df$txb
-  
-   }
+     }
 
  if(is.null(gene_biotype_color_master)==TRUE){
     ##generate list and print to csv for future
-    gnb<-levels(factor(rowRanges(kexp)$gene_biotype))
-    gn.colors<-magenta2green(length(gnb))
-    gn.color.master<-as.character(gn.colors)
-    names(gn.color.master)<-gnb
-   write.csv(gn.color.master,file="gene_biotype_color_master.csv")
+    gn.color.master<-repeatFamilyColorPalette(kexp)
+     write.csv(gn.color.master,file="gene_biotype_color_master.csv")
    }else{
     ##read in file, if fail to load, regenerate and print to csv
      gene.color.df<-read.csv(gene_biotype_color_master,stringsAsFactors=FALSE,row.names=NULL,col.names=c("txb","palette"))
-   
      ###FIX ME: have the csv enforce a certain structure.  case specific
-     gn.color.master<-gene.color.df$palette
+      gn.color.master<-gene.color.df$palette
       names(gn.color.master)<-gene.color.df$txb
-
-   }
+      }
 
 
    write.csv(tags,file="drawHeatmap.repeat_top_tags.csv")
@@ -76,7 +69,11 @@ drawHeatmap<-function(kexp,tags=NULL,annotations=TRUE,byType=c("counts","tpm"),c
                   column_title=paste0(title1),
                   column_title_gp=gpar(fontsize=10),
                  row_names_gp=gpar(fontsize=6),
-                 column_names_gp=gpar(fontsize=8))
+                 column_names_gp=gpar(fontsize=8),
+                 heatmap_legend_param=list(color_bar="continuous",
+                                       #legend_direction="horizontal",
+                                       legend_width=unit(5,"cm"),
+                                       title_position="lefttop"))
   
  #rh.rpt2<-Heatmap(rowRanges(kexp)[rownames(rpt.mt)]$tx_biotype,
  #         name="transcript_biotype",

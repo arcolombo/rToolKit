@@ -3,23 +3,56 @@
 #' @param kexp a kallisto experiment annotated
 #' @import grDevices
 #' @import colorRamps
+#' @importFrom hex colorspace
+#' @import TxDbLite
+#' @import arkas
 #' @export
 #' @return a vector ready for rowAnnotation ComplexHeatmap
-repeatColorPalette<-function(kexp){
-
+repeatBiotypeColorPalette<-function(kexp){
+kexp<-findRepeats(kexp)
 color.df<-data.frame(txb=levels(factor(rowRanges(kexp)$tx_biotype)),palette="none",stringsAsFactors=FALSE)
+ ##colors for acromeric/centromeric
+acro.group<-length(c(grep("acromeric",color.df$txb,ignore.case=TRUE),grep("centromeric",color.df$txb  )))
+color.df[  c(grep("acromeric",color.df$txb,ignore.case=TRUE),grep("centromeric",color.df$txb  ))  ,]$palette<-acro.centro(acro.group)  
 
-color.df[color.df$txb%in%c("acromeric","centromeric"),]$palette<-acro.centro(2)
- color.df[color.df$txb%in%c("Alu","SVA"),]$palette<-alu.sva(2)
- color.df[6:10,]$palette<-ervs(5)
- color.df[11:37,]$palette<-eutr(27)
-color.df[c(43,44,45),]$palette<-l1(3)
-color.df[57:59,]$palette<-sat(3)
-color.df[c(60:61,62),]$palette<-sine(3)
-color.df[c(54,55,56,51),]$palette<-rte.re(4)
- color.df[c(5,66),]$palette<-trans(2)
+ ##colors for Alu/SVA
+ alu.group<-length( c(grep("Alu",color.df$txb,ignore.case=FALSE),grep("SVA",color.df$txb  )) )
+ color.df[c(grep("Alu",color.df$txb,ignore.case=FALSE),grep("SVA",color.df$txb  ))  ,]$palette<-alu.sva(alu.group )
 
-color.df[which(color.df$palette=="none"),]$palette<-rainbow(17)
+ #erv colors
+ erv.group<-length(c(grep("ERV",color.df$txb),grep("Endogenous Retrovirus",color.df$txb)) )
+ color.df[c( grep("Endogenous Retrovirus",color.df$txb),grep("ERV",color.df$txb)),]$palette<-ervs(erv.group)
+
+ ##EUTR Colors
+  eutr.group<-length(grep("EUTR",color.df$txb,ignore.case=TRUE))
+  color.df[grep("EUTR",color.df$txb,ignore.case=TRUE),]$palette<-eutr(eutr.group)
+
+  ##L1 Colors
+  l1.group<-length( c(grep("L1",color.df$txb),grep("L2",color.df$txb),grep("LTR Retrotransposon",color.df$txb)))
+color.df[  c(grep("L1",color.df$txb),grep("L2",color.df$txb),grep("LTR Retrotransposon",color.df$txb))   ,]$palette<-l1(l1.group)
+
+  ##SAT colors
+  sat.group<-length( c(grep("SAT",color.df$txb),grep("satellite",color.df$txb,ignore.case=TRUE)  )) 
+color.df[c(grep("SAT",color.df$txb),grep("satellite",color.df$txb,ignore.case=TRUE)),]$palette<-sat(sat.group)
+
+
+  ##SINE
+  sine.group<-length( c(grep("SINE",color.df$txb,ignore.case=FALSE),grep("snRNA",color.df$txb  ))  )
+color.df[ c(grep("SINE",color.df$txb,ignore.case=FALSE),grep("snRNA",color.df$txb  ))  ,]$palette<-sine(sine.group  )
+
+  ##RTE RTEX
+ rte.group<-length(c(grep("Repetitive element",color.df$txb),grep("RTE",color.df$txb,ignore.case=FALSE)  )  )
+color.df[c(grep("Repetitive element",color.df$txb),grep("RTE",color.df$txb,ignore.case=FALSE)  ),]$palette<-rte.re(rte.group)
+
+
+ ##Transposable elements
+  trans.group<-length( c(grep("DNA transposon",color.df$txb),grep("Transposable Element",color.df$txb)  ))
+ color.df[c(grep("DNA transposon",color.df$txb),grep("Transposable Element",color.df$txb)  )  ,]$palette<-trans(trans.group  )
+
+
+  ##remnants
+ remnant.group<-length(which(color.df$palette=="none")  )
+color.df[which(color.df$palette=="none"),]$palette<-rainbow(remnant.group )
 
  tx.color.master<-color.df$palette
 names(tx.color.master)<-color.df$txb
