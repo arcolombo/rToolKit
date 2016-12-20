@@ -3,7 +3,7 @@
 #' @param kexp a kallisto experiment annotated
 #' @import grDevices
 #' @import colorRamps
-#' @importFrom hex colorspace
+#' @import colorspace
 #' @import TxDbLite
 #' @import arkas
 #' @export
@@ -63,6 +63,9 @@ names(tx.color.master)<-color.df$txb
 
 }
 
+#' @import grDevices
+#' @import colorRamps
+#' @import colorspace
 acro.centro<-function (n, h = 360, c. = c(53, 100), l = c(97, 86), power = 3, 
     fixup = TRUE, gamma = NULL, alpha = 1, ...) 
 {
@@ -89,7 +92,9 @@ acro.centro<-function (n, h = 360, c. = c(53, 100), l = c(97, 86), power = 3,
 
 
 
-
+#' @import grDevices
+#' @import colorRamps
+#' @import colorspace
 alu.sva<-function (n, h = 245, c. = c(63, 89), l = c(83, 100), power = 3, 
     fixup = TRUE, gamma = NULL, alpha = 1, ...) 
 {
@@ -113,7 +118,11 @@ alu.sva<-function (n, h = 245, c. = c(63, 89), l = c(83, 100), power = 3,
     return(rval)
 }
 
- ervs<-function (n, h = 260, c. = c(100, 10), l = c(30, 100), power = 0.7, 
+
+#' @import grDevices
+#' @import colorRamps
+#' @import colorspace
+ervs<-function (n, h = 260, c. = c(100, 10), l = c(30, 100), power = 0.7, 
     fixup = TRUE, gamma = NULL, alpha = 1, ...) 
 {
     if (!is.null(gamma)) 
@@ -137,7 +146,9 @@ alu.sva<-function (n, h = 245, c. = c(63, 89), l = c(83, 100), power = 3,
 }
 
 
-
+#' @import grDevices
+#' @import colorRamps
+#' @import colorspace
 eutr<-function (n, h = -275, c. = c(100, 0), l = c(22, 83), power = 0.840909090909091, 
     fixup = TRUE, gamma = NULL, alpha = 1, ...) 
 {
@@ -161,6 +172,9 @@ eutr<-function (n, h = -275, c. = c(100, 0), l = c(22, 83), power = 0.8409090909
     return(rval)
 }
 
+#' @import grDevices
+#' @import colorRamps
+#' @import colorspace
 l1<-function (n, h = 295, c. = c(89, 3), l = c(38, 54), power = 0.818181818181818, 
     fixup = TRUE, gamma = NULL, alpha = 1, ...) 
 {
@@ -184,7 +198,9 @@ l1<-function (n, h = 295, c. = c(89, 3), l = c(38, 54), power = 0.81818181818181
     return(rval)
 }
 
-
+#' @import grDevices
+#' @import colorRamps
+#' @import colorspace
 sat<-function (n, h = -194, c. = c(100, 71), l = c(21, 25), power = 0.159090909090909, 
     fixup = TRUE, gamma = NULL, alpha = 1, ...) 
 {
@@ -208,7 +224,9 @@ sat<-function (n, h = -194, c. = c(100, 71), l = c(21, 25), power = 0.1590909090
     return(rval)
 }
 
-
+#' @import grDevices
+#' @import colorRamps
+#' @import colorspace
 sine<-function (n, h = 33, c. = c(80, 10), l = c(30, 83), power = 0.7, 
     fixup = TRUE, gamma = NULL, alpha = 1, ...) 
 {
@@ -232,6 +250,10 @@ sine<-function (n, h = 33, c. = c(80, 10), l = c(30, 83), power = 0.7,
     return(rval)
 }
 
+
+#' @import grDevices
+#' @import colorRamps
+#' @import colorspace
 rte.re<-function (n, h = 3, c. = c(0, 0), l = c(2, 47), power = 1.32954545454545, 
     fixup = TRUE, gamma = NULL, alpha = 1, ...) 
 {
@@ -255,6 +277,9 @@ rte.re<-function (n, h = 3, c. = c(0, 0), l = c(2, 47), power = 1.32954545454545
     return(rval)
 }
 
+#' @import grDevices
+#' @import colorRamps
+#' @import colorspace
 trans<-function (n, h = 68, c. = c(39, 10), l = c(51, 79), power = 0.4, 
     fixup = TRUE, gamma = NULL, alpha = 1, ...) 
 {

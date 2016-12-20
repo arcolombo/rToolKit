@@ -3,7 +3,7 @@
 #' @param kexp a kallisto experiment annotated
 #' @import grDevices
 #' @import colorRamps
-#' @importFrom hex colorspace
+#' @import colorspace
 #' @import TxDbLite
 #' @import arkas
 #' @export
@@ -50,6 +50,9 @@ names(gene.color.master)<-color.df$txb
 }
 
 
+#' @import grDevices
+#' @import colorRamps
+#' @import colorspace
 dna.element<-function (n, h = -327, c. = c(100, 100), l = c(72, 87), power = 0.568181818181818, 
     fixup = TRUE, gamma = NULL, alpha = 1, ...) 
 {
@@ -74,6 +77,9 @@ dna.element<-function (n, h = -327, c. = c(100, 100), l = c(72, 87), power = 0.5
 }
 
 
+#' @import grDevices
+#' @import colorRamps
+#' @import colorspace
 line.family<-function (n, h = 280, c. = c(100, 95), l = c(50, 100), power = 0, 
     fixup = TRUE, gamma = NULL, alpha = 1, ...) 
 {
@@ -96,8 +102,11 @@ line.family<-function (n, h = 280, c. = c(100, 95), l = c(50, 100), power = 0,
     }
     return(rval)
 }
- 
 
+
+#' @import grDevices
+#' @import colorRamps
+#' @import colorspace
 ltr.family<-function (n, h = 0, c. = c(0, 0), l = c(0, 0), power = 0, fixup = TRUE, 
     gamma = NULL, alpha = 1, ...) 
 {
@@ -122,7 +131,9 @@ ltr.family<-function (n, h = 0, c. = c(0, 0), l = c(0, 0), power = 0, fixup = TR
 }
 
 
-
+#' @import grDevices
+#' @import colorRamps
+#' @import colorspace
 sine.family<-function (n, h = 245, c. = c(100, 12), l = c(41, 57), power = 0, 
     fixup = TRUE, gamma = NULL, alpha = 1, ...) 
 {
@@ -147,7 +158,9 @@ sine.family<-function (n, h = 245, c. = c(100, 12), l = c(41, 57), power = 0,
 }
 
 
-
+#' @import grDevices
+#' @import colorRamps
+#' @import colorspace
 other.family<-function (n, h = 135, c. = c(100, 100), l = c(64, 100), power = 1.27272727272727, 
     fixup = TRUE, gamma = NULL, alpha = 1, ...) 
 {

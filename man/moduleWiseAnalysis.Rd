@@ -30,7 +30,15 @@ moduleWiseAnalysis(kexp, lnames, rnames,
 
 \item{how}{either cpm or tpm, tpm recommended for heatmap visualizations}
 
+\item{enrichmentCaller}{either go or qusage, for some cases go enrichment is an interest to study}
+
+\item{comparison1}{this is the first comparison group the comparison key is in lower case letters 'mds' etc.}
+
+\item{comparison2}{this is the second comparison group, if there is only 1 comparison group, then leave this as "blast"; the method will query the 'blast' contrast and come up with an empty set and discard it.}
+
 \item{openDevice}{boolean if true then the images are opened on a device along with printing to pdf.  should be false for exploring all colors}
+
+\item{p.value}{an interger significance alpha level}
 
 \item{repeat.cutoff}{the cpm floor threshold if the cut off filters out elements that were not filtered in the wgcna method call, this will fail.  you must match the read.cutoff in the wgcna data base.}
 }

@@ -12,7 +12,8 @@ wrcna(kexp, read.cutoff = 2, minBranch = 2, whichWGCNA = c("single",
   "Repetitive element", "satellite", "snRNA", "SVA", "TcMar", "telo",
   "Transposable Element", "Satellite"), useAllBiotypes = FALSE,
   tmm.norm = TRUE, useBiCor = TRUE, how = c("cpm", "tpm"),
-  batchNormalize = FALSE, batchVector = NULL, design = NULL)
+  batchNormalize = FALSE, batchVector = NULL, design = NULL,
+  copyNormalize = TRUE)
 }
 \arguments{
 \item{kexp}{a kexp 2 group stage is preferred}
@@ -30,6 +31,8 @@ wrcna(kexp, read.cutoff = 2, minBranch = 2, whichWGCNA = c("single",
 \item{intBiotypes}{character the tx_biotypes of interest}
 
 \item{useAllBiotypes}{boolean if false then intBiotypes are used, if true than the correlations are checked against all tx_biotypes}
+
+\item{copyNormalize}{boolean, if true will execute copyNumberNormalize to normalize the repeat biotype counts by the copy number summation of the corresponding family type copy numbers find from repBase.}
 
 \item{entrezOnly}{boolean, soon to be deprecated because entrez is auto filtered when enrichment testing}
 }

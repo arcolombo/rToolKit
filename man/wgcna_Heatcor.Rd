@@ -7,7 +7,8 @@
 wgcna_Heatcor(lnames = NULL, rnames = NULL, read.cutoff = 1,
   recalc = FALSE, how = how, pathwaysToPick = c("immune", "inflam",
   "apopto", "death", "kappab", "wound"), pathPairing = c(1, 1, 2, 2, 3, 4),
-  dbname = NULL, qdbname = NULL, rdbname = NULL)
+  dbname = NULL, qdbname = NULL, rdbname = NULL, p.value = 1,
+  minRank = 0)
 }
 \arguments{
 \item{lnames}{this is the results from wgcna.R}

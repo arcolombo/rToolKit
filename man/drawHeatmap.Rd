@@ -5,7 +5,8 @@
 \title{Draws a heatmap with annotations}
 \usage{
 drawHeatmap(kexp, tags = NULL, annotations = TRUE, byType = c("counts",
-  "tpm"), cutoff = 2)
+  "tpm"), cutoff = 2, title1 = NULL, tx_biotype_color_master = NULL,
+  gene_biotype_color_master = NULL)
 }
 \arguments{
 \item{kexp}{a kallistoExperiment}
@@ -15,6 +16,10 @@ drawHeatmap(kexp, tags = NULL, annotations = TRUE, byType = c("counts",
 \item{annotations}{boolean  to include annotation side bar, or mutation type}
 
 \item{cutoff}{integer  cutoff min}
+
+\item{tx_biotype_color_master}{a csv of the master color list to be reused across heatmaps for tx biotypes independent of R session}
+
+\item{gene_biotype_color_master}{a csv of the master color list to be reused across heatmaps for gene biotype independent of R session.}
 }
 \description{
 draws a heatmap with annotations useful
