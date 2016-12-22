@@ -25,3 +25,5 @@ moduleWiseAnalysis(kexp,dbname....)
 
 repeatWiseAnalysis(kexp..)
 
+
+topHubGenes(kexp,lnames,topNumber=25)
