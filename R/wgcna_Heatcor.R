@@ -101,7 +101,10 @@ colnames(df_annot)[i+1]<-names(xN)[i]
   x.pv<-pvclust(moduleTraitCor2,nboot=100)
   colnames(moduleTraitCor2)<-gsub("Repetitive element","Rptv. Element",colnames(moduleTraitCor2))
   colnames(moduleTraitCor2)<-gsub("Endogenous Retrovirus","Endg. Retrovirus",colnames(moduleTraitCor2))
-  heatCor<-Heatmap(moduleTraitCor2,column_names_gp=gpar(fontsize=10),cluster_columns=x.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="cor(x)", column_title = paste0("Module-Repeat ",how," Biotype relationships (*<0.05)"),cell_fun=function(j,i,x,y,w,h,col){
+  heatCor<-Heatmap(moduleTraitCor2,column_names_gp=gpar(fontsize=10),cluster_columns=x.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="correlation(x)", 
+   heatmap_legend_param=list(color_bar="continuous"),
+   column_title = paste0("Module-Repeat ",how," Biotype relationships (*<0.05)"),
+        cell_fun=function(j,i,x,y,w,h,col){
         weighted.Pvalue<-corPvalueStudent(moduleTraitCor2,nSamples)
                    if(weighted.Pvalue[i,j]<0.05){
                  #  grid.text(sprintf("%.3f", weighted.Pvalue[i,j]),x,y)

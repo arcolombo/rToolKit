@@ -44,7 +44,7 @@ drawHeatmap<-function(kexp,tags=NULL,annotations=TRUE,byType=c("counts","tpm"),c
       }
 
 
-   write.csv(tags,file="drawHeatmap.repeat_top_tags.csv")
+   write.csv(tags,file=paste0(title1,"_drawHeatmap.repeat_top_tags.csv"))
    byType<-match.arg(byType,c("counts","tpm"))
     if(byType=="tpm"){
    rpt.tpm<-collapseTpm(kexp,"tx_id")
@@ -96,7 +96,7 @@ drawHeatmap<-function(kexp,tags=NULL,annotations=TRUE,byType=c("counts","tpm"),c
 
  draw(rh.rpt+rA+rA2)
  readkey()
- pdf(paste0("Repeat_Heatmap_",byType,".pdf"))
+ pdf(paste0(title1,"_Repeat_Heatmap_",byType,".pdf"))
   print(rh.rpt+rA+rA2)
   dev.off()
  } else {
@@ -108,7 +108,7 @@ drawHeatmap<-function(kexp,tags=NULL,annotations=TRUE,byType=c("counts","tpm"),c
    
  draw(rh.rpt)
   readkey()
- pdf(paste0("Repeat_Heatmap_",byType,".pdf"))
+ pdf(paste0(title1,"_Repeat_Heatmap_",byType,".pdf"))
   print(rh.rpt)
   dev.off()
   }

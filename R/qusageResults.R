@@ -4,19 +4,11 @@
 #' @import arkas
 #' @import edgeR
 #' @export
-qusageResults<-function(kexp,geneSetPath="~/Documents/Arkas-Paper-Data/MSigDB/MsigDb_all/",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),how=c("cpm","tpm"),species=c("Homo.sapiens"),comparison=c("pHSC","Blast"),controls="LSC", keyWords=c("immun","inflam","apopto","death","kappab","wound"),showPlots=FALSE,comparisonNumber=1,paired=FALSE,read.cutoff=2) {
+qusageResults<-function(kexp,geneSetPath="~/Documents/Arkas-Paper-Data/MSigDB/MsigDb_all/",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),how=c("cpm","tpm"),species=c("Homo.sapiens"),comparison=c("pHSC","Blast"),controls="LSC", keyWords=c("immun","inflam","apopto","death","kappab","wound"),showPlots=FALSE,comparisonNumber=1,Pathwaytitle=c("Apoptotic","Immune","Inflammation"),paired=FALSE,read.cutoff=2){
  ###the plots picked here must match the pathways picked exactly by heat Cor
- ## pp<- pickPathway(qusageDbLite(qdbname),keyWord="immun")
-  ##pp2<-sapply(pp,function(x) unique(x$pathway_name))
-  ##unique_names <-unique(unlist(pp2))
-  ##uni_names<-unique_names[!grepl(keyWords,unique_names)]
-  ##uni_names has all the pathway activations for keyWords i that is used in calculating the activation direction in HeatCor image. 
-  ##fix me: add a loop here to programmatically query the stage-level pathway analysis to match/search for the pathways found in the module pathway analysis
  #########
   ###TO DO: print everything to a table
 
-
-# geneSet<-match.arg(MsigDB,c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"))
   ##only controlling for specific comparison types for now  ###FIX ME: generalize
  geneSet<-MsigDB
   comparison<-match.arg(comparison,c("pHSC","Blast","RAEB","MDS"))
@@ -42,6 +34,8 @@ counts<-collapseBundles(phsc.lsc,"gene_name",read.cutoff=read.cutoff)
 
    contrast<-paste0(comparison,"-",controls)
    geneSets<-read.gmt(paste0(geneSetPath,geneSet))
+  ##alphabetical order the geneSets must be
+    geneSets<-geneSets[sort(names(geneSets))]
 
    if(paired==TRUE){
    pairs<-unlist(lapply(cN,function(x) x[2]))
@@ -52,8 +46,18 @@ counts<-collapseBundles(phsc.lsc,"gene_name",read.cutoff=read.cutoff)
   }
   ##pathway indices : inflam  903, immune 394,410 ,wound 831, mapK 865,494, 
   if(showPlots==TRUE){
-   plot(qs.pHSC.results)
-   title(paste0("Global Pathway ",comparison,"-",controls))
+  qstab<-qsTable(qs.pHSC.results)
+  t<-data.frame(qstab[,2:4])
+  rownames(t)<-as.character(qstab$pathway.name)
+  rownames(t)[ which(t$p.Value<=0.05)]<-paste0(rownames(t)[ which(t$p.Value<=0.05)],"**")
+  rownames(t)<-tolower(rownames(t))
+  rownames(t)<-paste0(toupper(substring(rownames(t),1,1)),substring(rownames(t),2))
+  t<- t[order(rownames(t)),]
+  par(cex.main=0.95,family='Helvetica') 
+  plot(qs.pHSC.results,col=1:nrow(t), main=paste0("Differential Enrichment of ",Pathwaytitle[1],", ",Pathwaytitle[2],", and ",Pathwaytitle[3]," Canonical Pathways"),xlab="Differential Pathway Enrichment Level",ylab="Distribution of Canonical Gene Set Activity"  )
+ legend("topleft",legend=rownames(t),col=1:nrow(t),pch=0.8,cex=0.99,bty='n',title=expression("Significant Enrichment **p.val" <= "0.05"))
+ mtext(paste0("Pairwise Comparison ",contrast),cex=0.95)
+ # title(paste0("Differential Enrichment Activity of Apoptotic, Inflammatory, and Immune Canonical Gene Sets Comparing",comparison,"-",controls))
    readkey()
    }
 
@@ -72,29 +76,41 @@ counts<-collapseBundles(phsc.lsc,"gene_name",read.cutoff=read.cutoff)
   if(length(sigId)>0){
   tp3[sigId]<-paste0(tp3[sigId],"**")
   }
- if(i=="immun"){
+  tp3<-tolower(tp3)
+  tp3<-paste0(toupper(substring(tp3,1,1)),substring(tp3,2))
+ 
+  
+  if(i=="immun"){
   tp3<-gsub("IMMUNE_","",tp3)
-  legendTitle<-"Immune Pathways ** pvalue<=0.05"
+  legendTitle<-"Immune"
   }else if(i=="inflam"){
-  legendTitle<-"Inflammatory Pathways ** pvalue<=0.05"
+  legendTitle<-"Inflammation"
   }else if(i=="apopto"){
-  legendTitle<-"Apoptotic Pathways ** pvalue<=0.05"
+  legendTitle<-"Apoptotic"
   }else if(i=="death"){
-  legendTitle<-"Programmed Cell Death ** pvalue<=0.05"
+  legendTitle<-"Programmed Cell Death"
   }else if(i=="kappab"){
-  legendTitle<-"NF Kappab ** pvalue<=0.05"
+  legendTitle<-"NF Kappab"
   }else if(i=="wound"){
-  legendTitle<-"Wound Healing ** pvalue<=0.05"
-  }
- plotDensityCurves(qs.pHSC.results,path.index=pathIndex,xlim=c(-2,2),col=1:length(pathIndex),main=paste0("Enriched Immune System Pathway ",contrast)  )
- legend("topleft",legend=tp3,col=1:length(tp3),pch=0.8,cex=0.6,bty='n',title=legendTitle)
+  legendTitle<-"Wound Healing"
+}
+
+
+  par(cex.main=0.95,family='Helvetica')
+ plotDensityCurves(qs.pHSC.results,path.index=pathIndex,xlim=c(-2,2),col=1:length(pathIndex),main=paste0("Differential Enrichment of ",legendTitle," Canonical Pathway"),xlab="Differential Pathway Enrichment Level",ylab="Distribution of Canonical Gene Set Activity")
+  legend("topleft",legend=tp3,pch=0.8,cex=0.99,bty='n',title=expression("Significant Enrichment **p.val" <= "0.05"))
+   mtext(paste0("Pairwise Comparison ",contrast),cex=0.95)
+
+
   readkey()
   for(j in pathIndex){
-  par(mar=c(12,5.3,2,2),mfrow=c(1,1),cex.main=0.44)
-  plotDensityCurves(qs.pHSC.results,path.index=j,xlim=c(-2,2),main=paste0(x[which(rownames(x)== j),1]," ",contrast))
-  legend("topleft",legend=signif(x[which(rownames(x)==j),3],2),bty='n',cex=0.6,pch=0.8,title="p.value" )
-  plotCIsGenes(qs.pHSC.results,path.index=j, main=paste0(x[which(rownames(x)== j),1]," ",contrast) )
+  par(mar=c(12,5.3,2,2),mfrow=c(1,1),cex.main=0.44,family='Helvetica',cex.lab=0.6)
+  x11(width=12,height=6)
+ # plotDensityCurves(qs.pHSC.results,path.index=j,xlim=c(-2,2),main=paste0(x[which(rownames(x)== j),1]," ",contrast))
+ # legend("topleft",legend=signif(x[which(rownames(x)==j),3],2),bty='n',cex=0.6,pch=0.8,title="p.value" )
+  plotCIsGenes(qs.pHSC.results,path.index=j, main=paste0(x[which(rownames(x)== j),1]," ",contrast),pch=18,cex.xaxis=0.6,ylab="Differential Canonical Gene Set Activity" )
   readkey()
+ write.csv(qs.pHSC.results$mean[qs.pHSC.results$pathways[[pathIndex]]],file=paste0("qusage.GeneSet.",contrast,".",names(qs.pHSC.results$pathways)[j],".csv"))
  ##its own page
  shortTitle<-unlist(strsplit(as.character(x[which(rownames(x)== j),1]),"_"))
  if(length(shortTitle)>=3){
