@@ -29,17 +29,31 @@ modulesA1<-lnames[["moduleColors"]]
 #### within gene module top rank calculations
   topGenesKME<-NULL
   for(i in 1:ncol(gm1)){
+  if(i%%31==0){
+    cat(paste(".",""))
+  }
   gm.id<-which(colnames(kMEtable1)==colnames(gm1)[i])
   gm.pvalue.id<-which(colnames(kMEtable1)==paste0("p.val.",colnames(gm1)[i]))
   kMErank1<-rank(gm1[,i],ties.method="average")
   index.range<-NULL
-   ##pick the 1:topNumber of top connected gene members in a module.  this should prolly be a while loop, {while length(topGenesKME)<=topNumber}
+   ##pick the 1:topNumber of top connected gene members in a module. 
+  ##unique ranks will filter out the ties.
   for(j in 1:length(kMErank1)){
   rank.range<-unique(sort(kMErank1,decreasing=TRUE))[j]
+   ##we use unique to find the range of the ranks
+   ##if NA
+   if(j%%71==0){
+    cat(paste(".",""))
+  }
+
+   if(is.na(rank.range)==TRUE){
+    next
+   }
   if(length(index.range)>topNumber){
    break
    }
-      ind.x<-which(kMErank1==rank.range)
+   #now we find which kMErank1 elements match the jth rank in the range
+      ind.x<-which(kMErank1==rank.range) 
      for(k in 1:length(ind.x)){
   ## ensure that the top ranked members were actually assigned to the module.
       if(kMEtable1[ind.x[k],]$Module==colnames(gm1)[i]){
