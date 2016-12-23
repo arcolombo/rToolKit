@@ -28,4 +28,7 @@ repeatWiseAnalysis(kexp..)
 
 patientTrioPlot(kexp,printWhat="pdf")
 
+drawBoxPlots(kexpByTrio(kexp),numberComparisons=2,read.cutoff=1,adjustBy="none",wilcox.Alternative="greater",testMedians=TRUE,title1="Absolute Differential Transposable Element Activity Comparing ",ylab1=ylab1,xlab1=xlab1,xlab2=xlab2)
+
+
 topHubGenes(kexp,lnames,topNumber=25)
