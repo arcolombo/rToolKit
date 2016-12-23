@@ -15,7 +15,7 @@
 #' @import ggplot2
 #' @import grid
 #' @export
-drawBoxPlots<-function(kexp,comparison="pHSC",control="LSC",comparison2="Blast",numberComparisons=1,read.cutoff=3,adjustBy="BH",wilcox.Alternative=c("less","greater"),grob.comparison1=paste0("Median(",control,")<Median(",comparison,") p.value: "),grob.comparison2=paste0("Median(",control,")<Median(",comparison2,") p.value: ") ,testMedians=FALSE,title1=NULL,xlab1=NULL,ylab1,xlab2=NULL  ){
+drawBoxPlots<-function(kexp,comparison="pHSC",control="LSC",comparison2="Blast",numberComparisons=1,read.cutoff=3,adjustBy="BH",wilcox.Alternative=c("less","greater"),grob.comparison1=paste0("Median(",control,")<Median(",comparison,") p.value: "),grob.comparison2=paste0("Median(",control,")<Median(",comparison2,") p.value: ") ,testMedians=FALSE,title1=NULL,xlab1=NULL,ylab1=NULL,xlab2=NULL  ){
   if(is.null(title1)==TRUE){
    title1<-"Differential Expression Boxplot"
   }
@@ -73,12 +73,12 @@ pp1<-pp1+xlab(xlab1)+ylab(ylab1)+guides(fill=guide_legend(title="Clonal Stages")
 
 
   if(testMedians==FALSE){
-  pp<-(ggplot(dat,aes(x=Stage,y=logFC,fill=Stage ))+ggtitle(paste0("Differential Repeat Expression |logFC| ",comparison2,"-",control))+scale_fill_manual(values=c("lightblue","red"))+stat_boxplot(aes(Stage,logFC),geom='errorbar',linetype=1,width=0.5)+geom_boxplot(aes(Stage,logFC),outlier.colour=NA)+stat_summary(aes(Stage,logFC),fun.y=mean,geom="point",size=2)+stat_summary(aes(Stage,logFC),fun.data=mean_se,geom="errorbar",width=0.74 ))
+  pp<-(ggplot(dat,aes(x=Stage,y=logFC,fill=Stage ))+ggtitle(paste0("Differential Repeat Expression |logFC| ",comparison2,"-",control))+scale_fill_manual(values=c("red","lightblue"))+stat_boxplot(aes(Stage,logFC),geom='errorbar',linetype=1,width=0.5)+geom_boxplot(aes(Stage,logFC),outlier.colour=NA)+stat_summary(aes(Stage,logFC),fun.y=mean,geom="point",size=2)+stat_summary(aes(Stage,logFC),fun.data=mean_se,geom="errorbar",width=0.74 ))
    pp<-pp+geom_point(position=position_jitter(width=0.2),alpha=0.4 )
   print(pp)
    }else if(testMedians==TRUE){
    #my_grob= grobTree(textGrob(paste0(grob.comparison2,wilcox.pvalue2 ),x=0.7,y=0.95,gp=gpar(col="black",fontsize=10,fontface="italic")))
-  pp<-(ggplot(dat,aes(x=Stage,y=logFC,fill=Stage ))+ggtitle(paste0(title2," ",comparison2,"-",control),subtitle=paste0(grob.comparison2,wilcox.pvalue2 ) )+scale_fill_manual(values=c("lightblue","red"))+stat_boxplot(aes(Stage,logFC),geom='errorbar',linetype=1,width=0.5)+geom_boxplot(aes(Stage,logFC),outlier.colour=NA))# + annotation_custom(my_grob,ymax=6,xmax=2 ) )
+  pp<-(ggplot(dat,aes(x=Stage,y=logFC,fill=Stage ))+ggtitle(paste0(title2," ",comparison2,"-",control),subtitle=paste0(grob.comparison2,wilcox.pvalue2 ) )+scale_fill_manual(values=c("red","lightblue"))+stat_boxplot(aes(Stage,logFC),geom='errorbar',linetype=1,width=0.5)+geom_boxplot(aes(Stage,logFC),outlier.colour=NA))# + annotation_custom(my_grob,ymax=6,xmax=2 ) )
   pp<-pp+xlab(xlab2)+ylab(ylab1)+guides(fill=guide_legend(title="Clonal Stages"))
 
   pp<-pp+geom_point(position=position_jitter(width=0.2),alpha=0.4,show.legend=FALSE ) 
