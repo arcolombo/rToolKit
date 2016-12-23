@@ -20,9 +20,9 @@ qusageResults<-function(kexp,geneSetPath="~/Documents/Arkas-Paper-Data/MSigDB/Ms
    phsc.lsc<-kexp2Group(kexp,comparison=comparison,control=controls)
    }
 
-counts<-collapseBundles(phsc.lsc,"gene_name",read.cutoff=read.cutoff)
+  counts<-collapseBundles(phsc.lsc,"gene_name",read.cutoff=read.cutoff)
   ##BSN
- counts<-counts[,which(colSums(counts)>1)]
+  counts<-counts[,which(colSums(counts)>1)]
    dge<-DGEList(counts=counts)
    dge<-calcNormFactors(dge)
    expr<-cpm(dge,normalized.lib.sizes=TRUE,log=FALSE)
@@ -49,13 +49,16 @@ counts<-collapseBundles(phsc.lsc,"gene_name",read.cutoff=read.cutoff)
   qstab<-qsTable(qs.pHSC.results)
   t<-data.frame(qstab[,2:4])
   rownames(t)<-as.character(qstab$pathway.name)
-  rownames(t)[ which(t$p.Value<=0.05)]<-paste0(rownames(t)[ which(t$p.Value<=0.05)],"**")
+    t<- t[order(rownames(t)),]
+   alpha<-which(t$p.Value<=0.05)
+ # rownames(t)[ which(t$p.Value<=0.05)]<-paste0(rownames(t)[ which(t$p.Value<=0.05)],"**")
+    pchLabels<-as.numeric(rep(0,nrow(t)))
+    pchLabels[alpha]<-8
   rownames(t)<-tolower(rownames(t))
   rownames(t)<-paste0(toupper(substring(rownames(t),1,1)),substring(rownames(t),2))
-  t<- t[order(rownames(t)),]
   par(cex.main=0.95,family='Helvetica') 
   plot(qs.pHSC.results,col=1:nrow(t), main=paste0("Differential Enrichment of ",Pathwaytitle[1],", ",Pathwaytitle[2],", and ",Pathwaytitle[3]," Canonical Pathways"),xlab="Differential Pathway Enrichment Level",ylab="Distribution of Canonical Gene Set Activity"  )
- legend("topleft",legend=rownames(t),col=1:nrow(t),pch=0.8,cex=0.99,bty='n',title=expression("Significant Enrichment **p.val" <= "0.05"))
+ legend("topleft",legend=rownames(t),col=1:nrow(t),pch=pchLabels,cex=0.99,bty='n',title=expression("Significant Enrichment *p.val" <= "0.05"))
  mtext(paste0("Pairwise Comparison ",contrast),cex=0.95)
  # title(paste0("Differential Enrichment Activity of Apoptotic, Inflammatory, and Immune Canonical Gene Sets Comparing",comparison,"-",controls))
    readkey()
