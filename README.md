@@ -26,4 +26,6 @@ moduleWiseAnalysis(kexp,dbname....)
 repeatWiseAnalysis(kexp..)
 
 
+patientTrioPlot(kexp,printWhat="pdf")
+
 topHubGenes(kexp,lnames,topNumber=25)
