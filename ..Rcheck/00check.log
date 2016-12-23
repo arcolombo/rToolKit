@@ -1,0 +1,19 @@
+* using log directory ‘/home/arcolombo/Documents/github_repos/repeatToolKit/..Rcheck’
+* using R version 3.3.2 (2016-10-31)
+* using platform: x86_64-pc-linux-gnu (64-bit)
+* using session charset: UTF-8
+* checking for file ‘./DESCRIPTION’ ... OK
+* checking extension type ... Package
+* this is package ‘repeatToolKit’ version ‘1.0.1’
+* checking package namespace information ... OK
+* checking package dependencies ... ERROR
+Namespace dependencies not required:
+  ‘DBI’ ‘GenomeInfoDb’ ‘GenomicRanges’ ‘RUVSeq’ ‘Rsamtools’ ‘S4Vectors’
+  ‘TxDbLite’ ‘WGCNA’ ‘biomaRt’ ‘circlize’ ‘cluster’ ‘colorRamps’
+  ‘colorspace’ ‘dendsort’ ‘ensembldb’ ‘fitdistrplus’ ‘ggplot2’ ‘gplots’
+  ‘gridExtra’ ‘logspline’ ‘methods’ ‘plyr’ ‘pvclust’ ‘qusage’ ‘scales’
+
+See section ‘The DESCRIPTION file’ in the ‘Writing R Extensions’
+manual.
+* DONE
+Status: 1 ERROR
