@@ -22,7 +22,7 @@ Imports:
     quantreg,
     tseries,
     mclust
-Author: Anthony Colombo, Dylan Rieder, Jamie Thomas, Chad Muska
+Author: Anthony Colombo, Dylan Rieder, Jamie Thomas, Annie Lennox
 Maintainer: Anthony R. Colombo <anthonycolombo60@gmail.com>
 Description: This will split the kallisto experiment by patient id, and use
     beeswarm to plot scatter plots, returning statistics on each clonal stage of

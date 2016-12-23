@@ -42,13 +42,14 @@ y<-c(as.vector(m[1,]),as.vector(m[2,]),as.vector(m[3,]))
  pair.pHSC.LSC<-pair.T$p.value[1,1]
  pair.Blast.LSC<-pair.T$p.value[2,2]
  pair.Blast.pHSC<-pair.T$p.value[2,1]
-  pairWise.DF<-data.frame(anova=anova.pvalue,pHSC.v.LSC=pair.pHSC.LSC,Blast.v.LSC=pair.Blast.LSC,Blast.v.pHSC=pair.Blast.pHSC)
-     par(xaxt="n")
-    matplot(DF, type = c("b"),pch=1,col = c("black","green","orange","red","purple","blue","magenta")  ,main=paste0(cols," TPM Repeat Expression/Test"),ylab="Log TPM" ) #plot
-   legend("topright",legend=colnames(DF),col=c("black","green","orange","red","purple","blue","magenta") ,pch=0.8)
-  axis(1,at=seq(1,3,1),labels=FALSE)
+  pairWise.DF<-data.frame(ANOVA=anova.pvalue,pHSC.v.LSC=pair.pHSC.LSC,Blast.v.LSC=pair.Blast.LSC,Blast.v.pHSC=pair.Blast.pHSC) 
+  x11(width=8,height=8)
+     par(mar=par()$mar+c(0,0,0,5),family='Helvetica',xpd=TRUE,cex.main=1)
+    matplot(DF, type = c("b"),pch=1,col = c("black","green","orange","red","purple","blue","magenta")  ,xaxt='n',xlab=NA,main=paste0("'",cols,"' Transposable Element Family ANOVA Across Clonal Stages"),ylab="Transposable Element Expression Level (Log TPM)" ) #plot
+   legend("topright",legend=colnames(DF),col=c("black","green","orange","red","purple","blue","magenta") ,pch=0.8,title="Patient ID",inset=c(-0.2,0))
+  axis(1,at=seq(1,3,1),labels=c(stage1,stage2,stage3))
   lablist.x<-c(stage1,stage2,stage3)
- text(x=seq(1,3,1),par("usr")[3]-0.2,labels=lablist.x,xpd=TRUE,srt=45,pos=1)
+ # text(x=seq(1,3,1),(par("mgp")[1]-3.4),labels=lablist.x,xpd=TRUE,srt=45,pos=1,cex=1.2)
 
  ### anova stats
  legend("top",legend=paste0(colnames(pairWise.DF),": ",signif(pairWise.DF,1)),pch=1,title="Adj.P.Values" )
@@ -63,28 +64,32 @@ y<-c(as.vector(m[1,]),as.vector(m[2,]),as.vector(m[3,]))
    leadTitle<-gsub("/","",cols)
    leadTitle<-gsub(" ","_",leadTitle)
    if(printWhat=="pdf"){
-   pdf(paste0(leadTitle,"patientTrio_RepeatPlot.pdf"))
-    par(xaxt="n")
-    matplot(DF, type = c("b"),pch=1,col = c("black","green","orange","red","purple","blue","magenta")  ,main=paste0(cols," TPM Repeat Expression/Test"),ylab="Log TPM" ) #plot
-   legend("topright",legend=colnames(DF),col=c("black","green","orange","red","purple","blue","magenta") ,pch=0.8)
-  axis(1,at=seq(1,3,1),labels=FALSE)
-  lablist.x<-c(stage1,stage2,stage3)
- text(x=seq(1,3,1),par("usr")[3]-0.2,labels=lablist.x,xpd=TRUE,srt=45,pos=1)
-
- ### anova stats
+   pdf(paste0(leadTitle,"patientTrio_RepeatPlot.pdf"),family='Helvetica',height=8,width=9)
+    
+  par(mar=par()$mar+c(0,0,0,5),family='Helvetica',xpd=TRUE,cex.main=1)
+    matplot(DF, type = c("b"),pch=1,col = c("black","green","orange","red","purple","blue","magenta")  ,xaxt='n',xlab=NA,main=paste0("'",cols,"' Transposable Element Family ANOVA Across Clonal Stages"),ylab="Transposable Element Expression Level (Log TPM)" ) #plot
+   legend("topright",legend=colnames(DF),col=c("black","green","orange","red","purple","blue","magenta") ,pch=0.8,title="Patient ID",inset=c(-0.2,0))
+  axis(1,at=seq(1,3,1),labels=c(stage1,stage2,stage3))
+ 
+  ### anova stats
  legend("top",legend=paste0(colnames(pairWise.DF),": ",signif(pairWise.DF,1)),pch=1,title="Adj.P.Values" )
   dev.off()
   }else{
    jpeg(paste0(leadTitle,"patientTrio_RepeatPlot.jpeg"))
- par(xaxt="n")
-    matplot(DF, type = c("b"),pch=1,col = c("black","green","orange","red","purple","blue","magenta")  ,main=paste0(cols," TPM Repeat Expression/Test"),ylab="Log TPM" ) #plot
-   legend("topright",legend=colnames(DF),col=c("black","green","orange","red","purple","blue","magenta") ,pch=0.8)
-  axis(1,at=seq(1,3,1),labels=FALSE)
+ 
+ par(mar=par()$mar+c(0,0,0,5),family='Helvetica',xpd=TRUE,cex.main=1)
+    matplot(DF, type = c("b"),pch=1,col = c("black","green","orange","red","purple","blue","magenta")  ,xaxt='n',xlab=NA,main=paste0("'",cols,"' Transposable Element Family ANOVA Across Clonal Stages"),ylab="Transposable Element Expression Level (Log TPM)" ) #plot
+   legend("topright",legend=colnames(DF),col=c("black","green","orange","red","purple","blue","magenta") ,pch=0.8,title="Patient ID",inset=c(-0.2,0))
+  axis(1,at=seq(1,3,1),labels=c(stage1,stage2,stage3))
   lablist.x<-c(stage1,stage2,stage3)
- text(x=seq(1,3,1),par("usr")[3]-0.2,labels=lablist.x,xpd=TRUE,srt=45,pos=1)
+ # text(x=seq(1,3,1),(par("mgp")[1]-3.4),labels=lablist.x,xpd=TRUE,srt=45,pos=1,cex=1.2)
+
  ### anova stats
  legend("top",legend=paste0(colnames(pairWise.DF),": ",signif(pairWise.DF,1)),pch=1,title="Adj.P.Values" )
+
+
   dev.off()
     }##Jpeg
   } ##tx biotypes
+  cat("done.\n")
 }##main
