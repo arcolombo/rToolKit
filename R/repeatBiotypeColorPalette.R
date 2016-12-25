@@ -20,16 +20,49 @@ color.df[  c(grep("acromeric",color.df$txb,ignore.case=TRUE),grep("centromeric",
  color.df[c(grep("Alu",color.df$txb,ignore.case=FALSE),grep("SVA",color.df$txb  ))  ,]$palette<-alu.sva(alu.group )
 
  #erv colors
- erv.group<-length(c(grep("ERV",color.df$txb),grep("Endogenous Retrovirus",color.df$txb)) )
- color.df[c( grep("Endogenous Retrovirus",color.df$txb),grep("ERV",color.df$txb)),]$palette<-ervs(erv.group)
+ endg.group<-length(grep("Endogenous Retrovirus",color.df$txb))
+ color.df[c( grep("Endogenous Retrovirus",color.df$txb)),]$palette<-rgb(t(col2rgb(colors()[c(28)])),maxColorValue=255)
+
+  erv1.group<-length(which(color.df$txb=="ERV1"))
+ color.df[which(color.df$txb=="ERV1"),]$palette<-rgb(t(col2rgb(colors()[c(565)])),maxColorValue=255)
+
+ erv3.group<-length(which(color.df$txb=="ERV3"))
+ color.df[which(color.df$txb=="ERV3"),]$palette<-rgb(t(col2rgb(colors()[c(114)])),maxColorValue=255)
+
+ ervk.group<-length(which(color.df$txb=="ERVK"))
+ color.df[which(color.df$txb=="ERVK"),]$palette<-rgb(t(col2rgb(colors()[c(553)])),maxColorValue=255)
+
+ ervl.group<-length(which(color.df$txb=="ERVL"))
+ color.df[which(color.df$txb=="ERVL"),]$palette<-rgb(t(col2rgb(colors()[c(141)])),maxColorValue=255)
+
 
  ##EUTR Colors
   eutr.group<-length(grep("EUTR",color.df$txb,ignore.case=TRUE))
   color.df[grep("EUTR",color.df$txb,ignore.case=TRUE),]$palette<-eutr(eutr.group)
 
   ##L1 Colors
-  l1.group<-length( c(grep("L1",color.df$txb),grep("L2",color.df$txb),grep("LTR Retrotransposon",color.df$txb)))
-color.df[  c(grep("L1",color.df$txb),grep("L2",color.df$txb),grep("LTR Retrotransposon",color.df$txb))   ,]$palette<-l1(l1.group)
+  l1.group<-length( c(grep("L1",color.df$txb)))
+color.df[ which(color.df$txb=="L1"),]$palette<-rgb(t(col2rgb(colors()[c(139)])),maxColorValue=255)
+
+ l2.group<-length( c(grep("L2",color.df$txb)))
+color.df[ which(color.df$txb=="L2"),]$palette<-rgb(t(col2rgb(colors()[c(373)])),maxColorValue=255)
+
+#LTR
+#Dark grey
+ltr.group<-length( c(grep("LTR Retrotransposon",color.df$txb)))
+color.df[ which(color.df$txb=="LTR Retrotransposon"),]$palette<-rgb(t(col2rgb(colors()[c(629)])),maxColorValue=255)
+
+#CR1
+#magenta
+cr1.group<-length( c(grep("CR1",color.df$txb)))
+color.df[ which(color.df$txb=="CR1"),]$palette<-rgb(t(col2rgb(colors()[c(451)])),maxColorValue=255)
+
+#MULE
+#bright green
+mule.group<-length( c(grep("MULE",color.df$txb)))
+color.df[ which(color.df$txb=="MULE"),]$palette<-rgb(t(col2rgb(colors()[c(393)])),maxColorValue=255)
+
+
 
   ##SAT colors
   sat.group<-length( c(grep("SAT",color.df$txb),grep("satellite",color.df$txb,ignore.case=TRUE)  )) 
@@ -46,8 +79,19 @@ color.df[c(grep("Repetitive element",color.df$txb),grep("RTE",color.df$txb,ignor
 
 
  ##Transposable elements
+ #brown/green and light grey
   trans.group<-length( c(grep("DNA transposon",color.df$txb),grep("Transposable Element",color.df$txb)  ))
  color.df[c(grep("DNA transposon",color.df$txb),grep("Transposable Element",color.df$txb)  )  ,]$palette<-trans(trans.group  )
+
+ ##bright green and dark purple
+  tc.group<-length( c(grep("TcMar",color.df$txb),grep("Mariner/Tc1",color.df$txb)  ))
+ color.df[c(grep("Mariner/Tc1",color.df$txb),grep("TcMar",color.df$txb)),]$palette<-rgb(t(col2rgb(colors()[c(254,551)])),maxColorValue=255)
+
+
+ ##red and orange
+ mer.group<-length( c(grep("Merlin",color.df$txb),grep("MIR",color.df$txb)  ))
+ color.df[c(grep("Merlin",color.df$txb),grep("MIR",color.df$txb)),]$palette<-rgb(t(col2rgb(colors()[c(503,34)])),maxColorValue=255)
+
 
 
   ##remnants
