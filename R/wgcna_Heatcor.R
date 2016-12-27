@@ -61,32 +61,32 @@ key<-data.frame(module=rownames(moduleTraitCor),id=seq(1:length(rownames(moduleT
  ###color code the rownames based on pathPairing
  ##add a legened
  ##create  a sub plot that shows the pathwaysToPick specific module Heatmap Correlations with altered significance level.
-xN<-list()
-for(i in 1:length(pathwaysToPick)){
-  xnam<-names(pickPathway(qusageDbLite(qdbname),keyWord=pathwaysToPick[i],p.value=p.value))
+  xN<-list()
+  for(i in 1:length(pathwaysToPick)){
+    xnam<-names(pickPathway(qusageDbLite(qdbname),
+                keyWord=pathwaysToPick[i],
+                p.value=p.value))
   if(length(xnam)>0){
-  xnam<-xnam[sapply(pickPathway(qusageDbLite(qdbname),keyWord=pathwaysToPick[i],p.value=p.value),function(x) median(x[which(rownames(x) !="Total"),"ranking"])>minRank)    ]
-  
-  xN[[i]]<-xnam
-  names(xN)[i]<-pathwaysToPick[i]
-  
-  xN<-xN[sapply(xN,function(x) length(x)>0)]
+  xnam<-xnam[sapply(pickPathway(qusageDbLite(qdbname),
+                    keyWord=pathwaysToPick[i],
+                    p.value=p.value),function(x) median(x[which(rownames(x) !="Total"),"ranking"])>minRank)    ]
+     xN[[i]]<-xnam
+     names(xN)[i]<-pathwaysToPick[i]
+     xN<-xN[sapply(xN,function(x) length(x)>0)]
   }
 }
 ###row Annotation left side
-df_annot<-data.frame(module=rownames(moduleTraitCor))
-rownames(df_annot)<-rownames(moduleTraitCor)
-for(i in 1:length(names(xN))){
-
-df_annot<-cbind(df_annot,-1)
-colnames(df_annot)[i+1]<-names(xN)[i]
-
- df_annot[ rownames(df_annot)%in% paste0("ME", xN[[i]]  )  ,i+1  ]<-1
-}
- df_annot$module<-NULL
- key.id1<-match(rownames(df_annot),key$module)
- rownames(df_annot)<-key$id[key.id1]
- modA<-HeatmapAnnotation(df=df_annot,which="row" )
+  df_annot<-data.frame(module=rownames(moduleTraitCor))
+  rownames(df_annot)<-rownames(moduleTraitCor)
+  for(i in 1:length(names(xN))){
+  df_annot<-cbind(df_annot,-1)
+  colnames(df_annot)[i+1]<-names(xN)[i]
+  df_annot[ rownames(df_annot)%in% paste0("ME", xN[[i]]  )  ,i+1  ]<-1
+ }
+   df_annot$module<-NULL
+   key.id1<-match(rownames(df_annot),key$module)
+   rownames(df_annot)<-key$id[key.id1]
+   modA<-HeatmapAnnotation(df=df_annot,which="row" )
 ####
   
   moduleTraitCor2<-moduleTraitCor
@@ -96,10 +96,10 @@ colnames(df_annot)[i+1]<-names(xN)[i]
 
   par(mar = c(6, 10, 3, 3));
  # Display the correlation values within a heatmap plot
-  plot.new()
- if(nrow(moduleTraitCor2)>6){
-  x.pv<-pvclust(moduleTraitCor2,nboot=100)
-  colnames(moduleTraitCor2)<-gsub("Repetitive element","Rptv. Element",colnames(moduleTraitCor2))
+   plot.new()
+   if(nrow(moduleTraitCor2)>6){
+   x.pv<-pvclust(moduleTraitCor2,nboot=100)
+   colnames(moduleTraitCor2)<-gsub("Repetitive element","Rptv. Element",colnames(moduleTraitCor2))
   colnames(moduleTraitCor2)<-gsub("Endogenous Retrovirus","Endg. Retrovirus",colnames(moduleTraitCor2))
   heatCor<-Heatmap(moduleTraitCor2,column_names_gp=gpar(fontsize=10),cluster_columns=x.pv$hclust,cluster_rows=FALSE,row_names_side="left",name="correlation(x)", 
    heatmap_legend_param=list(color_bar="continuous"),
