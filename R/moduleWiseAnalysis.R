@@ -19,7 +19,7 @@
 #' @import pvclust
 #' @import ComplexHeatmap
 #' @export
-moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sqlite",wrcnaDbName="wrcnaDbLite.cpm.sqlite",qusageDbName="qusageDbLite.cpm.sqlite", geneModules=c("darkturquoise","red","grey60","pink","darkred","royalblue","green","magenta","brown"),repeatModules=c("blue","brown","grey","turquoise"),read.cutoff=2,how="tpm",enrichmentCaller=c("go","qusage"),comparison1="phsc",comparison2="blast",openDevice=FALSE,p.value=0.1 ){
+moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sqlite",wrcnaDbName="wrcnaDbLite.cpm.sqlite",qusageDbName="qusageDbLite.cpm.sqlite", geneModules=c("darkturquoise","red","grey60","pink","darkred","royalblue","green","magenta","brown"),repeatModules=c("blue","brown","grey","turquoise"),read.cutoff=4,how="tpm",enrichmentCaller=c("go","qusage"),comparison1="phsc",comparison2="blast",openDevice=FALSE,p.value=0.1 ){
   ##FIX ME: generically handle repeat modules of various sizes.
   how<-match.arg(how,c("cpm","tpm"))
   ## gather all ENGIDs for each module.
@@ -61,7 +61,7 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
   if(nrow(pHSC)>0){
   pHSC<-data.frame(pHSC,contrast=comparison1,color=geneModules)
   }
-  blast<-pathways(qusageDbLite(qusageDbName),Module.color=geneModules,tx.Biotype=geneModules,contrast=comparison2)  
+  blast<-pathways(qusageDbLite(qusageDbName),Module.color=geneModules,tx.Biotype=geneModules,contrast=comparison2,p.value=p.value)  
   if(nrow(blast)>0){
   blast<-data.frame(blast,contrast=comparison2,color=geneModules)
   }
@@ -149,18 +149,85 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
   if(openDevice==TRUE){
   ###heatmap of module genes
  dev.new()
-  print(Heatmap(asinh(module.cpm),column_title=paste0(geneModules," (",key.id,") Module Gene Expression"),name="asinh(x)",row_names_gp=gpar(fontsize=5) ) )
+ ####Heatmap DE genes in the module 
+
+
+  m.kexp<- kexp[rowRanges(kexp)$gene_id%in%rownames(module.cpm),]
+  res<-fitBundles(m.kexp,design,bundleID="gene_name",read.cutoff=read.cutoff)
+  res$top <- with(res, topTable(fit, coef=2, p=0.05,adjust.method="none", n=nrow(kexp)))
+  ###draw heatmap with fixed colors. 
+
+
+  ########
+
+
+  tpm<-collapseTpm(m.kexp,"gene_name")
+  top.tpm<-tpm[rownames(tpm)%in%rownames(res$top),]
+   rpt.pv<-pvclust(log(1+top.tpm),nboot=100)
+  rpt.dend<-dendsort(hclust(dist(log(1+top.tpm))),isReverse=TRUE)
+  rh.rpt<-Heatmap(log(1+top.tpm),
+                  name="log(1+tpm)",
+                  cluster_rows=rpt.dend,
+                  cluster_columns=rpt.pv$hclust,
+                  column_title=paste0("Gene Module ",key.id," (",geneModules,") "," DE Gene Expression"),
+                  column_title_gp=gpar(fontsize=15),
+                 row_names_gp=gpar(fontsize=9),
+                 column_names_gp=gpar(fontsize=13),
+                 heatmap_legend_param=list(color_bar="continuous",
+                                       #legend_direction="horizontal",
+                                       legend_width=unit(5,"cm"),
+                                       title_position="lefttop"))
+
+  
+
+
+
+ # print(Heatmap(asinh(module.cpm),column_title=paste0(geneModules," (",key.id,") Module Gene Expression"),name="asinh(x)",row_names_gp=gpar(fontsize=5) ) )
  ##heatmap of repeat modules
   dev.new()
+
+   tx_biotype_color_master<-repeatBiotypeColorPalette(kexp)
+   gene_biotype_color_master<-repeatFamilyColorPalette(kexp)
+  ##call DE repeat expression using drawHeatmap
    for(colR in repeatModules){
+
   color.id<-match(repeat.module.list[[colR]]$gene_id,rownames(rpm))
-  module.color<-rpm[color.id,]
+  module.color<-rpm[color.id,] #all the repeats in the module color
   stopifnot(all(rownames(module.color)==repeat.module.list[[colR]]$gene_id)==TRUE)
+   r.title<-repeat.key[grep(paste0("ME",colR),rownames(repeat.key)),]
+   mr.kexp<- kexp[rowRanges(kexp)$tx_id%in%rownames(module.color),]
+  rps<-fitBundles(mr.kexp,design,bundleID="gene_id",read.cutoff=read.cutoff)
+  rps$top <- with(rps, topTable(fit, coef=2, p=0.05,adjust.method="none", n=nrow(kexp)))
+
+   if(nrow(rps$top)>=16){
+  colR.map<-drawHeatmap(mr.kexp,tags=rps$top,byType="tpm",title1=paste0(r.title," DE Repeat Module Expression"),tx_biotype_color_master=tx_biotype_color_master,gene_biotype_color_master=gene_biotype_color_master)  
+  }else{
   dev.new()
-  print(Heatmap(asinh(module.color),column_title=paste0(repeat.key[which(rownames(repeat.key)==paste0("ME",colR)),]," Module Repeat Expression"),name="asinh(x)",row_names_gp=gpar(fontsize=6))+Heatmap(rowRanges(rexp)$tx_biotype[rowRanges(rexp)$tx_id%in%rownames(module.color)],name="tx_biotype")+ Heatmap(rowRanges(rexp)$gene_biotype[rowRanges(rexp)$tx_id%in%rownames(module.color)],name="gene_biotype"))
-  }
- }
+  rpt.pv<-pvclust(log(1+module.color),nboot=100)
+  rpt.dend<-dendsort(hclust(dist(log(1+module.color))),isReverse=TRUE)
+  non.de.map<-Heatmap(log(1+module.color),
+    column_title=paste0(repeat.key[which(rownames(repeat.key)==paste0("ME",colR)),]," Module Repeat Expression"),
+         name="log(1+x)",
+         cluster_rows=rpt.dend,
+         cluster_columns=rpt.pv$hclust,
+         row_names_gp=gpar(fontsize=8),
+          column_names_gp=gpar(fontsize=9))
+
+ txb.df<-data.frame(transcript_biotype=rowRanges(kexp)[rownames(module.color)]$tx_biotype)
+ txb.sel.col=list(transcript_biotype=tx.color.master)
+ id2<-names(txb.sel.col[[1]])%in%rowRanges(kexp)[rownames(module.color)]$tx_biotype
+ rA<-rowAnnotation(txb.df,col=list(transcript_biotype=(txb.sel.col[[1]][id2])))
+
+ gn.df<-data.frame(gene_biotype=rowRanges(kexp)[rownames(module.color)]$gene_biotype)
+ gn.sel.col=list(gene_biotype=gn.color.master)
+ id3<-names(gn.sel.col[[1]])%in%rowRanges(kexp)[rownames(module.color)]$gene_biotype
+ rA2<-rowAnnotation(gn.df,col=list(gene_biotype=(gn.sel.col[[1]][id3])))
  
+ draw(non.de.map+rA+rA2)
+ readkey()
+      }
+    }##colR loop
+ }
 
  
  ### PRINT TO PDF########3
@@ -176,17 +243,52 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
   stopifnot(all(rownames(module.color)==repeat.module.list[[colR]]$gene_id)==TRUE)
    barplot(rMEs[,ME.id],horiz=T,names.arg=colnames(kexp),cex.names=0.8,las=1,main=paste0(repeat.key[which(rownames(repeat.key)==paste0("ME",colR)),]," Module correlation ~(",key.id,") ",signif(bicor(rMEs[,ME.id],MEs[,color.ID]),3 )) ,space=1)
    }
+  dev.off()
  ##the bar plots of the eigenvalues for repeats that are highly correlated to the gene moduleEigenvalue should have co-expression with similiar covariance 
-  print(Heatmap(asinh(module.cpm),column_title=paste0(geneModules," (",key.id,") Module Gene Expression"),name="asinh(x)",row_names_gp=gpar(fontsize=5) ) )
+ # print(Heatmap(asinh(module.cpm),column_title=paste0(geneModules," (",key.id,") Module Gene Expression"),name="asinh(x)",row_names_gp=gpar(fontsize=5) ) )
+ 
+  pdf(paste0(geneModules,"_",key.id,"_",how,"_",enrichmentCaller,"_ModuleExpressions.pdf"),height=11)
 
+ print(rh.rpt)
  ##heatmap of repeat modules
    for(colR in repeatModules){
-  color.id<-match(repeat.module.list[[colR]]$gene_id,rownames(rpm))
-  module.color<-rpm[color.id,]
+color.id<-match(repeat.module.list[[colR]]$gene_id,rownames(rpm))
+  module.color<-rpm[color.id,] #all the repeats in the module color
   stopifnot(all(rownames(module.color)==repeat.module.list[[colR]]$gene_id)==TRUE)
- 
- print(Heatmap(asinh(module.color),column_title_gp=gpar(fontsize=11),column_title=paste0(repeat.key[which(rownames(repeat.key)==paste0("ME",colR)),]," Module Repeat Expression"),name="asinh(x)",row_names_gp=gpar(fontsize=6))+Heatmap(rowRanges(rexp)$tx_biotype[rowRanges(rexp)$tx_id%in%rownames(module.color)],name="tx_biotype")+ Heatmap(rowRanges(rexp)$gene_biotype[rowRanges(rexp)$tx_id%in%rownames(module.color)],name="gene_biotype"))
-  }
+   r.title<-repeat.key[grep(paste0("ME",colR),rownames(repeat.key)),]
+   mr.kexp<- kexp[rowRanges(kexp)$tx_id%in%rownames(module.color),]
+  rps<-fitBundles(mr.kexp,design,bundleID="gene_id",read.cutoff=read.cutoff)
+  rps$top <- with(rps, topTable(fit, coef=2, p=0.05,adjust.method="none", n=nrow(kexp)))
+
+   if(nrow(rps$top)>=16){
+  heat.map<-drawHeatmap(mr.kexp,tags=rps$top,byType="tpm",title1=paste0(r.title," DE Repeat  Expression"),tx_biotype_color_master=tx_biotype_color_master,gene_biotype_color_master=gene_biotype_color_master)
+  print(heat.map)
+  }else{
+ # dev.new()
+  rpt.pv<-pvclust(log(1+module.color),nboot=100)
+  rpt.dend<-dendsort(hclust(dist(log(1+module.color))),isReverse=TRUE)
+  non.de.map<-Heatmap(log(1+module.color),
+    column_title=paste0(repeat.key[which(rownames(repeat.key)==paste0("ME",colR)),]," Repeat Expression"),
+         name="log(1+x)",
+         cluster_rows=rpt.dend,
+         cluster_columns=rpt.pv$hclust,
+         row_names_gp=gpar(fontsize=8),
+          column_names_gp=gpar(fontsize=9))
+
+ txb.df<-data.frame(transcript_biotype=rowRanges(kexp)[rownames(module.color)]$tx_biotype)
+ txb.sel.col=list(transcript_biotype=tx.color.master)
+ id2<-names(txb.sel.col[[1]])%in%rowRanges(kexp)[rownames(module.color)]$tx_biotype
+ rA<-rowAnnotation(txb.df,col=list(transcript_biotype=(txb.sel.col[[1]][id2])))
+
+ gn.df<-data.frame(gene_biotype=rowRanges(kexp)[rownames(module.color)]$gene_biotype)
+ gn.sel.col=list(gene_biotype=gn.color.master)
+ id3<-names(gn.sel.col[[1]])%in%rowRanges(kexp)[rownames(module.color)]$gene_biotype
+ rA2<-rowAnnotation(gn.df,col=list(gene_biotype=(gn.sel.col[[1]][id3])))
+
+ print(non.de.map+rA+rA2)
+# readkey()
+      }
+    }##colR loop
  dev.off()
 
 } ##main
