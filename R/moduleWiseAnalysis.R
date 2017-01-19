@@ -181,10 +181,10 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
   
 
 
-
+  draw(rh.rpt)
  # print(Heatmap(asinh(module.cpm),column_title=paste0(geneModules," (",key.id,") Module Gene Expression"),name="asinh(x)",row_names_gp=gpar(fontsize=5) ) )
  ##heatmap of repeat modules
-  dev.new()
+ # dev.new()
 
    tx_biotype_color_master<-repeatBiotypeColorPalette(kexp)
    gene_biotype_color_master<-repeatFamilyColorPalette(kexp)
@@ -199,9 +199,11 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
   rps<-fitBundles(mr.kexp,design,bundleID="gene_id",read.cutoff=read.cutoff)
   rps$top <- with(rps, topTable(fit, coef=2, p=0.05,adjust.method="none", n=nrow(kexp)))
 
-   if(nrow(rps$top)>=16){
+   if(nrow(rps$top)>=10){
+   print("printing DE repeats")
   colR.map<-drawHeatmap(mr.kexp,tags=rps$top,byType="tpm",title1=paste0(r.title," DE Repeat Module Expression"),tx_biotype_color_master=tx_biotype_color_master,gene_biotype_color_master=gene_biotype_color_master)  
   }else{
+  print(paste0(nrow(rps$top),": not enough DE repeats"))
   dev.new()
   rpt.pv<-pvclust(log(1+module.color),nboot=100)
   rpt.dend<-dendsort(hclust(dist(log(1+module.color))),isReverse=TRUE)
