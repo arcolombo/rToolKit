@@ -18,8 +18,9 @@
 #' @import edgeR
 #' @import pvclust
 #' @import ComplexHeatmap
+#' @import dendsort
 #' @export
-moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sqlite",wrcnaDbName="wrcnaDbLite.cpm.sqlite",qusageDbName="qusageDbLite.cpm.sqlite", geneModules=c("darkturquoise","red","grey60","pink","darkred","royalblue","green","magenta","brown"),repeatModules=c("blue","brown","grey","turquoise"),read.cutoff=4,how="tpm",enrichmentCaller=c("go","qusage"),comparison1="phsc",comparison2="blast",openDevice=FALSE,p.value=0.1 ){
+moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sqlite",wrcnaDbName="wrcnaDbLite.cpm.sqlite",qusageDbName="qusageDbLite.cpm.sqlite", geneModules=c("darkturquoise","red","grey60","pink","darkred","royalblue","green","magenta","brown"),repeatModules=c("blue","brown","grey","turquoise"),read.cutoff=4,how="tpm",enrichmentCaller=c("go","qusage"),comparison1="phsc",comparison2="blast",openDevice=FALSE,p.value=0.1,design=metadata(kexp)$design,includeRepeatHeatmaps=FALSE ){
   ##FIX ME: generically handle repeat modules of various sizes.
   how<-match.arg(how,c("cpm","tpm"))
   ## gather all ENGIDs for each module.
@@ -146,7 +147,7 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
 
   }
   ##the bar plots of the eigenvalues for repeats that are highly correlated to the gene moduleEigenvalue should have co-expression with similiar covariance 
-  if(openDevice==TRUE){
+ # if(openDevice==TRUE){
   ###heatmap of module genes
  dev.new()
  ####Heatmap DE genes in the module 
@@ -154,15 +155,22 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
 
   m.kexp<- kexp[rowRanges(kexp)$gene_id%in%rownames(module.cpm),]
   res<-fitBundles(m.kexp,design,bundleID="gene_name",read.cutoff=read.cutoff)
-  res$top <- with(res, topTable(fit, coef=2, p=0.05,adjust.method="none", n=nrow(kexp)))
-  ###draw heatmap with fixed colors. 
-
+   tpm<-collapseTpm(m.kexp,"gene_name")
+   
+    res$top <- with(res, topTable(fit, coef=2, p=0.05,adjust.method="none", n=nrow(kexp)))
+ if(nrow(res$top)>0 && nrow(res$top)<=64 ){
+    top.tpm<-tpm[rownames(tpm)%in%rownames(res$top),]
+  }else if(nrow(res$top)>65){
+   res$top <- with(res, topTable(fit, coef=2, p=0.05,adjust.method="BH", n=100))
+   top.tpm<-tpm[rownames(tpm)%in%rownames(res$top),]
+   }else{
+  res$top<-byMad(tpm,nrow(tpm)/(1.5))
+  top.tpm<-tpm[rownames(tpm)%in%rownames(res$top),]
+   }
+ # }
 
   ########
-
-
-  tpm<-collapseTpm(m.kexp,"gene_name")
-  top.tpm<-tpm[rownames(tpm)%in%rownames(res$top),]
+  if(nrow(res$top)>=10){ 
    rpt.pv<-pvclust(log(1+top.tpm),nboot=100)
   rpt.dend<-dendsort(hclust(dist(log(1+top.tpm))),isReverse=TRUE)
   rh.rpt<-Heatmap(log(1+top.tpm),
@@ -171,14 +179,27 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
                   cluster_columns=rpt.pv$hclust,
                   column_title=paste0("Gene Module ",key.id," (",geneModules,") "," DE Gene Expression"),
                   column_title_gp=gpar(fontsize=15),
-                 row_names_gp=gpar(fontsize=9),
+                 row_names_gp=gpar(fontsize=8),
                  column_names_gp=gpar(fontsize=13),
                  heatmap_legend_param=list(color_bar="continuous",
                                        #legend_direction="horizontal",
                                        legend_width=unit(5,"cm"),
                                        title_position="lefttop"))
 
-  
+  }else{
+ rh.rpt<-Heatmap(log(1+top.tpm),
+                  name="log(1+tpm)",
+                  column_title=paste0("Gene Module ",key.id," (",geneModules,") "," DE Gene Expression"),
+                  column_title_gp=gpar(fontsize=15),
+                 row_names_gp=gpar(fontsize=8),
+                 column_names_gp=gpar(fontsize=13),
+                 heatmap_legend_param=list(color_bar="continuous",
+                                       #legend_direction="horizontal",
+                                       legend_width=unit(5,"cm"),
+                                       title_position="lefttop"))
+
+ 
+ }
 
 
   draw(rh.rpt)
@@ -187,7 +208,9 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
  # dev.new()
 
    tx_biotype_color_master<-repeatBiotypeColorPalette(kexp)
+    tx.color.master<-tx_biotype_color_master
    gene_biotype_color_master<-repeatFamilyColorPalette(kexp)
+   gn.color.master<-gene_biotype_color_master 
   ##call DE repeat expression using drawHeatmap
    for(colR in repeatModules){
 
@@ -204,7 +227,9 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
   colR.map<-drawHeatmap(mr.kexp,tags=rps$top,byType="tpm",title1=paste0(r.title," DE Repeat Module Expression"),tx_biotype_color_master=tx_biotype_color_master,gene_biotype_color_master=gene_biotype_color_master)  
   }else{
   print(paste0(nrow(rps$top),": not enough DE repeats"))
+  if(openDevice==TRUE){
   dev.new()
+  }
   rpt.pv<-pvclust(log(1+module.color),nboot=100)
   rpt.dend<-dendsort(hclust(dist(log(1+module.color))),isReverse=TRUE)
   non.de.map<-Heatmap(log(1+module.color),
@@ -213,7 +238,8 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
          cluster_rows=rpt.dend,
          cluster_columns=rpt.pv$hclust,
          row_names_gp=gpar(fontsize=8),
-          column_names_gp=gpar(fontsize=9))
+          column_names_gp=gpar(fontsize=10),
+           column_title_gp=gpar(fontsize=9))
 
  txb.df<-data.frame(transcript_biotype=rowRanges(kexp)[rownames(module.color)]$tx_biotype)
  txb.sel.col=list(transcript_biotype=tx.color.master)
@@ -224,12 +250,13 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
  gn.sel.col=list(gene_biotype=gn.color.master)
  id3<-names(gn.sel.col[[1]])%in%rowRanges(kexp)[rownames(module.color)]$gene_biotype
  rA2<-rowAnnotation(gn.df,col=list(gene_biotype=(gn.sel.col[[1]][id3])))
- 
+ if(openDevice==TRUE){ 
  draw(non.de.map+rA+rA2)
  readkey()
+  }
       }
     }##colR loop
- }
+# }
 
  
  ### PRINT TO PDF########3
@@ -253,7 +280,8 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
 
  print(rh.rpt)
  ##heatmap of repeat modules
-   for(colR in repeatModules){
+   
+  for(colR in repeatModules){
 color.id<-match(repeat.module.list[[colR]]$gene_id,rownames(rpm))
   module.color<-rpm[color.id,] #all the repeats in the module color
   stopifnot(all(rownames(module.color)==repeat.module.list[[colR]]$gene_id)==TRUE)
@@ -262,7 +290,7 @@ color.id<-match(repeat.module.list[[colR]]$gene_id,rownames(rpm))
   rps<-fitBundles(mr.kexp,design,bundleID="gene_id",read.cutoff=read.cutoff)
   rps$top <- with(rps, topTable(fit, coef=2, p=0.05,adjust.method="none", n=nrow(kexp)))
 
-   if(nrow(rps$top)>=16){
+   if(nrow(rps$top)>=10){
   heat.map<-drawHeatmap(mr.kexp,tags=rps$top,byType="tpm",title1=paste0(r.title," DE Repeat  Expression"),tx_biotype_color_master=tx_biotype_color_master,gene_biotype_color_master=gene_biotype_color_master)
   print(heat.map)
   }else{
@@ -275,7 +303,8 @@ color.id<-match(repeat.module.list[[colR]]$gene_id,rownames(rpm))
          cluster_rows=rpt.dend,
          cluster_columns=rpt.pv$hclust,
          row_names_gp=gpar(fontsize=8),
-          column_names_gp=gpar(fontsize=9))
+          column_names_gp=gpar(fontsize=10),
+            column_title_gp=gpar(fontsize=9))
 
  txb.df<-data.frame(transcript_biotype=rowRanges(kexp)[rownames(module.color)]$tx_biotype)
  txb.sel.col=list(transcript_biotype=tx.color.master)
