@@ -9,9 +9,10 @@ moduleWiseAnalysis(kexp, lnames, rnames,
   wrcnaDbName = "wrcnaDbLite.cpm.sqlite",
   qusageDbName = "qusageDbLite.cpm.sqlite", geneModules = c("darkturquoise",
   "red", "grey60", "pink", "darkred", "royalblue", "green", "magenta", "brown"),
-  repeatModules = c("blue", "brown", "grey", "turquoise"), read.cutoff = 2,
+  repeatModules = c("blue", "brown", "grey", "turquoise"), read.cutoff = 4,
   how = "tpm", enrichmentCaller = c("go", "qusage"), comparison1 = "phsc",
-  comparison2 = "blast", openDevice = FALSE, p.value = 0.1)
+  comparison2 = "blast", openDevice = FALSE, p.value = 0.1,
+  design = metadata(kexp)$design, includeRepeatHeatmaps = FALSE)
 }
 \arguments{
 \item{kexp}{this should be the full stage kexp, could even be a tcga kexp}

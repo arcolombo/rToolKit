@@ -10,7 +10,7 @@ drawBoxPlots(kexp, comparison = "pHSC", control = "LSC",
   grob.comparison1 = paste0("Median(", control, ")<Median(", comparison,
   ") p.value: "), grob.comparison2 = paste0("Median(", control, ")<Median(",
   comparison2, ") p.value: "), testMedians = FALSE, title1 = NULL,
-  xlab1 = NULL, ylab1, xlab2 = NULL)
+  xlab1 = NULL, ylab1 = NULL, xlab2 = NULL)
 }
 \arguments{
 \item{kexp}{this is the non-stage level kexp for 3 stages}

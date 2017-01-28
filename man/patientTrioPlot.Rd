@@ -5,7 +5,7 @@
 \title{this creates an expression time plot of match patients}
 \usage{
 patientTrioPlot(kexp, stage1 = "pHSC", stage2 = "LSC", stage3 = "Blast",
-  printWhat = "jpeg")
+  printWhat = "jpeg", printOut = FALSE)
 }
 \arguments{
 \item{kexp}{this is a kexp for three stages patient wise, with 3 time-stages}
