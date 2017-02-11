@@ -1,10 +1,11 @@
 #' @title runs qusage for pairwise or global runs
 #' @description this is a point-wise qusage call not connected to database formations but used for kexp alone. Requires that hte comparison and controls be the leading column name able to be split by kexp2Group.  the qusageTables script is used to make a database. this script is used to make specific plots of qusage calls that target specific pathways.
+#' @param p.cutoff threshold for FPR filtering alpha significance level
 #' @import qusage
 #' @import arkas
 #' @import edgeR
 #' @export
-qusageResults<-function(kexp,geneSetPath="~/Documents/Arkas-Paper-Data/MSigDB/MsigDb_all/",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),how=c("cpm","tpm"),species=c("Homo.sapiens"),comparison=c("pHSC","Blast"),controls="LSC", keyWords=c("immun","inflam","apopto","death","kappab","wound"),showPlots=FALSE,comparisonNumber=1,Pathwaytitle=c("Apoptotic","Immune","Inflammation"),paired=FALSE,read.cutoff=2){
+qusageResults<-function(kexp,geneSetPath="~/Documents/Arkas-Paper-Data/MSigDB/MsigDb_all/",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt"),how=c("cpm","tpm"),species=c("Homo.sapiens"),comparison=c("pHSC","Blast"),controls="LSC", keyWords=c("immun","inflam","apopto","death","kappab","wound"),showPlots=FALSE,comparisonNumber=1,Pathwaytitle=c("Apoptotic","Immune","Inflammation"),paired=FALSE,read.cutoff=2,p.cutoff=0.05){
  ###the plots picked here must match the pathways picked exactly by heat Cor
  #########
   ###TO DO: print everything to a table
@@ -50,8 +51,8 @@ qusageResults<-function(kexp,geneSetPath="~/Documents/Arkas-Paper-Data/MSigDB/Ms
   t<-data.frame(qstab[,2:4])
   rownames(t)<-as.character(qstab$pathway.name)
     t<- t[order(rownames(t)),]
-   alpha<-which(t$p.Value<=0.05)
- # rownames(t)[ which(t$p.Value<=0.05)]<-paste0(rownames(t)[ which(t$p.Value<=0.05)],"**")
+   alpha<-which(t$p.Value<=p.cutoff)
+ # rownames(t)[ which(t$p.Value<=p.cutoff)]<-paste0(rownames(t)[ which(t$p.Value<=p.cutoff)],"**")
     pchLabels<-as.numeric(rep(0,nrow(t)))
     pchLabels[alpha]<-8
   rownames(t)<-tolower(rownames(t))

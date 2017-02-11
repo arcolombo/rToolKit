@@ -304,7 +304,7 @@ setMethod("listModuleColors", "wgcnaDbLite", function(x, ...) { # {{{
 
 
 
-setGeneric("pickPathway",function(x,p.value=NULL,keyWord=NULL,contrast=NULL) standardGeneric("pickPathway"))
+setGeneric("pickPathway",function(x,p.value=0.05,keyWord=NULL,contrast=NULL) standardGeneric("pickPathway"))
 
 
 
@@ -317,14 +317,14 @@ setGeneric("pickPathway",function(x,p.value=NULL,keyWord=NULL,contrast=NULL) sta
 #' @param p.value numeric threshold
 #' @param keyWord the name must match what is in the pathways list 
 #' @export
-setMethod("pickPathway", "qusageDbLite", function(x,p.value=0.05,keyWord=NULL,contrast=NULL) {
+setMethod("pickPathway", "qusageDbLite", function(x,p.value=NULL,keyWord=NULL,contrast=NULL) {
   ##FIX ME: safety check for the input color using dbListTables,  signature
   allcolors<-listModuleColors((x))
   df<-list()
   #drivers are defined as the most significantly cross correlated genes
   for(colR in allcolors){  
      if(colR!="kexp"){
-    pathd<-pathways((x),Module.color=colR,tx.Biotype=colR,contrast=contrast)
+    pathd<-pathways((x),Module.color=colR,tx.Biotype=colR,contrast=contrast,p.value=p.value)
     if(nrow(pathd)==0){
     next
     }

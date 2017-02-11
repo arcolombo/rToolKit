@@ -15,14 +15,16 @@
 #' @import qusage
 #' @import ggplot2
 #' @import ggpmisc
+#' @import ggthemes
 #' @import arkas
 #' @export
 compareRestrictions<-function(kexp1,kexp2,geneSetPath="~/Documents/Arkas-Paper-Data/MSigDB/MsigDb_all/",compare1="Low",compare2="pHSC",controls1="High",controls2="LSC",paired1=FALSE,paired2=TRUE,read.cutoff=2,MsigDB=NULL,saveToFile=FALSE){
 
  geneSet<-MsigDB
-
-   kexp1<-kexp2Group(kexp1,comparison=comparison1,control=controls1)
-    kexp2<-kexp2Group(kexp2,comparison=comparison2,control=controls2)
+ comparison1<-compare1
+ comparison2<-compare2
+   kexp1<-kexp2Group(kexp1,comparison=compare1,control=controls1)
+    kexp2<-kexp2Group(kexp2,comparison=compare2,control=controls2)
   qusageMean1<-qusageMean(kexp=kexp1,read.cutoff=read.cutoff,comparison=comparison1,controls=controls1,geneSet=geneSet,paired=paired1,geneSetPath=geneSetPath)
    qusageMean2<-qusageMean(kexp=kexp2,read.cutoff=read.cutoff,comparison=comparison2,controls=controls2,geneSet=geneSet,paired=paired2,geneSetPath=geneSetPath)
 
@@ -35,9 +37,9 @@ compareRestrictions<-function(kexp1,kexp2,geneSetPath="~/Documents/Arkas-Paper-D
  corVec<-matrix(nrow=length(names(norm1)),ncol=2)
  rownames(corVec)<-names(norm1)
  colnames(corVec)<-c("Correlation","p.value")
- if(saveToFile==TRUE){
- write.csv(corvec,file="MDS-AML-RestrictionFactor-Analysis-Correlations-pvalues.csv")
- }
+# if(saveToFile==TRUE){
+# write.csv(corVec,file="MDS-AML-RestrictionFactor-Analysis-Correlations-pvalues.csv")
+# }
  ##match intersect
   for(i in 1:length(names(norm1))){
   n1.id<-intersect(names(norm1[[i]]),names(norm2[[i]]))
@@ -82,11 +84,18 @@ compareRestrictions<-function(kexp1,kexp2,geneSetPath="~/Documents/Arkas-Paper-D
  print(p)
  readkey()
  if(saveToFile==TRUE){
-pdf(paste0("MDS-AML_Restriction_Factor_Correlations_",gsub(" ","",names(norm1)[i]),".pdf" ))
+pdf(paste0("MDS-AML_ImmuneComplexes_pHSC-Blast-Restriction_Factor_Correlations_",gsub(" ","",names(norm1)[i]),".pdf" ))
+# print(p)
  print(p)
  dev.off() 
  }
 }
+
+
+ if(saveToFile==TRUE){
+ write.csv(corVec,file="MDS-AML-RestrictionFactor-Analysis-Correlations-pvalues.csv")
+ }
+
 
 } #main 
 
