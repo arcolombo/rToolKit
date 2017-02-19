@@ -42,7 +42,7 @@
 
 \S4method{listModuleColors}{wgcnaDbLite}(x, ...)
 
-\S4method{pickPathway}{qusageDbLite}(x, p.value = 0.05, keyWord = NULL,
+\S4method{pickPathway}{qusageDbLite}(x, p.value = NULL, keyWord = NULL,
   contrast = NULL)
 }
 \arguments{

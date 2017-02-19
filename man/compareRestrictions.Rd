@@ -10,6 +10,31 @@ compareRestrictions(kexp1, kexp2,
   controls2 = "LSC", paired1 = FALSE, paired2 = TRUE, read.cutoff = 2,
   MsigDB = NULL, saveToFile = FALSE)
 }
+\arguments{
+\item{kexp1}{this is the first experiment you wish to analyze}
+
+\item{kexp2}{the second experiment you wish to examine across.}
+
+\item{geneSetPath}{the path to the gmt files which contain the geneSet.gmt files}
+
+\item{compare1}{the first comparison group in kexp1}
+
+\item{compare2}{the second comparison group in kexp2}
+
+\item{controls1}{the first control/reference group in kexp1}
+
+\item{controls2}{the second control/reference group in kexp2}
+
+\item{paired1}{boolean indicating if kexp1 is paired samples}
+
+\item{paired2}{boolean indicating if kexp2 is paired samples}
+
+\item{read.cutoff}{min threshold of count data}
+
+\item{MsigDB}{character of the .gmt file to load}
+
+\item{saveToFile}{boolean will save a pdf and write the data to .csv}
+}
 \description{
 compares the qusage results from two different experiments and finds the correlation of means for each pathway level after standardizing the means.
 }

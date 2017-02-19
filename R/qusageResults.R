@@ -112,7 +112,7 @@ qusageResults<-function(kexp,geneSetPath="~/Documents/Arkas-Paper-Data/MSigDB/Ms
   x11(width=12,height=6)
  # plotDensityCurves(qs.pHSC.results,path.index=j,xlim=c(-2,2),main=paste0(x[which(rownames(x)== j),1]," ",contrast))
  # legend("topleft",legend=signif(x[which(rownames(x)==j),3],2),bty='n',cex=0.6,pch=0.8,title="p.value" )
-  plotCIsGenes(qs.pHSC.results,path.index=j, main=paste0(x[which(rownames(x)== j),1]," ",contrast),pch=18,cex.xaxis=0.6,ylab="Differential Canonical Gene Set Activity" )
+  plotCIsGenes(qs.pHSC.results,path.index=j, main=paste0(x[which(rownames(x)== j),1]," ",contrast),pch=18,cex.xaxis=1.2,ylab="Differential Canonical Gene Set Activity" )
   readkey()
  write.csv(qs.pHSC.results$mean[qs.pHSC.results$pathways[[pathIndex]]],file=paste0("qusage.GeneSet.",contrast,".",names(qs.pHSC.results$pathways)[j],".csv"))
  ##its own page

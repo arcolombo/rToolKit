@@ -5,7 +5,7 @@
 #' @import ggplot2
 #' @export
 #' @return images and a pdf/jpeg
-geneTest<-function(kexp,geneName="EVI",how=c("cpm","tpm"),saveOut=FALSE,numberPairs=c(1,2,3)){
+geneTest<-function(kexp,geneName="EVI",how=c("cpm","tpm"),saveOut=FALSE,numberPairs=c(1,2,3),read.cutoff=1){
 
  
  rexp<-kexp
@@ -16,7 +16,7 @@ geneTest<-function(kexp,geneName="EVI",how=c("cpm","tpm"),saveOut=FALSE,numberPa
  n.samples<-factor(sapply(strsplit(colnames(rexp),"_"),function(x) x[1]))
  number.samples<-sapply(samples,function(x) length(grep(x[1],n.samples)))
  if(how=="tpm"){
- tpm<-collapseTpm(rexp,"gene_name") ##36 repeat classes collapsed
+ tpm<-collapseTpm(rexp,"gene_name",minTPM=read.cutoff) ##36 repeat classes collapsed
  ##now for each repeat class and for each pairs, plot a connected dot plot
  tpm<-tpm[which(rownames(tpm)==geneName),]
  stopifnot(nrow(tpm)>0)
@@ -44,6 +44,14 @@ for(i in 1:length(samples)){
  
   group<-unlist(group)
   data=data.frame(y=t(m),group=factor(group,levels=samples))
+
+###add repeated measures
+#for(i in 1:length(pairs)){
+
+
+#}
+#######
+
   fit<-lm(y~group,data)
  ANOVA<-anova(fit)
   anova.pvalue<-ANOVA[1,5]
