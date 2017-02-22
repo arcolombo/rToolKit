@@ -43,6 +43,9 @@ y<-c(as.vector(m[1,]),as.vector(m[2,]),as.vector(m[3,]))
  pair.Blast.LSC<-pair.T$p.value[2,2]
  pair.Blast.pHSC<-pair.T$p.value[2,1]
   pairWise.DF<-data.frame(ANOVA=anova.pvalue,pHSC.v.LSC=pair.pHSC.LSC,Blast.v.LSC=pair.Blast.LSC,Blast.v.pHSC=pair.Blast.pHSC) 
+  names(pairWise.DF)[2]<-paste0(stage1,".v.",stage2)
+  names(pairWise.DF)[3]<-paste0(stage2,".v.",stage3)
+  names(pairWise.DF)[4]<-paste0(stage1,".v.",stage3)
   names(pairWise.DF)<-gsub(".v.","-",names(pairWise.DF))
   alpha<-which(pairWise.DF<=0.05)
   pchLabels<-as.numeric(rep(0,ncol(pairWise.DF)))
@@ -64,7 +67,7 @@ y<-c(as.vector(m[1,]),as.vector(m[2,]),as.vector(m[3,]))
  ####8  for significant
  pchLabels<-as.numeric(rep(0,ncol(pairWise.DF)))
  pchLabels[alpha]<-8
-  legend("top", paste0(colnames(pairWise.DF)),pch=pchLabels,title=expression("* Adj.P.Val" <= 0.05 ),cex=1.1)
+  legend("bottomright", paste0(colnames(pairWise.DF)),pch=pchLabels,title=expression("* Adj.P.Val" <= 0.05 ),cex=0.9,inset=c(-0.24,0))
    readkey()
    }
    leadTitle<-gsub("/","",cols)
@@ -87,7 +90,7 @@ if(printWhat=="pdf"){
 
  dev.off()
   }else{
-   jpeg(paste0(leadTitle,"patientTrio_RepeatPlot.jpeg"),width=680,height=680)
+   jpeg(paste0(leadTitle,"patientTrio_RepeatPlot.jpeg"),width=8.5,height=8,res=300,unit='in')
  
  par(mar=par()$mar+c(0,0,0,5),family='Helvetica',xpd=TRUE,cex.main=1)
     matplot(DF, type = c("b"),pch=1,col = c("black","green","orange","red","purple","blue","magenta")  ,xaxt='n',xlab=NA,main=paste0("'",cols,"' Transposable Element Family ANOVA Across Clonal Stages"),ylab="Transposable Element Expression Level (Log TPM)",cex.lab=1.2 ) #plot
@@ -99,7 +102,7 @@ if(printWhat=="pdf"){
  ####8  for significant
  pchLabels<-as.numeric(rep(0,ncol(pairWise.DF)))
  pchLabels[alpha]<-8
-  legend("top", paste0(colnames(pairWise.DF)),pch=pchLabels,title=expression("* Adj.P.Val" <= 0.05 ),cex=1.1)
+   legend("bottomright", paste0(colnames(pairWise.DF)),pch=pchLabels,title=expression("* Adj.P.Val" <= 0.05 ),cex=0.9,inset=c(-0.22,0))
 
 
   dev.off()
