@@ -6,7 +6,7 @@
 \usage{
 qusageMean(kexp = NULL, read.cutoff = read.cutoff, comparison = NULL,
   controls = NULL, geneSet = geneSet, paired = FALSE,
-  geneSetPath = geneSetPath)
+  geneSetPath = geneSetPath, how = c("cpm", "tpm"))
 }
 \description{
 calculates the mean pathway activity for a gene set

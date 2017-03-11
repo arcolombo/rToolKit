@@ -18,15 +18,15 @@
 #' @import ggthemes
 #' @import arkas
 #' @export
-compareRestrictions<-function(kexp1,kexp2,geneSetPath="~/Documents/Arkas-Paper-Data/MSigDB/MsigDb_all/",compare1="Low",compare2="pHSC",controls1="High",controls2="LSC",paired1=FALSE,paired2=TRUE,read.cutoff=2,MsigDB=NULL,saveToFile=FALSE){
-
+compareRestrictions<-function(kexp1,kexp2,geneSetPath="~/Documents/Arkas-Paper-Data/MSigDB/MsigDb_all/",compare1="Low",compare2="pHSC",controls1="High",controls2="LSC",paired1=FALSE,paired2=TRUE,read.cutoff=2,MsigDB=NULL,saveToFile=FALSE,how=c("cpm","tpm")){
+   how<-match.arg(how,c("cpm","tpm"))
  geneSet<-MsigDB
  comparison1<-compare1
  comparison2<-compare2
    kexp1<-kexp2Group(kexp1,comparison=compare1,control=controls1)
     kexp2<-kexp2Group(kexp2,comparison=compare2,control=controls2)
-  qusageMean1<-qusageMean(kexp=kexp1,read.cutoff=read.cutoff,comparison=comparison1,controls=controls1,geneSet=geneSet,paired=paired1,geneSetPath=geneSetPath)
-   qusageMean2<-qusageMean(kexp=kexp2,read.cutoff=read.cutoff,comparison=comparison2,controls=controls2,geneSet=geneSet,paired=paired2,geneSetPath=geneSetPath)
+  qusageMean1<-qusageMean(kexp=kexp1,read.cutoff=read.cutoff,comparison=comparison1,controls=controls1,geneSet=geneSet,paired=paired1,geneSetPath=geneSetPath,how=how)
+   qusageMean2<-qusageMean(kexp=kexp2,read.cutoff=read.cutoff,comparison=comparison2,controls=controls2,geneSet=geneSet,paired=paired2,geneSetPath=geneSetPath,how=how)
 
  ##standardize for correlation tests is not needed!
  #  norm1<- lapply(qusageMean1,function(x) (x-mean(x))/sd(x))
@@ -84,7 +84,7 @@ compareRestrictions<-function(kexp1,kexp2,geneSetPath="~/Documents/Arkas-Paper-D
  print(p)
  readkey()
  if(saveToFile==TRUE){
-pdf(paste0("MDS-AML_ImmuneComplexes_pHSC-Blast-Restriction_Factor_Correlations_",gsub(" ","",names(norm1)[i]),".pdf" ))
+pdf(paste0("MDS-AML_",how,"_",names(norm1)[i],"_",compare1,"-",controls1,"_",compare2,"-",controls2,"_Correlations",".pdf" ))
 # print(p)
  print(p)
  dev.off() 
@@ -93,7 +93,7 @@ pdf(paste0("MDS-AML_ImmuneComplexes_pHSC-Blast-Restriction_Factor_Correlations_"
 
 
  if(saveToFile==TRUE){
- write.csv(corVec,file="MDS-AML-RestrictionFactor-Analysis-Correlations-pvalues.csv")
+ write.csv(corVec,file=paste0("MDS-AML-Correlations_",how,"_",MsigDB,"_",compare1,"-",controls1,"_",compare2,"-",controls2,"_Correlations",".csv" ))
  }
 
 
@@ -103,17 +103,20 @@ pdf(paste0("MDS-AML_ImmuneComplexes_pHSC-Blast-Restriction_Factor_Correlations_"
 #' @description calculates the mean pathway activity for a gene set
 #' @import edgeR
 #' @import qusage
-qusageMean<-function(kexp=NULL,read.cutoff=read.cutoff,comparison=NULL,controls=NULL,geneSet=geneSet,paired=FALSE,geneSetPath=geneSetPath  ){
+qusageMean<-function(kexp=NULL,read.cutoff=read.cutoff,comparison=NULL,controls=NULL,geneSet=geneSet,paired=FALSE,geneSetPath=geneSetPath,how=c("cpm","tpm")  ){
 
-
+  if(how=="cpm"){
   counts<-collapseBundles(kexp,"gene_name",read.cutoff=read.cutoff)
   ##BSN
-  counts<-counts[,which(colSums(counts)>1)]
+   counts<-counts[,which(colSums(counts)>read.cutoff)]
    dge<-DGEList(counts=counts)
    dge<-calcNormFactors(dge)
    expr<-cpm(dge,normalized.lib.sizes=TRUE,log=FALSE)
   expr2<-log2(1+expr)
-
+  }else{
+   counts<-collapseTpm(kexp,"gene_name",minTPM=read.cutoff)
+   expr2<-log2(1+counts)
+  }
   cN<-colnames(expr2)
   cN<-strsplit(cN,"_")
   labels<-unlist(lapply(cN,function(x) x[1]))

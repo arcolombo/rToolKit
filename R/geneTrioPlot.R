@@ -6,26 +6,56 @@
 #' @param stage3 character Blast
 #' @export
 #' @return images and a pdf/jpeg
-patientTrioPlot<-function(kexp,stage1="pHSC",stage2="LSC",stage3="Blast",printWhat="jpeg",printOut=FALSE){
+geneTrioPlot<-function(kexp,stage1="pHSC",stage2="LSC",stage3="Blast",printWhat="jpeg",printOut=FALSE,geneName=NULL,how=c("cpm","tpm"),read.cutoff=1){
 
- printWhat=match.arg(printWhat,c("pdf","jpeg"))
- rexp<-findRepeats(kexp)
- rexp<-kexpByTrio(rexp) ##take all triples
+
+
+
+ rexp<-kexp[,c(grep(stage1,colnames(kexp)),grep(stage2,colnames(kexp)),grep(stage3,colnames(kexp)))]
+
+ #rexp<-kexpByTrio(rexp) ##take all triples
  pairs<-colnames(rexp)
  pairs<-unique(sapply(strsplit(pairs,"_"),function(x) x[2]))
- tpm<-collapseTpm(rexp,"tx_biotype") ##36 repeat classes collapsed
+ samples<-unique(sapply(strsplit(colnames(rexp),"_"),function(x) x[1]))
+ n.samples<-factor(sapply(strsplit(colnames(rexp),"_"),function(x) x[1]))
+ number.samples<-sapply(samples,function(x) length(grep(x[1],n.samples)))
+ if(how=="tpm"){
+ tpm<-collapseTpm(rexp,"gene_name",minTPM=read.cutoff) ##36 repeat classes collapsed
  ##now for each repeat class and for each pairs, plot a connected dot plot
-  write.csv(tpm,file="TxBiotype-Repeat-Matched_Triplicates.TPM.PatientTrioPlots.csv")
+ tpm<-tpm[which(rownames(tpm)==geneName),]
+# stopifnot(nrow(tpm)>0)
+ }else{
+  dge<-list()
+ bundledCounts <- collapseBundles(kexp, bundleID="gene_name",
+                                   read.cutoff=1)
+  dge <- DGEList(counts=bundledCounts)
+  dge <- calcNormFactors(dge)
+  tpm<-cpm(dge)
+  tpm<-tpm[which(rownames(tpm)==geneName),]
+# stopifnot(nrow(tpm)>0)
+
+ }
+
+ if(length(tpm)==0){
+  return(0)
+ }
+ ##now for each repeat class and for each pairs, plot a connected dot plot
+#  write.csv(tpm,file="TxBiotype-Repeat-Matched_Triplicates.TPM.PatientTrioPlots.csv")
   pair.tpm<-t(tpm)
   pair.tpm<-log2(1+pair.tpm)  
-  for(cols in colnames(pair.tpm)){ 
+  t(pair.tpm)->pair.tpm
+  colnames(pair.tpm)<-geneName
+ 
+ for(cols in colnames(pair.tpm)){ 
   #grab first
   paird<-pair.tpm[grep(pairs[1],rownames(pair.tpm)),colnames(pair.tpm)[which(cols==colnames(pair.tpm))] ]
+  paird<-paird[c(grep(stage1,names(paird)),grep(stage2,names(paird)),grep(stage3,names(paird)))]
   DF<-data.frame(paird)
   colnames(DF)<-pairs[1]
   rownames(DF)<-c(stage1,stage2,stage3)
   for(j in 2:length(pairs)){
    paird<-pair.tpm[grep(pairs[j],rownames(pair.tpm)),colnames(pair.tpm)[which(cols==colnames(pair.tpm)) ]]
+  paird<-paird[c(grep(stage1,names(paird)),grep(stage2,names(paird)),grep(stage3,names(paird)))]
   df<-data.frame(paird)
   colnames(df)<-pairs[j]
   rownames(df)<-c(stage1,stage2,stage3)
@@ -33,12 +63,14 @@ patientTrioPlot<-function(kexp,stage1="pHSC",stage2="LSC",stage3="Blast",printWh
   }
  m<-as.matrix(DF)
 y<-c(as.vector(m[1,]),as.vector(m[2,]),as.vector(m[3,]))
-  group<-c(rep(1,7),rep(2,7),rep(3,7))
+  group<-c(rep(1,length(pairs)),rep(2,length(pairs)),rep(3,length(pairs)))
   data=data.frame(y=y,group=factor(group))
-  fit<-lm(y~group,data)
+  ##adding paired patient into the model. 
+   data$patient<-factor(c(rep(names(DF),3)))
+  fit<-lm(y~group+patient,data)
  ANOVA<-anova(fit)
   anova.pvalue<-ANOVA[1,5]
- pair.T<-pairwise.t.test(data$y,data$group,p.adj='bonferroni')
+ pair.T<-pairwise.t.test(data$y,data$group,p.adj='bonferroni',paired=TRUE)
  pair.pHSC.LSC<-pair.T$p.value[1,1]
  pair.Blast.LSC<-pair.T$p.value[2,2]
  pair.Blast.pHSC<-pair.T$p.value[2,1]
@@ -52,11 +84,11 @@ y<-c(as.vector(m[1,]),as.vector(m[2,]),as.vector(m[3,]))
   pchLabels[alpha]<-8
 
   #names(pairWise.DF)[alpha]<-paste0(names(pairWise.DF)[alpha],"**")
-  write.csv(pairWise.DF,file=paste0(gsub("/","_",cols),".Transposable.Element.Family.ANOVA.Across.Clonal.Stages.csv"))
+  write.csv(pairWise.DF,file=paste0(gsub("/","_",cols),".Transposable.Element.Family.ANOVA.Across.Clonal.Stages_",how,".csv"))
    if(printOut==TRUE){   
     x11(width=8,height=8)
-     par(mar=par()$mar+c(0,0,0,5),family='Helvetica',xpd=TRUE,cex.main=1.9)
-    matplot(DF, type = c("b"),pch=1,col = c("black","green","orange","red","purple","blue","magenta")  ,xaxt='n',xlab=NA,main=paste0("'",cols,"' Transposable Element Family ANOVA Across Clonal Stages"),ylab="Transposable Element Expression Level (Log TPM)",cex.lab=1.9 ) #plot
+     par(mar=par()$mar+c(0,0,0,5),family='Helvetica',xpd=TRUE,cex.main=1.1)
+    matplot(DF, type = c("b"),pch=1,col = c("black","green","orange","red","purple","blue","magenta")  ,xaxt='n',xlab=NA,main=paste0("'",cols,"' Coding Gene Expression ANOVA Across Clonal Stages"),ylab=paste0("'",cols,"'"," Coding Gene Expression Level (Log ",toupper(how),")"),cex.lab=1.2 ) #plot
    legend("topright",legend=colnames(DF),col=c("black","green","orange","red","purple","blue","magenta") ,pch=0.8,title="Patient ID",inset=c(-0.22,0),cex=1.2)
   axis(1,at=seq(1,3,1),labels=c(stage1,stage2,stage3),cex.axis=1.2)
   lablist.x<-c(stage1,stage2,stage3)
@@ -74,28 +106,28 @@ y<-c(as.vector(m[1,]),as.vector(m[2,]),as.vector(m[3,]))
    leadTitle<-gsub(" ","_",leadTitle)
 if(printWhat=="pdf"){
 
-  pdf(paste0(leadTitle,"patientTrio_RepeatPlot.pdf"),family='Helvetica',height=8,width=9)
+  pdf(paste0(leadTitle,"patientTrio_RepeatPlot_",how,".pdf"),family='Helvetica',height=8,width=9)
 
  par(mar=par()$mar+c(0,0,0,5),family='Helvetica',xpd=TRUE,cex.main=1)
-    matplot(DF, type = c("b"),pch=1,col = c("black","green","orange","red","purple","blue","magenta")  ,xaxt='n',xlab=NA,main=paste0("'",cols,"' Transposable Element Family ANOVA Across Clonal Stages"),ylab="Transposable Element Expression Level (Log TPM)",cex.lab=1.2 ) #plot
+    matplot(DF, type = c("b"),pch=1,col = c("black","green","orange","red","purple","blue","magenta")  ,xaxt='n',xlab=NA,main=paste0("'",cols,"' Coding Gene Expression ANOVA Across Clonal Stages"),ylab=paste0("'",cols,"' Coding Gene Expression Level (Log ",toupper(how),")"),cex.lab=1.2 ) #plot
    legend("topright",legend=colnames(DF),col=c("black","green","orange","red","purple","blue","magenta") ,pch=0.8,title="Patient ID",inset=c(-0.20,0),cex=1.2)
-  axis(1,at=seq(1,3,1),labels=c(stage1,stage2,stage3),cex.axis=1.2)
+  axis(1,at=seq(1,3,1),labels=c(stage1,stage2,stage3),cex.axis=1.7)
   lablist.x<-c(stage1,stage2,stage3)
  #####  anova stats
  ###0 for non significant
  ####8  for significant
  pchLabels<-as.numeric(rep(0,ncol(pairWise.DF)))
  pchLabels[alpha]<-8
-  legend("top", paste0(colnames(pairWise.DF)),pch=pchLabels,title=expression("* Adj.P.Val" <= 0.05 ),cex=1.1)
+  legend("bottomright", paste0(colnames(pairWise.DF)),pch=pchLabels,title=expression("* Adj.P.Val" <= 0.05 ),cex=0.9,inset=c(-0.20,0))
 
  dev.off()
   }else{
    jpeg(paste0(leadTitle,"patientTrio_RepeatPlot.jpeg"),width=8.5,height=8,res=300,unit='in')
  
  par(mar=par()$mar+c(0,0,0,5),family='Helvetica',xpd=TRUE,cex.main=1)
-    matplot(DF, type = c("b"),pch=1,col = c("black","green","orange","red","purple","blue","magenta")  ,xaxt='n',xlab=NA,main=paste0("'",cols,"' Transposable Element Family ANOVA Across Clonal Stages"),ylab="Transposable Element Expression Level (Log TPM)",cex.lab=1.2 ) #plot
+    matplot(DF, type = c("b"),pch=1,col = c("black","green","orange","red","purple","blue","magenta")  ,xaxt='n',xlab=NA,main=paste0("'",cols,"' Coding Gene Expression ANOVA Across Clonal Stages"),ylab=paste0("'",cols,"' Coding Gene Expression Level (Log ",toupper(how),")"),cex.lab=1.2 ) #plot
    legend("topright",legend=colnames(DF),col=c("black","green","orange","red","purple","blue","magenta") ,pch=0.8,title="Patient ID",inset=c(-0.18,0),cex=1.2)
-  axis(1,at=seq(1,3,1),labels=c(stage1,stage2,stage3),cex.axis=1.2)
+  axis(1,at=seq(1,3,1),labels=c(stage1,stage2,stage3),cex.axis=1.7)
   lablist.x<-c(stage1,stage2,stage3)
  #####  anova stats
  ###0 for non significant

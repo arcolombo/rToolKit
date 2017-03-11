@@ -13,7 +13,8 @@ clusterGenesAndRepeats(kexp, read.cutoff = 2, minBranch = 2,
   "Repetitive element", "satellite", "snRNA", "SVA", "TcMar", "telo",
   "Transposable Element", "Satellite"), useAllBiotypes = FALSE,
   tmm.norm = TRUE, useBiCor = TRUE, how = c("cpm", "tpm"),
-  batchNormalize = FALSE, batchVector = NULL, design = NULL)
+  batchNormalize = FALSE, batchVector = NULL, design = NULL,
+  collapseBy = c("gene_id", "gene_name"))
 }
 \arguments{
 \item{kexp}{a kexp 2 group stage is preferred}

@@ -14,7 +14,7 @@
 #' @import limma
 #' @export
 #' @return images and cluster at the gene and repeat level
-wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE,species=c("Homo.sapiens","Mus.musculus"),selectedPower=NULL,intBiotypes=c("acromeric","centromeric","CR1","Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","hAT","HSFAU","L1","L2","LTR Retrotransposon","Eutr1","Merlin","PiggyBac","Pseudogene","Repetitive element","satellite","snRNA","SVA","TcMar","telo","Transposable Element","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm"),batchNormalize=FALSE,batchVector=NULL,design=NULL){
+wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE,species=c("Homo.sapiens","Mus.musculus"),selectedPower=NULL,intBiotypes=c("acromeric","centromeric","CR1","Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","hAT","HSFAU","L1","L2","LTR Retrotransposon","Eutr1","Merlin","PiggyBac","Pseudogene","Repetitive element","satellite","snRNA","SVA","TcMar","telo","Transposable Element","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm"),batchNormalize=FALSE,batchVector=NULL,design=NULL,collapseBy=c("gene_id","gene_name")){
   if(batchNormalize==TRUE && is.null(design)==TRUE){
    stopifnot(is.null(metadata(kexp)$design)==FALSE)
    design<-metadata(kexp)$design
@@ -23,6 +23,8 @@ wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),en
  stopifnot(is.null(metadata(kexp)$batch)==FALSE)
    batchVector<-metadata(kexp)$batch
  }
+
+  collapseBy=match.arg(collapseBy,c("gene_id","gene_name"))
    how<-match.arg(how,c("cpm","tpm"))
   ##prepare data
   whichWGCNA<-match.arg(whichWGCNA,c("single","block"))
@@ -32,11 +34,13 @@ wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),en
   if(how=="cpm"){
   ###rows must be SAMPLES columns genes
   if(batchNormalize==FALSE){
-  cpm<-collapseBundles(kexp,"gene_id",read.cutoff=read.cutoff)
+  cpm<-collapseBundles(kexp,collapseBy,read.cutoff=read.cutoff)
   cpm<-cpm[!grepl("^ERCC",rownames(cpm)),]
   rexp<-findRepeats(kexp)
   rpm<-collapseBundles(rexp,"tx_biotype",read.cutoff=read.cutoff) 
   rpm<-rpm[!grepl("^ERCC",rownames(rpm)),]
+  ##some intBiotypes will be filtered if the rows of rpm don't pass the read.cutoff
+ 
  if(tmm.norm==TRUE){
   d<-DGEList(counts=cpm)
   d<-calcNormFactors(d)
@@ -50,6 +54,7 @@ wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),en
   rdm.norm<-NULL
       }#tmm norm
     rpm<-log2(1+rpm)
+    intBiotypes<-rownames(rpm)
     cpm<-log2(1+cpm)
     }else if(batchNormalize==TRUE){
    ##task: input kexp, metadata$design, metadata$batch
@@ -96,7 +101,7 @@ wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),en
   ############collapse by gene_id
   }##batch
   }else if(how=="tpm"){
-  cpm<-collapseTpm(kexp,"gene_id",read.cutoff=read.cutoff)
+  cpm<-collapseTpm(kexp,collapseBy,read.cutoff=read.cutoff)
   cpm<-cpm[!grepl("^ERCC",rownames(cpm)),]
   rexp<-findRepeats(kexp)
   rpm<-collapseTpm(rexp,"tx_biotype",read.cutoff=read.cutoff)
@@ -104,7 +109,7 @@ wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),en
   cpm<-log2(1+cpm) ##log2 transform recommended of genes
   rpm<-log2(1+rpm) ##log2 transform of repeats.
   }
-  
+  intBiotypes<-intBiotypes[intBiotypes%in%rownames(rpm)]
   #split out repeats
   datExpr0<-t(cpm)
   gsg<-goodSamplesGenes(datExpr0,verbose=3)

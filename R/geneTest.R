@@ -1,20 +1,24 @@
 #' @title this creates an expression time plot of match patients
-#' @description for paired time series, this plots the expression across time points in units of TPM. This plots each repeat biotype and every patient trio across stages.
-#' @param kexp this is a kexp for three stages patient wise, with 3 time-stages
+#' @description for non-paired group factor ANOVA testing, this plots the expression across two groups units of TPM
+#' @param kexp this is a kexp for 2 gropu non-paired patient wise, with 2 groups
 #' @import ComplexHeatmap
 #' @import ggplot2
+#' @import ggthemes
 #' @export
 #' @return images and a pdf/jpeg
 geneTest<-function(kexp,geneName="EVI",how=c("cpm","tpm"),saveOut=FALSE,numberPairs=c(1,2,3),read.cutoff=1){
 
- 
+ theme_set(theme_tufte())
  rexp<-kexp
  #rexp<-kexpByTrio(rexp) ##take all triples
  pairs<-colnames(rexp)
  pairs<-unique(sapply(strsplit(pairs,"_"),function(x) x[2]))
  samples<-unique(sapply(strsplit(colnames(rexp),"_"),function(x) x[1]))
+
  n.samples<-factor(sapply(strsplit(colnames(rexp),"_"),function(x) x[1]))
  number.samples<-sapply(samples,function(x) length(grep(x[1],n.samples)))
+ samples<-paste0(samples,"_Risk")
+
  if(how=="tpm"){
  tpm<-collapseTpm(rexp,"gene_name",minTPM=read.cutoff) ##36 repeat classes collapsed
  ##now for each repeat class and for each pairs, plot a connected dot plot
@@ -28,9 +32,12 @@ geneTest<-function(kexp,geneName="EVI",how=c("cpm","tpm"),saveOut=FALSE,numberPa
   dge <- calcNormFactors(dge)
   tpm<-cpm(dge)
   tpm<-tpm[which(rownames(tpm)==geneName),]
- stopifnot(nrow(tpm)>0)
-
  }
+
+ if(length(tpm)==0){
+  return(0)
+  }
+
  # write.csv(tpm,file=paste0(geneName,"_Gene-Matched_Triplicates.TPM.PatientTrioPlots.csv"))
   pair.tpm<-t(tpm)
   pair.tpm<-log2(1+pair.tpm)  
@@ -75,19 +82,21 @@ print(pairWise.DF)
  }
  readkey() 
  
-  pp1<-ggplot(data,aes(x=group,y=y,file=group))+ggtitle(paste0(geneName," Expression"))+stat_boxplot(aes(group,y),geom='errorbar',linetype=1,width=0.5)+geom_boxplot(aes(group,y))
+  pp1<-ggplot(data,aes(x=group,y=y,file=group))+ggtitle(paste0(geneName," Coding Gene Expression"))+stat_boxplot(aes(group,y),geom='errorbar',linetype=1,width=0.5)+geom_boxplot(aes(group,y))+theme(text=element_text(size=20))+xlab("Low/High Risk MDS")+ylab(paste0(geneName," Expression Level (Log2 ",toupper(how),")"))
   pp1<-pp1+geom_point(position=position_jitter(width=0.2),alpha=0.4)
  print(pp1)
  readkey()
-
- print(Heatmap(t(m),name=geneName))
+   gn.mt<-t(m)
+  colnames(gn.mt)<-geneName
+ geneHeat<-(Heatmap(gn.mt,name=paste0("Log(1+",toupper(how),")")))
+ print(geneHeat)
  readkey()
   if(saveOut==TRUE){
  
    pdf(paste0(geneName,"_ANOVA.pdf"))
    print(pp1)
-   print(Heatmap(t(m),name=geneName))
+   print(geneHeat)
    dev.off()
  }
- cat("done.\n")
+ cat("done.")
 }##main

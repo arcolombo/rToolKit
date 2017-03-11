@@ -14,12 +14,13 @@
 #' @import arkas
 #' @import ggplot2
 #' @import grid
+#' @import ggthemes
 #' @export
 drawBoxPlots<-function(kexp,comparison="pHSC",control="LSC",comparison2="Blast",numberComparisons=1,read.cutoff=3,adjustBy="BH",wilcox.Alternative=c("less","greater"),grob.comparison1=paste0("Median(",control,")<Median(",comparison,") p.value: "),grob.comparison2=paste0("Median(",control,")<Median(",comparison2,") p.value: ") ,testMedians=FALSE,title1=NULL,xlab1=NULL,ylab1=NULL,xlab2=NULL  ){
   if(is.null(title1)==TRUE){
    title1<-"Differential Expression Boxplot"
   }
- 
+   theme_set(theme_tufte())
   title2<-title1
  
   if(is.null(xlab1)==TRUE){

@@ -14,7 +14,7 @@
 #' @import limma
 #' @export
 #' @return images and cluster at the gene and repeat level
-clusterGenesAndRepeats<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE,species=c("Homo.sapiens","Mus.musculus"),selectedPower=NULL,intBiotypes=c("acromeric","centromeric","CR1","Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","hAT","HSFAU","L1","L2","LTR Retrotransposon","Eutr1","Merlin","PiggyBac","Pseudogene","Repetitive element","satellite","snRNA","SVA","TcMar","telo","Transposable Element","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm"),batchNormalize=FALSE,batchVector=NULL,design=NULL){
+clusterGenesAndRepeats<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE,species=c("Homo.sapiens","Mus.musculus"),selectedPower=NULL,intBiotypes=c("acromeric","centromeric","CR1","Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","hAT","HSFAU","L1","L2","LTR Retrotransposon","Eutr1","Merlin","PiggyBac","Pseudogene","Repetitive element","satellite","snRNA","SVA","TcMar","telo","Transposable Element","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm"),batchNormalize=FALSE,batchVector=NULL,design=NULL,collapseBy=c("gene_id","gene_name")){
  
  ##FIX ME: use numbersToColors on a sorted biotype column to get a single bar plot for a legened and print that out separately.  ##
  if(batchNormalize==TRUE && is.null(design)==TRUE){
@@ -26,6 +26,7 @@ clusterGenesAndRepeats<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("si
    batchVector<-metadata(kexp)$batch
  }
    how<-match.arg(how,c("cpm","tpm"))
+   collapseBy<-match.arg(collapseBy,c("tx_id","gene_id","gene_name"))
   ##prepare data
   whichWGCNA<-match.arg(whichWGCNA,c("single","block"))
   species<-match.arg(species,c("Homo.sapiens","Mus.musculus"))
@@ -34,7 +35,7 @@ clusterGenesAndRepeats<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("si
   if(how=="cpm"){
   ###rows must be SAMPLES columns genes
   if(batchNormalize==FALSE){
-  cpm<-collapseBundles(kexp,"gene_id",read.cutoff=read.cutoff)
+  cpm<-collapseBundles(kexp,collapseBy,read.cutoff=read.cutoff)
   cpm<-cpm[!grepl("^ERCC",rownames(cpm)),]
   rexp<-findRepeats(kexp)
   rpm<-collapseBundles(rexp,"tx_biotype",read.cutoff=read.cutoff)
@@ -58,7 +59,7 @@ clusterGenesAndRepeats<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("si
    ##the caller will batch normalize WITH design matrix
    ##output: log2 batch cpm, re-convert into CPM, collapse tx_id normalized into gene bundles CPM ,final output is batch correct CPM values tx_id
   ##taks for this branch is to collapse tx_id into gene_id (CPM), and tx_biotype(cpm)
-   cpm<-collapseBundles(kexp,"tx_id",read.cutoff=read.cutoff)
+   cpm<-collapseBundles(kexp,collapseBy,read.cutoff=read.cutoff)
    d<-DGEList(counts=cpm)
    d<-calcNormFactors(d)
    log.cpm<-cpm(d,log=TRUE,normalize.lib.sizes=TRUE) #log2
@@ -101,7 +102,7 @@ clusterGenesAndRepeats<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("si
   ############collapse by gene_id
   }##batch
   }else if(how=="tpm"){
-  cpm<-collapseTpm(kexp,"gene_id",read.cutoff=read.cutoff)
+  cpm<-collapseTpm(kexp,collapseBy,read.cutoff=read.cutoff)
   cpm<-cpm[!grepl("^ERCC",rownames(cpm)),]
   rexp<-findRepeats(kexp)
   rpm<-collapseTpm(rexp,"tx_biotype",read.cutoff=read.cutoff)
@@ -109,6 +110,7 @@ clusterGenesAndRepeats<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("si
   cpm<-log2(1+cpm) ##log2 transform recommended of genes
   rpm<-log2(1+rpm) ##log2 transform of repeats.
   }
+  intBiotypes<-intBiotypes[intBiotypes%in%rownames(rpm)]
   #split out repeats
   datExpr0<-t(cpm)
   gsg<-goodSamplesGenes(datExpr0,verbose=3)
@@ -156,7 +158,7 @@ datExpr<-datExpr0
                     marAll=c(1,11,3,3),
                     main=paste0("Hierarchial Cluster of Gene Expression (CPM)"),ylab="Average Euclidean Distance Gene Expression")
   readkey()
-  pdf(paste0("TxBiotype_",how,"_Correlation_Samples.pdf"),width=12,heigh=10)
+  pdf(paste0("TxBiotype_",how,"_Correlation_Samples_",collapseBy,".pdf"),width=12,heigh=10)
   plotDendroAndColors(sampleTree2, traitColors,
                     groupLabels = names(datTraits),
                     marAll=c(1,11,3,3),ylab=NULL,main=NULL)

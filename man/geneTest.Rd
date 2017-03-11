@@ -8,12 +8,12 @@ geneTest(kexp, geneName = "EVI", how = c("cpm", "tpm"), saveOut = FALSE,
   numberPairs = c(1, 2, 3), read.cutoff = 1)
 }
 \arguments{
-\item{kexp}{this is a kexp for three stages patient wise, with 3 time-stages}
+\item{kexp}{this is a kexp for 2 gropu non-paired patient wise, with 2 groups}
 }
 \value{
 images and a pdf/jpeg
 }
 \description{
-for paired time series, this plots the expression across time points in units of TPM. This plots each repeat biotype and every patient trio across stages.
+for non-paired group factor ANOVA testing, this plots the expression across two groups units of TPM
 }
 

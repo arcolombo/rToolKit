@@ -8,7 +8,7 @@ compareRestrictions(kexp1, kexp2,
   geneSetPath = "~/Documents/Arkas-Paper-Data/MSigDB/MsigDb_all/",
   compare1 = "Low", compare2 = "pHSC", controls1 = "High",
   controls2 = "LSC", paired1 = FALSE, paired2 = TRUE, read.cutoff = 2,
-  MsigDB = NULL, saveToFile = FALSE)
+  MsigDB = NULL, saveToFile = FALSE, how = c("cpm", "tpm"))
 }
 \arguments{
 \item{kexp1}{this is the first experiment you wish to analyze}

@@ -204,7 +204,7 @@ setMethod("drivers", "wgcnaDbLite", function(x,Module.color=NULL,p.value.type="s
   }#for
   
  
-    return(drivers)
+    return(out)
 
  })
 

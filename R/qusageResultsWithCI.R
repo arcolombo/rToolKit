@@ -58,9 +58,10 @@ qusageResultsWithCI<-function(kexp,geneSetPath="~/Documents/Arkas-Paper-Data/MSi
     pchLabels<-as.numeric(rep(0,nrow(t)))
   rownames(t)<-tolower(rownames(t))
   rownames(t)<-paste0(toupper(substring(rownames(t),1,1)),substring(rownames(t),2))
-  write.csv(t,file=paste0("qusage_",contrast,"_enrichmentActivation.csv"))
+  write.csv(t,file=paste0("qusage_",contrast,"_",MsigDB,"_enrichmentActivation.csv"))
+  max.mean<-max(qs.pHSC.results$path.mean)
   par(cex.main=0.95,family='Helvetica') 
-  plot(qs.pHSC.results,col=1:nrow(t), main=Pathwaytitle,xlab="Differential Enrichment Level",ylab="Distribution of Canonical Gene Set Activity",xlim=c(-1.2,1)  )
+  plotDensityCurves(qs.pHSC.results,col=1:nrow(t), main=Pathwaytitle,xlab="Differential Enrichment Level",ylab="Distribution of Canonical Gene Set Activity",xlim=c(-max.mean-2,max.mean+2)  )
  legend("topleft",legend=rownames(t),col=1:nrow(t),pch=pchLabels,cex=0.99,bty='n',title=paste0("Significant Enrichment *p.val","\u2264",p.cutoff))
  mtext(paste0("Pairwise Comparison ",contrast),cex=0.95)
  # title(paste0("Differential Enrichment Activity of Apoptotic, Inflammatory, and Immune Canonical Gene Sets Comparing",comparison,"-",controls))
@@ -75,7 +76,7 @@ qusageResultsWithCI<-function(kexp,geneSetPath="~/Documents/Arkas-Paper-Data/MSi
   x11(width=12,height=6)
   plotCIsGenes(qs.pHSC.results,path.index=j, main=paste0(x[which(rownames(x)== j),1]," ",contrast),pch=18,cex.xaxis=1.2,ylab="Differential Canonical Gene Set Activity" )
 #  readkey()
- write.csv(qs.pHSC.results$mean[qs.pHSC.results$pathways[[pathIndex]]],file=paste0("qusage.GeneSet.",contrast,".",names(qs.pHSC.results$pathways)[j],".csv"))
+ write.csv(qs.pHSC.results$mean[qs.pHSC.results$pathways[[pathIndex]]][order(qs.pHSC.results$mean[qs.pHSC.results$pathways[[pathIndex]]],decreasing=TRUE)] ,file=paste0("qusage.GeneSet.",contrast,".",names(qs.pHSC.results$pathways)[j],".csv"))
  ##its own page
 ###
   readkey()
@@ -83,20 +84,20 @@ qusageResultsWithCI<-function(kexp,geneSetPath="~/Documents/Arkas-Paper-Data/MSi
   }##show plots
 
 ############PDF PLOT#################################################
- cairo_pdf(paste0("Qusage_Plotting_Results_Activation",contrast,".pdf"),family='Helvetica')
+ cairo_pdf(paste0("Qusage_Plotting_Results_Activation_",contrast,"_",MsigDB,".pdf"),family='Helvetica')
   par(cex.main=0.95)
-  plot(qs.pHSC.results,col=1:nrow(t), main=Pathwaytitle,xlab="Differential Pathway Enrichment Level",ylab="Distribution of Canonical Gene Set Activity",xlim=c(-1.3,1.1)  )
+  plotDensityCurves(qs.pHSC.results,col=1:nrow(t), main=Pathwaytitle,xlab="Differential Pathway Enrichment Level (Log2)",ylab="Distribution of Canonical Gene Set Activity",xlim=c(-max.mean-2,max.mean+2)  )
  legend("topleft",legend=rownames(t),col=c(1:nrow(t)),pch=pchLabels,bty='n',title=paste0("Significant Enrichment *p.val","\u2264",p.cutoff)  )
  mtext(paste0("Pairwise Comparison ",contrast),cex=0.95)
  dev.off()
 
- pdf(paste0("Qusage_Plotting_Results_CI",contrast,".pdf"),width=12,height=7)
+ pdf(paste0("Qusage_Plotting_Results_CI_",contrast,"_",MsigDB,".pdf"),width=12,height=7)
 
 ###
  for(j in 1:nrow(t)){
  pathIndex<-j
   par(mar=c(12,5.3,2,2),mfrow=c(1,1),cex.main=1.2,family='Helvetica')
-  plotCIsGenes(qs.pHSC.results,path.index=j, main=paste0(x[which(rownames(x)== j),1]," ",contrast),pch=18,cex.xaxis=1.9,asBand=TRUE,col=2,ylab="Differential Canonical Gene Set Activity" )
+  plotCIsGenes(qs.pHSC.results,path.index=j, main=paste0(x[which(rownames(x)== j),1]," ",contrast),pch=18,cex.xaxis=2.6,asBand=TRUE,col=2,ylab="Differential Canonical Gene Set Activity" )
 
    ##its own page
 
