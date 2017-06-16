@@ -182,7 +182,7 @@ key<-data.frame(module=rownames(moduleTraitCor),id=seq(1:length(rownames(moduleT
 ########i
    activation.direction<-activation.direction[which(key$module!="MEgrey"),]
 
-  activation.Heat<-Heatmap((activation.direction),col=colorRamp2(c(-2,0,2),c("black","white","orange")),name="Activity Level",column_title=activationTitle,column_title_gp=gpar(fontsize=11),heatmap_legend_param=list(color_bar="continuous"),cluster_columns=FALSE,cluster_row=FALSE,show_row_names=FALSE, column_title_side="top" )
+  activation.Heat<-Heatmap((activation.direction),col=colorRamp2(c(-2,0,2),c("black","white","orange")),name="Activity Level",column_title="Inferred Function",column_title_gp=gpar(fontsize=11),heatmap_legend_param=list(color_bar="continuous"),cluster_columns=FALSE,cluster_row=FALSE,show_row_names=FALSE, column_title_side="top" )
 
    par(mar = c(6, 14, 3, 3));
  # Display the correlation values within a heatmap plot
@@ -190,6 +190,10 @@ key<-data.frame(module=rownames(moduleTraitCor),id=seq(1:length(rownames(moduleT
   readkey()
 #######
    ###fisher test mainly designed for 2 enrichment functions Immune and Inflammation not general
+ pdf(paste0("Heat_correlation_Fisher",how,"_",p.value,"_plots.pdf"),width=12,height=12)
+    par(mar = c(9, 10, 3, 3));
+     print(activation.Heat+heatCor)
+   dev.off()
 
 
 
@@ -229,16 +233,24 @@ colnames(d)<-c("Immune.up","Immune.down","Inflam.up","Inflam.down")
     colnames(t2)[which(colnames(t2)=="inf.neg")]<-paste0(colnames(moduleTraitCor2)[i],".",colnames(d)[4])
   }
     rownames(t2)<-c("positive.enriched","negative.enriched")
-  global.chi<-chisq.test(colSums(t))$p.value
-
+  global.correlation.chi<-chisq.test(colSums(t))$p.value
+  pos<-t[grep(".CorPos",rownames(t)),]
+   neg<-t[grep(".CorNeg",rownames(t)),]
+  df.pos.neg<-data.frame(Pos=colSums(pos),Neg=colSums(neg))
+  df.pos.neg<-t(df.pos.neg)
+  pos.neg.correlation.chi<-chisq.test(df.pos.neg)$p.value
 write.csv(t,file="Significant-Association.table.pairwise.Fisher.test.correlation.enrichment.csv")
-write.csv(chi.df,file="Fisher.pairwise.test.correlation.enrichment.csv")
-write.csv(global.chi,file="Global.chi.square.test.correlation.enrichment.csv")
-
+  write.csv(chi.df,file="Fisher.pairwise.test.correlation.enrichment.csv")
+  write.csv(global.correlation.chi,file="Global.chi.square.test.correlation.enrichment.csv")
+  write.csv(pos.neg.correlation.chi,file="Positive.Negative.correlation.factor.correlation.enrichment.csv")
  # draw(activation.Heat+heatCor)
  # readkey()
  outputs<-t(chi.df)
-  outputs<-rbind(outputs,global.chi)
+ outputs<- cbind(outputs,p.adjust(outputs[,1],method="fdr",n=nrow(outputs)))
+ 
+ outputs<-rbind(outputs,global.correlation.chi)
+ outputs<-rbind(outputs,pos.neg.correlation.chi)
+ colnames(outputs)<-c("p.value","FDR-adjust.p.value")
   return(outputs)
 
 

@@ -55,7 +55,7 @@ message(paste0("found lnames"))
  write.csv(moduleTraitPvalue,file="Correlation_Matrix_PValues_ModuleRepeat-CPM-Biotype-TxBiotype.csv")
   write.csv(moduleTraitCor,file="Correlation_Matrix_Gene_ModuleRepeats-CPM-Biotype-TxBiotype.csv")
  ###label the rows of the heatmap by numbers
-key<-data.frame(module=rownames(moduleTraitCor),id=seq(1:length(rownames(moduleTraitCor))),stringsAsFactors=FALSE)
+  key<-data.frame(module=rownames(moduleTraitCor),id=seq(1:length(rownames(moduleTraitCor))),stringsAsFactors=FALSE)
  write.csv(key,file="ModuleNameColor_key_ModuleNumber.csv")
 
  ###color code the rownames based on pathPairing
@@ -103,7 +103,7 @@ key<-data.frame(module=rownames(moduleTraitCor),id=seq(1:length(rownames(moduleT
   colnames(moduleTraitCor2)<-gsub("Endogenous Retrovirus","Endg. Retrovirus",colnames(moduleTraitCor2))
     moduleTraitCor2<-moduleTraitCor2[which(key$module!="MEgrey"),]   
    heatCor<-Heatmap(moduleTraitCor2,
-                   column_names_gp=gpar(fontsize=10),
+                   column_names_gp=gpar(fontsize=18),
                    cluster_columns=x.pv$hclust,
                    cluster_rows=FALSE,
                    row_names_side="left",
@@ -160,15 +160,15 @@ key<-data.frame(module=rownames(moduleTraitCor),id=seq(1:length(rownames(moduleT
 ########
  activation.direction<-activation.direction[which(key$module!="MEgrey"),]
 
-  activation.Heat<-Heatmap((activation.direction),col=colorRamp2(c(-2,0,2),c("black","white","orange")),name="Activity Level",column_title=activationTitle,column_title_gp=gpar(fontsize=11),heatmap_legend_param=list(color_bar="continuous"),cluster_columns=FALSE,show_row_names=FALSE, column_title_side="top" )
+  activation.Heat<-Heatmap((activation.direction),col=colorRamp2(c(-2,0,2),c("black","white","orange")),name="Activity Level",column_title=activationTitle,column_title_gp=gpar(fontsize=11),heatmap_legend_param=list(color_bar="continuous"),cluster_columns=FALSE,cluster_rows=FALSE,show_row_names=FALSE, column_title_side="top" )
 
 
 ##
   draw(activation.Heat+heatCor)    
 #######
  ##traitCorRenamed is the slot for custom renaming of module repeat identity of family
-  pdf(paste0("Heat_correlation_",how,"_plots.pdf"),width=12,height=12)
-    par(mar = c(9, 10, 3, 3));
+  pdf(paste0("Heat_correlation_",how,"_plots.pdf"),width=16,height=12)
+    par(mar = c(12, 10, 3, 3));
      print(activation.Heat+heatCor)
    dev.off()
  

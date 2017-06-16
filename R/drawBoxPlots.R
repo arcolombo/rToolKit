@@ -20,7 +20,7 @@ drawBoxPlots<-function(kexp,comparison="pHSC",control="LSC",comparison2="Blast",
   if(is.null(title1)==TRUE){
    title1<-"Differential Expression Boxplot"
   }
-   theme_set(theme_tufte())
+   theme_set(theme_bw())
   title2<-title1
  
   if(is.null(xlab1)==TRUE){
@@ -37,7 +37,7 @@ drawBoxPlots<-function(kexp,comparison="pHSC",control="LSC",comparison2="Blast",
   kexp1<-kexp2Group(kexp,comparison=comparison,control=control)
   design<-metadata(kexp1)$design
   gwa1<-repeatWiseAnalysis(kexp1,design=design,adjustBy=adjustBy,read.cutoff=read.cutoff)
-  write.csv(gwa1$top,file=paste0("repeatWiseAnalysis.BoxPlot.",comparison,"v.",control,".",adjustBy,".csv"))
+  write.csv(gwa1$limmaWithMeta,file=paste0("repeatWiseAnalysis.BoxPlot.",comparison,"v.",control,".",adjustBy,".csv"))
   pHSC<-gwa1$top$logFC[which(gwa1$top$logFC>0)]
   lsc<-gwa1$top$logFC[which(gwa1$top$logFC<=0)]
   wilcox.pvalue<-signif(wilcox.test(pHSC,abs(lsc),wilcox.Alternative)$p.value,2)
@@ -48,22 +48,25 @@ drawBoxPlots<-function(kexp,comparison="pHSC",control="LSC",comparison2="Blast",
 
 
  if(testMedians==FALSE){
- pp1<-(ggplot(dat1,aes(x=Stage,y=logFC,fill=Stage ))+ggtitle(paste0("Differential Repeat Expression |logFC| ",comparison,"-",control))+scale_fill_manual(values=c("green","red"))+stat_boxplot(aes(Stage,logFC),geom='errorbar',linetype=1,width=0.5)+geom_boxplot(aes(Stage,logFC),outlier.colour=NA))
+ pp1<-(ggplot(dat1,aes(x=Stage,y=logFC,fill=Stage ))+ggtitle(paste0("Differential Repeat Expression |logFC| ",comparison,"-",control))+scale_fill_manual(values=c("green","red"))+stat_boxplot(aes(Stage,logFC),geom='errorbar',linetype=1,width=0.5)+geom_boxplot(aes(Stage,logFC),outlier.colour=NA)+theme(axis.text=element_text(size=18)))
    pp1<-pp1+geom_point(position=position_jitter(width=0.2),alpha=0.4 )
+   pp1<-pp1+xlab(NULL)+ylab(NULL)+ggtitle(NULL)
   print(pp1)
   }else if(testMedians==TRUE){
 
 #  my_grob= grobTree(textGrob(paste0(grob.comparison1,wilcox.pvalue ),x=0.7,y=0.95,gp=gpar(col="black",fontsize=10,fontface="italic")))
-  pp1<-(ggplot(dat1,aes(x=Stage,y=logFC,fill=Stage ))+ggtitle(paste0(title1," ",comparison,"-",control), subtitle=paste0(grob.comparison1,wilcox.pvalue   ))+scale_fill_manual(values=c("green","red"))+stat_boxplot(aes(Stage,logFC),geom='errorbar',linetype=1,width=0.5)+geom_boxplot(aes(Stage,logFC),outlier.colour=NA))#+annotation_custom(my_grob,ymax=6,xmax=2) )
+  pp1<-(ggplot(dat1,aes(x=Stage,y=logFC,fill=Stage ))+ggtitle(paste0(title1," ",comparison,"-",control), subtitle=paste0(grob.comparison1,wilcox.pvalue   ))+scale_fill_manual(values=c("green","red"))+stat_boxplot(aes(Stage,logFC),geom='errorbar',linetype=1,width=0.5)+geom_boxplot(aes(Stage,logFC),outlier.colour=NA)+theme(axis.text=element_text(size=20)))
+#)#+annotation_custom(my_grob,ymax=6,xmax=2) )
 pp1<-pp1+xlab(xlab1)+ylab(ylab1)+guides(fill=guide_legend(title="Clonal Stages"))
  pp1<-pp1+geom_point(position=position_jitter(width=0.2),alpha=0.4,show.legend=FALSE )
+ pp1<-pp1+xlab(NULL)+ylab(NULL)+ggtitle(NULL)
   print(pp1)
    }
   readkey()
  if(numberComparisons==2){
   kexp2<-kexp2Group(kexp,comparison2,control)
   gwa<-repeatWiseAnalysis(kexp2,design=metadata(kexp2)$design,adjustBy=adjustBy)
-  write.csv(gwa$top,file=paste0("repeatWiseAnalysis.Boxplot.",adjustBy,".",comparison2,"v.",control,".csv"))
+  write.csv(gwa$limmaWithMeta,file=paste0("repeatWiseAnalysis.Boxplot.",adjustBy,".",comparison2,"v.",control,".csv"))
 
   blast<-gwa$top$logFC[which(gwa$top$logFC>0)]
   lsc<-gwa$top$logFC[which(gwa$top$logFC<=0)]
@@ -74,15 +77,18 @@ pp1<-pp1+xlab(xlab1)+ylab(ylab1)+guides(fill=guide_legend(title="Clonal Stages")
 
 
   if(testMedians==FALSE){
-  pp<-(ggplot(dat,aes(x=Stage,y=logFC,fill=Stage ))+ggtitle(paste0("Differential Repeat Expression |logFC| ",comparison2,"-",control))+scale_fill_manual(values=c("red","lightblue"))+stat_boxplot(aes(Stage,logFC),geom='errorbar',linetype=1,width=0.5)+geom_boxplot(aes(Stage,logFC),outlier.colour=NA)+stat_summary(aes(Stage,logFC),fun.y=mean,geom="point",size=2)+stat_summary(aes(Stage,logFC),fun.data=mean_se,geom="errorbar",width=0.74 ))
+  pp<-(ggplot(dat,aes(x=Stage,y=logFC,fill=Stage ))+ggtitle(paste0("Differential Repeat Expression |logFC| ",comparison2,"-",control))+scale_fill_manual(values=c("red","lightblue"))+stat_boxplot(aes(Stage,logFC),geom='errorbar',linetype=1,width=0.5)+geom_boxplot(aes(Stage,logFC),outlier.colour=NA)+theme(axis.text=element_text(size=20)))
    pp<-pp+geom_point(position=position_jitter(width=0.2),alpha=0.4 )
+   pp<-pp+xlab(NULL)+ylab(NULL)+ggtitle(NULL)
   print(pp)
    }else if(testMedians==TRUE){
    #my_grob= grobTree(textGrob(paste0(grob.comparison2,wilcox.pvalue2 ),x=0.7,y=0.95,gp=gpar(col="black",fontsize=10,fontface="italic")))
-  pp<-(ggplot(dat,aes(x=Stage,y=logFC,fill=Stage ))+ggtitle(paste0(title2," ",comparison2,"-",control),subtitle=paste0(grob.comparison2,wilcox.pvalue2 ) )+scale_fill_manual(values=c("red","lightblue"))+stat_boxplot(aes(Stage,logFC),geom='errorbar',linetype=1,width=0.5)+geom_boxplot(aes(Stage,logFC),outlier.colour=NA))# + annotation_custom(my_grob,ymax=6,xmax=2 ) )
+  pp<-(ggplot(dat,aes(x=Stage,y=logFC,fill=Stage ))+ggtitle(paste0(title2," ",comparison2,"-",control),subtitle=paste0(grob.comparison2,wilcox.pvalue2 ) )+scale_fill_manual(values=c("red","lightblue"))+stat_boxplot(aes(Stage,logFC),geom='errorbar',linetype=1,width=0.5)+geom_boxplot(aes(Stage,logFC),outlier.colour=NA)+theme(axis.text=element_text(size=16)))
+ #)# + annotation_custom(my_grob,ymax=6,xmax=2 ) )
   pp<-pp+xlab(xlab2)+ylab(ylab1)+guides(fill=guide_legend(title="Clonal Stages"))
 
   pp<-pp+geom_point(position=position_jitter(width=0.2),alpha=0.4,show.legend=FALSE ) 
+   pp<-pp+xlab(NULL)+ylab(NULL)+ggtitle(NULL)
   print(pp)
    }
   

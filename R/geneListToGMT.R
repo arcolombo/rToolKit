@@ -8,7 +8,11 @@ geneListToGMT<-function(geneList=NULL,fileName="test.gmt",citation="www.na.com")
    for(i in 1:length(names(geneList))){
     x<-data.frame(c(citation,geneList[[i]]))
     colnames(x)<-names(geneList)[i]
-   write.table(x,
+   ##there is a bugger where the last gene prints an eol as tab and \n is needed for the last gene
+    xnrow<-nrow(x)
+    x.first<-seq(1,(xnrow-1))
+
+   write.table(x[x.first,],
                file=fileName,
                append= T, 
                sep='\t',
@@ -16,6 +20,13 @@ geneListToGMT<-function(geneList=NULL,fileName="test.gmt",citation="www.na.com")
                row.names=FALSE,
                col.names=colnames(x),
                eol="\t" )
-
+   write.table(x[xnrow,],
+               file=fileName,
+               append=T,
+               sep='\t',
+               quote=FALSE,
+               row.names=FALSE,
+               col.names=FALSE,
+               eol="\n")
   }#loop
 }

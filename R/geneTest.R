@@ -8,7 +8,7 @@
 #' @return images and a pdf/jpeg
 geneTest<-function(kexp,geneName="EVI",how=c("cpm","tpm"),saveOut=FALSE,numberPairs=c(1,2,3),read.cutoff=1){
 
- theme_set(theme_tufte())
+ theme_set(theme_bw())
  rexp<-kexp
  #rexp<-kexpByTrio(rexp) ##take all triples
  pairs<-colnames(rexp)
@@ -17,8 +17,13 @@ geneTest<-function(kexp,geneName="EVI",how=c("cpm","tpm"),saveOut=FALSE,numberPa
 
  n.samples<-factor(sapply(strsplit(colnames(rexp),"_"),function(x) x[1]))
  number.samples<-sapply(samples,function(x) length(grep(x[1],n.samples)))
+if(numberPairs==1){
  samples<-paste0(samples,"_Risk")
+ xLabels<-"Low/High Risk MDS"
+ }else{
+ xLabels<-"pHSC,LSC, and Blast AML"
 
+}
  if(how=="tpm"){
  tpm<-collapseTpm(rexp,"gene_name",minTPM=read.cutoff) ##36 repeat classes collapsed
  ##now for each repeat class and for each pairs, plot a connected dot plot
@@ -82,7 +87,7 @@ print(pairWise.DF)
  }
  readkey() 
  
-  pp1<-ggplot(data,aes(x=group,y=y,file=group))+ggtitle(paste0(geneName," Coding Gene Expression"))+stat_boxplot(aes(group,y),geom='errorbar',linetype=1,width=0.5)+geom_boxplot(aes(group,y))+theme(text=element_text(size=20))+xlab("Low/High Risk MDS")+ylab(paste0(geneName," Expression Level (Log2 ",toupper(how),")"))
+  pp1<-ggplot(data,aes(x=group,y=y,file=group))+ggtitle(paste0(geneName," Coding Gene Expression"))+stat_boxplot(aes(group,y),geom='errorbar',linetype=1,width=0.5)+geom_boxplot(aes(group,y))+theme(text=element_text(size=20))+xlab(xLabels)+ylab(paste0(geneName," Expression Level (Log2 ",toupper(how),")"))
   pp1<-pp1+geom_point(position=position_jitter(width=0.2),alpha=0.4)
  print(pp1)
  readkey()

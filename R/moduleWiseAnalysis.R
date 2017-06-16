@@ -138,7 +138,7 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
     par(mar=c(4,10,4,4),cex.main=0.9)
    color.id<-match(repeat.module.list[[colR]]$gene_id,rownames(rpm))
   module.color<-rpm[color.id,]
-  ME.id<-grep(paste0("ME",colR),colnames(rMEs))
+  ME.id<-which(colnames(rMEs)==(paste0("ME",colR)))
   stopifnot(all(rownames(module.color)==repeat.module.list[[colR]]$gene_id)==TRUE)
   barplot(rMEs[,ME.id],horiz=T,names.arg=colnames(kexp),cex.names=0.8,las=1,main=paste0(repeat.key[which(rownames(repeat.key)==paste0("ME",colR)),]," Module correlation ~(",key.id,") ",signif(bicor(rMEs[,ME.id],MEs[,color.ID]),3 )) ,space=1)
    
@@ -268,7 +268,7 @@ moduleWiseAnalysis<-function(kexp,lnames,rnames,wgcnaDbName="wgcnaDbLite.cpm.sql
     par(mar=c(4,10,4,4),cex.main=0.9)
    color.id<-match(repeat.module.list[[colR]]$gene_id,rownames(rpm))
   module.color<-rpm[color.id,]
-  ME.id<-grep(paste0("ME",colR),colnames(rMEs))
+  ME.id<-which(colnames(rMEs)==(paste0("ME",colR)))
   stopifnot(all(rownames(module.color)==repeat.module.list[[colR]]$gene_id)==TRUE)
    barplot(rMEs[,ME.id],horiz=T,names.arg=colnames(kexp),cex.names=0.8,las=1,main=paste0(repeat.key[which(rownames(repeat.key)==paste0("ME",colR)),]," Module correlation ~(",key.id,") ",signif(bicor(rMEs[,ME.id],MEs[,color.ID]),3 )) ,space=1)
    }
