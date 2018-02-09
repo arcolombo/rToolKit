@@ -21,11 +21,11 @@
 wgcna_HeatCorFinal<-function(lnames=NULL,rnames=NULL, read.cutoff=1,recalc=FALSE,how=how,pathwaysToPick=c("immune_response","inflam","apopto","death","kappab","wound"),pathPairing=c(1,1,2,2,3,4),dbname=NULL,qdbname=NULL,rdbname=NULL,p.value=1,minRank=0,averagePathwayFC=FALSE){
 ##FIX ME:  add a star for pvalues less than 0.05 in the cell_function Heat
 stopifnot(length(pathwaysToPick)==length(pathPairing))
- require(plyr)
-  require(ComplexHeatmap)
-  require(circlize)
-  require(pvclust) 
-  require(WGCNA)
+ # require(plyr)
+ # require(ComplexHeatmap)
+ # require(circlize)
+ # require(pvclust) 
+ # require(WGCNA)
 if(is.null(lnames)==TRUE){
 cat("Please call wgcna.R prior calling a heatmap...\n")
 }
@@ -112,8 +112,7 @@ message(paste0("found lnames"))
         cell_fun=function(j,i,x,y,w,h,col){
         weighted.Pvalue<-corPvalueStudent(moduleTraitCor2,nSamples)
                    if(weighted.Pvalue[i,j]<0.05){
-                 #  grid.text(sprintf("%.3f", weighted.Pvalue[i,j]),x,y)
-                  grid.text("*",x,y-unit(0.005,'npc') )
+                    grid.text("*",x,y-unit(0.005,'npc') )
                     }
                    grid.rect(x,y,w,h,gp=gpar(fill=NA,col="black"))
            }     
@@ -124,10 +123,6 @@ message(paste0("found lnames"))
   print(modA+heatCor)
   }
   readkey()
-
-#####add Heatcor of row annotation subset. 
-
-
 ###add activation direction
  mC<-moduleTraitCor
   activation.direction<-matrix(data=0,nrow=nrow(moduleTraitCor),ncol=length(names(xN)))
@@ -144,8 +139,6 @@ message(paste0("found lnames"))
   next
  }
  df<-df[sapply(df,function(x) median(x[which(rownames(x) !="Total"),"ranking"])>minRank)  ]
-# merged.df<-lapply(df,function(x) x["Total",])
-# sig.df<-merged.df[sapply(merged.df,function(x) x[,"pvalue"]<=0.05)]
   ###average pathways is c5.all.symbols.gmt was used.  if the canonical merged GO.gmt was used do not average.
  if(averagePathwayFC==TRUE){
     df.path<-lapply(df,function(x) x[which(rownames(x) !="Total"),] )
