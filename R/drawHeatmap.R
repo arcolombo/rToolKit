@@ -13,7 +13,7 @@
 #' @importFrom pvclust pvclust
 #' @import colorRamps
 #' @export
-drawHeatmap<-function(kexp,tags=NULL,annotations=TRUE,byType=c("counts","tpm"),cutoff=2,title1=NULL,tx_biotype_color_master=NULL,gene_biotype_color_master=NULL,openDevice=FALSE){
+drawHeatmap<-function(kexp,tags=NULL,annotations=TRUE,byType=c("counts","tpm"),cutoff=2,title1=NULL,tx_biotype_color_master=NULL,gene_biotype_color_master=NULL,openDevice=FALSE,clust.method="average"){
     stopifnot(is.null(tags)==FALSE)
     if(is.null(title1)==TRUE){
    title1="Repeat Differential Expression"
@@ -23,6 +23,7 @@ drawHeatmap<-function(kexp,tags=NULL,annotations=TRUE,byType=c("counts","tpm"),c
     ##generate list and print to csv for future
     tx.color.master<-repeatBiotypeColorPalette(kexp)
   # write.csv(tx.color.master,file="tx_biotype_color_master.csv")
+    tx_color_master<-tx.color.master
    }else{
     ##read in file, if fail to load, regenerate and print to csv
      #color.df<-read.csv(tx_biotype_color_master,stringsAsFactors=FALSE,row.names=NULL,col.names=c("txb","palette"))
@@ -67,7 +68,7 @@ drawHeatmap<-function(kexp,tags=NULL,annotations=TRUE,byType=c("counts","tpm"),c
  dev.new()
   }
   if(nrow(rpt.mt)>=12){
-  rpt.pv<-pvclust(log(1+rpt.mt),nboot=100)
+  rpt.pv<-pvclust(log(1+rpt.mt),nboot=100,method.hclust=clust.method)
   rpt.dend<-dendsort(hclust(dist(log(1+rpt.mt))),isReverse=TRUE)
   rh.rpt<-Heatmap(log(1+rpt.mt),
                   name=name.legend,

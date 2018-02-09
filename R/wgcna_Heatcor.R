@@ -108,7 +108,7 @@ key<-data.frame(module=rownames(moduleTraitCor),id=seq(1:length(rownames(moduleT
         weighted.Pvalue<-corPvalueStudent(moduleTraitCor2,nSamples)
                    if(weighted.Pvalue[i,j]<0.05){
                  #  grid.text(sprintf("%.3f", weighted.Pvalue[i,j]),x,y)
-                    grid.text("*",x,y-0.005 )
+                  grid.text("*",x,y-unit(0.005,'npc') )
                     }
                    grid.rect(x,y,w,h,gp=gpar(fill=NA,col="black"))
            }     
@@ -161,8 +161,10 @@ key<-data.frame(module=rownames(moduleTraitCor),id=seq(1:length(rownames(moduleT
  }
  df<-df[sapply(df,function(x) median(x[which(rownames(x) !="Total"),"ranking"])>minRank)  ]
 
- activation.df<-sapply(df,function(x) as.numeric(x[grep("Total",rownames(x)),]$logFC)/as.numeric(x[grep("Total",rownames(x)),]$query.size))
-  names(activation.df)<-paste0("ME",names(activation.df))
+# activation.df<-sapply(df,function(x) as.numeric(x[grep("Total",rownames(x)),]$logFC)/as.numeric(x[grep("Total",rownames(x)),]$query.size))
+ activation.df<-sapply(df,function(x) as.numeric(x[grep("Total",rownames(x)),]$logFC))
+ 
+ names(activation.df)<-paste0("ME",names(activation.df))
  dir.id<-match(names(activation.df),key$module)
   names(activation.df)<-dir.id
  dir.id2<-match(names(activation.df),rownames(activation.direction))

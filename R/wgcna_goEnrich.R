@@ -30,6 +30,11 @@ wgcna_goEnrich<-function(lnames,species=c("human","mouse"),entrezOnly=FALSE ) {
 ###need MEs, moduleLables,moduleColors, and geneTree loaded
   if(entrezOnly==FALSE){
   probes = names(datExpr)
+  if(is.null(probes)==TRUE){
+    message("names of datExpr is null, checking column names for ENG ids...")
+   probes<-colnames(datExpr)
+   stopifnot(!is.null(probes)==TRUE)
+  }
   probes2annot<-match(probes,annot$ensembl_gene_id)
   allEntrezID<-annot$entrezgene[probes2annot]
  } else{

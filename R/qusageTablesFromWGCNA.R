@@ -20,7 +20,7 @@
 #' @import TxDbLite
 #' @export
 #' @return a qusageDbLite db
-qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",version="1.0.0",Module.color="brown",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt","immuneComplexes.gmt"),how=c("cpm","tpm"),species=c("Homo.sapiens","Mus.musculus"),comparison1="pHSC",comparison2="Blast",controls="LSC",paired=TRUE,batchNormalize=FALSE,batchVector=NULL,comparisonNumber=1,skipWithinEnrichment=TRUE,qusageDbName="qusageDbLite",read.cutoff=2 ){
+qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",version="1.0.0",Module.color="brown",MsigDB=c("c1.all.v5.1.symbols.gmt","c2.all.v5.1.symbols.gmt","c4.all.v5.1.symbols.gmt","c5.all.v5.1.symbols.gmt","c6.all.v5.1.symbols.gmt","c7.all.v5.1.symbols.gmt","h.all.v5.1.symbols.gmt","immuneComplexes.gmt"),how=c("cpm","tpm"),species=c("Homo.sapiens","Mus.musculus"),comparison1="pHSC",comparison2="Blast",controls="LSC",paired=TRUE,batchNormalize=FALSE,batchVector=NULL,comparisonNumber=1,skipWithinEnrichment=TRUE,qusageDbName="qusageDbLite",read.cutoff=2,design=NULL ){
 
 ##task: this will take a full kexp and first normalize then collapse by gene_name then log2 transform or tpm normalize and pass into qusageRun.R to handle the pre-proccessing for qusage call.  the output should be module.biotype.enrich specific data.  then write to a db. 
  ##important note: it is tempting to merely use collapseBundles(kexp,"gene_name") and pipe into qusage HOWEVER QUSAGE REQUIRES NORMALIZED LOG2 XR. collapseBundles will only use the raw counts(kexp) bundle gene_name counts.  here we *****MUST******* use tmm normalized or Tpm calls.
@@ -91,7 +91,16 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
    counts<-counts[,which(colSums(counts)>1)]
    dge<-DGEList(counts=counts)
    dge<-calcNormFactors(dge)
+   if(is.null(design)==TRUE){
    expr<-cpm(dge,normalized.lib.sizes=TRUE,log=FALSE)
+   counts<-log2(1+expr) ##enirhcment on log2 is required
+   }else{
+    stopifnot(all(rownames(design)==colnames(kexp)))
+    message("detected design...voom'ing")
+    voom.expr<-voom(dge,design)
+    expr<-voom.expr$E ##log2
+    counts<-expr
+    }
    }else if(batchNormalize==TRUE){
      stopifnot(is.null(batchVector)==FALSE)
      stopifnot(length(batchVector)==ncol(kexp))##the batchVector nomenclature must match the length of columns.
@@ -102,11 +111,11 @@ qusageTablesFromWGCNA<-function(kexp,verbose=TRUE,dbname="wgcnaDBLite.sqlite",ve
      counts<-collapseBundles(module.kexp,"gene_name")
 
      module.id<-match(rownames(counts),rownames(expr))
-     counts<-expr[module.id,]
+     counts<-expr[module.id,] #log2
       }
-   if(batchNormalize==FALSE){ 
-  counts<-log2(1+expr) ##enirhcment on log2 is required
-     }
+   #if(batchNormalize==FALSE){ 
+  #counts<-log2(1+expr) ##enirhcment on log2 is required
+   #  }
   } else {
   counts<-collapseTpm(module.kexp,"gene_name")
   counts<-log2(1+counts)

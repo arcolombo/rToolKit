@@ -14,7 +14,7 @@
 #' @import limma
 #' @export
 #' @return images and cluster at the gene and repeat level
-wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE,species=c("Homo.sapiens","Mus.musculus"),selectedPower=NULL,intBiotypes=c("acromeric","centromeric","CR1","Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","hAT","HSFAU","L1","L2","LTR Retrotransposon","Eutr1","Merlin","PiggyBac","Pseudogene","Repetitive element","satellite","snRNA","SVA","TcMar","telo","Transposable Element","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm"),batchNormalize=FALSE,batchVector=NULL,design=NULL,collapseBy=c("gene_id","gene_name")){
+wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE,species=c("Homo.sapiens","Mus.musculus"),selectedPower=NULL,intBiotypes=c("acromeric","centromeric","CR1","Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","hAT","HSFAU","L1","L2","LTR Retrotransposon","Eutr1","Merlin","PiggyBac","Pseudogene","Repetitive element","satellite","snRNA","SVA","TcMar","telo","Transposable Element","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm"),batchNormalize=FALSE,batchVector=NULL,design=NULL,collapseBy=c("gene_id","gene_name"),annotate=FALSE){
   if(batchNormalize==TRUE && is.null(design)==TRUE){
    stopifnot(is.null(metadata(kexp)$design)==FALSE)
    design<-metadata(kexp)$design
@@ -44,18 +44,40 @@ wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),en
  if(tmm.norm==TRUE){
   d<-DGEList(counts=cpm)
   d<-calcNormFactors(d)
-  cpm.norm<-cpm(d,normalized.lib.sizes=TRUE,log=FALSE)
-  cpm<-cpm.norm
-  cpm.norm<-NULL
   rd<-DGEList(counts=rpm)
   rd<-calcNormFactors(rd)
-  rdm.norm<-cpm(rd,normalized.lib.sizes=TRUE,log=FALSE)
-  rpm<-rdm.norm
-  rdm.norm<-NULL
-      }#tmm norm
-    rpm<-log2(1+rpm)
+  if(is.null(design)==TRUE){
+#  stopifnot(all(rownames(design)==colnames(kexp)))
+   message('cpm normalization')
+    cpm.norm<-cpm(d,normalized.lib.sizes=TRUE,log=FALSE)
+    rdm.norm<-cpm(rd,normalized.lib.sizes=TRUE,log=FALSE)
+    rpm<-log2(1+rdm.norm)
+   cpm<-log2(1+cpm.norm)
+   cpm.norm<-NULL
+   rdm.norm<-NULL
+    }else{
+    stopifnot(all(rownames(design)==colnames(kexp)))
+    message("voom'ing")
+    res.voom<-voom(d,design)
+    cpm.norm<-res.voom$E  ##log2 normalized
+    rep.norm<-voom(rd,design)
+    rdm.norm<-rep.norm$E ##log2 normalized tx_biotypes
+    rpm<-rdm.norm ##log2 norm
+    cpm<-cpm.norm #log2 norm
+   cpm.norm<-NULL
+   rdm.norm<-NULL
+    }
+ # cpm<-cpm.norm
+ # cpm.norm<-NULL
+#  rd<-DGEList(counts=rpm)
+#  rd<-calcNormFactors(rd)
+ # rdm.norm<-cpm(rd,normalized.lib.sizes=TRUE,log=FALSE)
+ # rpm<-rdm.norm
+ # rdm.norm<-NULL
+   }#tmm norm
+  #  rpm<-log2(1+rpm)
     intBiotypes<-rownames(rpm)
-    cpm<-log2(1+cpm)
+  #  cpm<-log2(1+cpm)
     }else if(batchNormalize==TRUE){
    ##task: input kexp, metadata$design, metadata$batch
    ##the caller will batch normalize WITH design matrix
@@ -243,6 +265,7 @@ if (!gsg$allOK)
   dev.off()
 
   } #selectedPower NULL
+  if(annotate==TRUE){
   message("annotating...")
   datExpr<-as.data.frame(datExpr,stringsAsFactors=FALSE)
   annot<-geneAnnotation(datExpr,datTraits,species=species)
@@ -257,7 +280,10 @@ if (!gsg$allOK)
   probes2annot<-match(names(datExpr),annot$ensembl_gene_id)
   stopifnot(sum(is.na(probes2annot))==0) ##no NA 
   }
+ }else{
 
+ annot<-"NULL"
+ }
 
 
 if(whichWGCNA=="single"){
@@ -318,7 +344,7 @@ net = blockwiseModules(datExpr, power = selectedPower,
   
   enableWGCNAThreads()
   bwnet = blockwiseModules(datExpr, 
-                       maxBlockSize = 4000,
+                       maxBlockSize = 2500,
                        power = selectedPower, 
                        networkType="signed",
                        TOMType = "signed", 

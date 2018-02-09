@@ -16,7 +16,11 @@
 #' @export
 #' @return images and cluster at the gene and repeat level
 wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),species=c("Homo.sapiens","Mus.musculus"),selectedPower=6, intBiotypes=c("acromeric","centromeric","CR1","Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","hAT","HSFAU","L1","L2","LTR Retrotransposon","Eutr1","Merlin","PiggyBac","Pseudogene","Repetitive element","satellite","snRNA","SVA","TcMar","telo","Transposable Element","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm"), batchNormalize=FALSE,batchVector=NULL,design=NULL,copyNormalize=TRUE){
-   
+  
+
+    if(nrow(kexp)>20000){
+    kexp<-findRepeats(kexp)
+    } 
    if(batchNormalize==TRUE &&  is.null(design)==TRUE){
    stopifnot(is.null(metadata(kexp)$design)==FALSE)
    design<-metadata(kexp)$design
@@ -25,16 +29,12 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
  stopifnot(is.null(metadata(kexp)$batch)==FALSE)
    batchVector<-metadata(kexp)$batch
  }
-
-
    how<-match.arg(how,c("cpm","tpm"))
    byWhich<-"repeat"
   ##prepare data
   whichWGCNA<-match.arg(whichWGCNA,c("single","block"))
   species<-match.arg(species,c("Homo.sapiens","Mus.musculus"))
   rexp<-findRepeats(kexp)
-
-
   if(how=="cpm"){
    if(batchNormalize==FALSE){
     ##FIX ME: add copyNumber normalize flag here.....
@@ -54,17 +54,31 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
    if(tmm.norm==TRUE){
   d<-DGEList(counts=cpm)
   d<-calcNormFactors(d)
-  cpm.norm<-cpm(d,normalized.lib.sizes=TRUE,log=FALSE)
-  cpm<-cpm.norm
-  cpm.norm<-NULL
   rd<-DGEList(counts=rpm)
   rd<-calcNormFactors(rd)
-  rdm.norm<-cpm(rd,normalized.lib.sizes=TRUE,log=FALSE)
-  rpm<-rdm.norm
-  rdm.norm<-NULL
-    } #tmm norm
-  cpm<-log2(1+cpm)
+  if(is.null(design)==TRUE){
+   message('cpm normalization')
+   cpm.norm<-cpm(d,normalized.lib.sizes=TRUE,log=FALSE)
+   rdm.norm<-cpm(rd,normalized.lib.sizes=TRUE,log=FALSE)
+   rpm<-log2(1+rdm.norm)
+   cpm<-log2(1+cpm.norm)
+   cpm.norm<-NULL
+   rdm.norm<-NULL
+    }else{
+   stopifnot(all(rownames(design)==colnames(kexp)))
+   message('voom-ing')
+    res.voom<-voom(d,design)
+    cpm.norm<-res.voom$E  ##log2 normalized
+    rep.norm<-voom(rd,design)
+    rdm.norm<-rep.norm$E ##log2 normalized tx_biotypes
+    rpm<-rdm.norm ##log2 norm
+    cpm<-cpm.norm #log2 norm
+   cpm.norm<-NULL
+   rdm.norm<-NULL
+   cpm<-log2(1+cpm)
   rpm<-log2(1+rpm)
+  }##if design is input
+ }
   }else if(batchNormalize==TRUE){
  ##task: input kexp, metadata$design, metadata$batch
    ##the caller will batch normalize WITH design matrix
@@ -80,7 +94,6 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
    logCPM<-removeBatchEffect(log.cpm,batch=batchVector,design=design)
    CPM<-logCPM^2
    ####now split repeats tnx and tx_biotypes
-
     bundleable <- !is.na(mcols(rowRanges(kexp))[["tx_id"]])
     feats<-rowRanges(kexp)[bundleable]
     feats<-feats[rownames(CPM),]
@@ -94,8 +107,7 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
    ####split genes and repeats
   cpm.norm<-bundled[!grepl("^ENS",rownames(bundled)),]
   cpm.norm<-cpm.norm[!grepl("^ERCC",rownames(cpm.norm)),]
- 
-  ##########collapse batch free repeat transcripts into tx_biotype aggregates
+   ##########collapse batch free repeat transcripts into tx_biotype aggregates
     bundleable <- !is.na(mcols(rowRanges(kexp))[["tx_biotype"]])
     feats<-rowRanges(kexp)[bundleable]
     feats<-feats[rownames(cpm.norm),]
@@ -106,7 +118,6 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
  tx.bundled <- do.call(rbind, lapply(rts,
                                    function(x)
                                      if(!is.null(nrow(x))) colSums(x) else x))
-
   cpm<-log2(1+cpm.norm)
   rpm<-log2(1+tx.bundled)
       } #batch
@@ -207,8 +218,8 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
  plot(x,y,
      xlab="Soft Threshold (power)",
      ylab="Scale Free Topology Model Fit,signed R^2",
-     type='n',  
-   main = paste("Scale independence"));
+     type="n",
+    main = paste("Scale independence"));
   text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
      labels=powers,cex=cex1,col="red");
   # this line corresponds to using an R^2 cut-off of h
@@ -217,17 +228,17 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
   readkey()
    y2<-sft$fitIndices[,5]
   plot(x, y2,
-     xlab="Soft Threshold (power)",ylab="Mean Connectivity", type="n",
+     xlab="Soft Threshold (power)",ylab="Mean Connectivity",
+      type="n",
      main = paste("Mean connectivity"))
    text(x, y2,
      labels=powers,cex=cex1,col="red");
-
   selectedPower<-readPower()
   pdf(paste0("RepeatModule_",how,"_soft_ThresholdPower.pdf"),width=12,height=9)
   plot(x,y,
      xlab=paste0("RE ",how," Soft Threshold (power)"),
      ylab="RE Scale Free Topology Model Fit,signed R^2",
-     type='n',
+     type="n",
    main = paste("RE Scale independence"));
   text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
      labels=powers,cex=cex1,col="red");
@@ -239,7 +250,6 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
    text(x, y2,
      labels=powers,cex=cex1,col="red");
    dev.off()
-
   } #selectedPower NULL
   message("annotating...")
   datExpr<-as.data.frame(datExpr,stringsAsFactors=FALSE)
@@ -255,8 +265,6 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
   annot$entrezgene<-"NA"
   annot<-as.data.frame(annot)
 
-
-
 if(whichWGCNA=="single"){
  ##auto####################################################
 datExpr<-as.data.frame(datExpr,stringsAsFactors=FALSE)
@@ -271,7 +279,6 @@ net = blockwiseModules(datExpr, power = selectedPower,
                        saveTOMs = TRUE,
                        saveTOMFileBase = "rwasingleTOM", 
                        verbose = 3)
-
 # Convert labels to colors for plotting
 # Plot the dendrogram and the module colors underneath
   bwLabels<-net$colors ###for saving
@@ -279,8 +286,7 @@ net = blockwiseModules(datExpr, power = selectedPower,
   MEs = net$MEs; ##use the module network calculation, do not recalculate 2nd time
   #plots each gene tree one by one
   wgcna_plotAll_dendrograms(bwnet=net,whichWGCNA="single",bwModuleColors=bwModuleColors,bwLabels=bwLabels,how=how,byWhich=byWhich)
-  
-  nGenes = ncol(datExpr);
+    nGenes = ncol(datExpr);
   nSamples = nrow(datExpr);
   geneTree = net$dendrograms;
   if(useBiCor==TRUE){
@@ -291,8 +297,7 @@ net = blockwiseModules(datExpr, power = selectedPower,
    moduleTraitCor = cor(MEs, datTraits, use = "p");
   moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples);
   modulePvalFisher<-corPvalueFisher(moduleTraitCor,nSamples)
-  }
-  
+  }  
  rnames <-list(datExpr=datExpr,
             datTraits=datTraits,
             annot=annot,
@@ -306,14 +311,13 @@ net = blockwiseModules(datExpr, power = selectedPower,
             usedbiCor=useBiCor,
             how=how,
             byWhich=byWhich)
-} ##single block should have 1 module per datTraits column
+   } ##single block should have 1 module per datTraits column
   if(whichWGCNA=="block"){
 ##############BLOCK LEVEL ###################
   message("networking...")
   datExpr<-as.data.frame(datExpr,stringsAsFactors=FALSE)
   ##############################################
-  
-  enableWGCNAThreads()
+    enableWGCNAThreads()
   bwnet = blockwiseModules(datExpr, 
                        maxBlockSize = 4000,
                        power = selectedPower, 
@@ -348,13 +352,11 @@ net = blockwiseModules(datExpr, power = selectedPower,
    moduleTraitCor<-bicor(MEs,datTraits)
   moduleTraitPvalue = bicorAndPvalue(MEs,datTraits,use="pairwise.complete.obs",alternative="two.sided")[["p"]]
     modulePvalFisher<-corPvalueFisher(moduleTraitCor,nSamples)
-  } else {
+  }else{
    moduleTraitCor = cor(MEs, datTraits, use = "p");
   moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples);
   modulePvalFisher<-corPvalueFisher(moduleTraitCor,nSamples)
   }
-
-
   rnames<-list(datExpr=datExpr,
             datTraits=datTraits,
             annot=annot,

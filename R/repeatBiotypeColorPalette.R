@@ -98,13 +98,15 @@ color.df[  c(grep("acromeric",color.df$txb,ignore.case=TRUE),grep("centromeric",
    if(tc.group>0){
   color.df[c(grep("Mariner/Tc1",color.df$txb),grep("TcMar",color.df$txb)),]$palette<-rgb(t(col2rgb(colors()[c(254,551)])),maxColorValue=255)
   }
-
+ 
  ##red and orange
  mer.group<-length( c(grep("Merlin",color.df$txb),grep("MIR",color.df$txb)  ))
-  if(mer.group>0){
+  if(mer.group==1){
+   color.df[c(grep("Merlin",color.df$txb),grep("MIR",color.df$txb)),]$palette<-rgb(t(col2rgb(colors()[c(503)])),maxColorValue=255)
+  }else if(mer.group==2){
    color.df[c(grep("Merlin",color.df$txb),grep("MIR",color.df$txb)),]$palette<-rgb(t(col2rgb(colors()[c(503,34)])),maxColorValue=255)
-  }
-
+ }
+ 
 
   ##remnants
  remnant.group<-length(which(color.df$palette=="none")  )

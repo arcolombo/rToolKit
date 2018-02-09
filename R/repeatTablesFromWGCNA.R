@@ -149,6 +149,7 @@ repeatTablesFromWGCNA<-function(kexp,lnames=NULL,useBiCor=TRUE,verbose=TRUE,dbna
   cat("Could not detect species...defaulting to human\n")
   commonName<-"human"
   }
+  source("~/Documents/github_repos/repeatToolKit/R/wgcna_goEnrich.R")
   enri<-wgcna_goEnrich(lnames,species=commonName)
   term.id<-grep("term name",colnames(enri))
   pval.id<-grep("p-val",colnames(enri))
@@ -183,6 +184,9 @@ repeatTablesFromWGCNA<-function(kexp,lnames=NULL,useBiCor=TRUE,verbose=TRUE,dbna
   con<-dbConnect(dbDriver("SQLite"),dbname=dbname)
   if(verbose) cat("Extracting Module Color Names...")
    modulesNeeded<-unique(moduleColors)
+   ###moduleColors needs to be a vector of colors, a data frame causes issues.
+   moduleColors<-moduleColors[,1]
+   modulesNeeded<-as.vector(modulesNeeded[,1])
    modulePvalue.Needed<-colnames(geneModuleDF)[grep("p_MM",colnames(geneModuleDF))]
   stopifnot(length(modulesNeeded)==length(modulePvalue.Needed))
   if(verbose) cat("Extracting Pheno-types of interest...\n")
