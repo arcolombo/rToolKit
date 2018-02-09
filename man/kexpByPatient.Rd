@@ -14,4 +14,3 @@ kexpByPatient(kexp, patientID = NULL)
 \description{
 splits kexp by patient ID
 }
-

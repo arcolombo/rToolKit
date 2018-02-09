@@ -15,4 +15,3 @@ connectivityWiseAnalysis(lnames, MsigDB = c("c1.all.v5.1.symbols.gmt",
 \description{
 tests the significance of connectivity of genes in a given pathway resulting in significance tests of connected genes of pathway.
 }
-

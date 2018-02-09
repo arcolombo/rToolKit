@@ -19,4 +19,3 @@ images and go enrichment object
 \description{
 downstream from wgcna_analysis we can investigate enrichment. The wgcna_goEnrich is used when creating the repeatTables SQL database.  the WGCNA:goEnrich is a bit slow, so it is ideal to call this method once upon SQLdb creation and query the info needed.  so repeatTablesFromWGCNA calls this method and stores into the DB.  WGCNA:goEnrich is an experimental method, and repeatToolKit supports qusage, however qusage is differential activity, where goEnrich tests for overall activity as a preliminary glimpse.  useful for exploration
 }
-

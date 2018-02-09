@@ -15,4 +15,3 @@ significance images
 \description{
 this will analyze the significance of modules returning a heatmap, and average gene significance per module
 }
-

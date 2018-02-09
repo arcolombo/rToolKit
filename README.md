@@ -6,10 +6,10 @@ lnames<-wgcna(kexp)
 rnames<-wrcna(findRepeats(kexp))
 
 
-repeatTablesFromWGCNA(lnames,annotate=TRUE,which="gene")
+repeatTablesFromWGCNA(lnames,annotate=TRUE,byWhich="gene")
 
 
-repeatTablesFromWGCNA(rnames,annotate=FALSE,which="repeat")
+repeatTablesFromWGCNA(rnames,annotate=FALSE,byWhich="repeat")
 
 
 qb<-qusageTablesFromWGCNA(lnames,rnames,"wgcnaDblite.sqlite","wrcnaDbLite.sqlite","qusageDbLite.sqlite")

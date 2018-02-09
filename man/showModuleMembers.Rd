@@ -17,4 +17,3 @@ a data frame with the eigenmodule color selected with the correlation score and 
 \description{
 given a gene module color, we can examine the gene Ids , gene description along side an overall module enrichment activity result.  Module enrichment shows the overall enriched pathway analysis, and won't give specifics about genes.  this will display a specific module enrichment result and the module members with gene information.
 }
-

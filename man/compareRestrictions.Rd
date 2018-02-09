@@ -38,4 +38,3 @@ compareRestrictions(kexp1, kexp2,
 \description{
 compares the qusage results from two different experiments and finds the correlation of means for each pathway level after standardizing the means.
 }
-

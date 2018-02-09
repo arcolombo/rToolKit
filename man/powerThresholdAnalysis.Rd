@@ -16,4 +16,3 @@ powerThresholdAnalysis(lnames = NULL, datExpr = NULL, how = "gene")
 \description{
 although the network is robust to the choice of beta, this method will call the pickSoftThreshold values and print to a pdf for future use.
 }
-

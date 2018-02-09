@@ -20,4 +20,3 @@ wgcna_analysis(lnames, biotype = c("ERV1", "ERV2", "Endogenous Retrovirus",
 \description{
 this can investigate annotations of the datTraits object plots individual color modules and an individual biotype correlation and pvalue significance. the scatter plot returned is produced by the correlation value, p.value and regression line; it uses the base function lm to fit a linear model.
 }
-

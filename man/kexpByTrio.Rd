@@ -9,4 +9,3 @@ kexpByTrio(kexp, stage1 = "pHSC", stage2 = "LSC", stage3 = "Blast")
 \description{
 given a trio time series we subset a kexp so that each patient trio exists across all time points
 }
-

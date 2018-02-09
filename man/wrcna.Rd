@@ -42,4 +42,3 @@ images and cluster at the gene and repeat level
 \description{
 this differs from wgcna.R, where wgcna.R create phenotypic module analysis of genes and phenotypic repeat data.  wrna will run a single/block wise adjacency/correlation matrices of repeats into modules of transcripts and also returns an object ready for wgcnaDbLite that includes repeat phenotypic data. This uses the recommended 'biocor' function which is a bi-weight mid-correlation calculation. For normalization, the default uses tmm normalization and a log2 transformation for each cpm for genes,  We use 'signed' networks based on the FAQ.  This will create the blockwise/single module data frame and run the soft-thresholding and create a correlation heatmap.  the downstream method is wgcna_analsyis which investigates specific module color and specific biotype (phenotypic relationship).  tx_biotype is included as phenotypic data
 }
-

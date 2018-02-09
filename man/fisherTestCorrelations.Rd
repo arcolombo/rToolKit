@@ -38,4 +38,3 @@ images of eigengenes
 \description{
 after calling CorrelationHeatmap we can test the correlations association to the enrichment activation. This uses a fisher test to test each TE type individually association to the TE type's enrichment activation directions.  finally we aggregate all the TE types count data and perform a global chi-sq test for an overall association.
 }
-

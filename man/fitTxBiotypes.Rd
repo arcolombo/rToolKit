@@ -15,4 +15,3 @@ a bunch of useful plots
 \description{
 plots the stage of each DE
 }
-

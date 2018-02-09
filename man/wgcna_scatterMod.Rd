@@ -20,4 +20,3 @@ prints images and returns module significance using student t test and fisher ex
 \description{
 allows for exploration of data presented in wgcna_Cormap of individual modules plotted by individual traits and shows their absolute correlation.  also returns a data frame of modules' correlation and student and fisher pvalues in terms of ENSG id.  wgcna_filter is downstream of this analysis. note: you only want to call this function with plotALL=TRUE once, this will identify modules that have high absolute correlation.
 }
-

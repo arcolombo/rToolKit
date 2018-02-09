@@ -12,4 +12,3 @@ gene name data frame
 \description{
 used mainly for qusage calls which returns a data frame of gene counts with rownames as gene HUGO names
 }
-

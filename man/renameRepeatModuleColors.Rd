@@ -16,4 +16,3 @@ renameRepeatModuleColors(rnames = NULL,
 \description{
 the rnames object is assigned color names, and we want to rename the repeat module colors after the top 3 highest correlated tx_biotype groups to assign an identity.  this will systematically rename the repeat module colors to leading biotype. this script is primarily a helper function to moduleWiseAnalysis that aids in renaming gene modules to the leading correlated biotype families.
 }
-

@@ -18,4 +18,3 @@ a list with the meta data added
 \description{
 sometimes you just want gene names from a TPM list.  this uses a collapseTPM call to map to HUGO to allow for exploration
 }
-

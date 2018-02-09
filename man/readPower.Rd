@@ -9,4 +9,3 @@ readPower()
 \description{
 read key pause for plotting powers
 }
-

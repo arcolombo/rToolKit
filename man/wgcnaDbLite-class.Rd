@@ -2,19 +2,19 @@
 % Please edit documentation in R/wgcnaDbLite-class.R, R/wgcnaDbLite-methods.R
 \docType{class}
 \name{wgcnaDbLite-class}
+\alias{wgcnaDbLite-class}
+\alias{qusageDbLite-class}
 \alias{dbconn,wgcnaDbLite-method}
-\alias{drivers,wgcnaDbLite-method}
-\alias{goEnrich,wgcnaDbLite-method}
-\alias{kexpEnrich,qusageDbLite-method}
-\alias{listModuleColors,wgcnaDbLite-method}
+\alias{show,wgcnaDbLite-method}
 \alias{metadata,wgcnaDbLite-method}
 \alias{modulesBy,wgcnaDbLite-method}
-\alias{pathways,qusageDbLite-method}
-\alias{pickPathway,qusageDbLite-method}
-\alias{qusageDbLite-class}
-\alias{show,wgcnaDbLite-method}
 \alias{traitsBy,wgcnaDbLite-method}
-\alias{wgcnaDbLite-class}
+\alias{drivers,wgcnaDbLite-method}
+\alias{pathways,qusageDbLite-method}
+\alias{kexpEnrich,qusageDbLite-method}
+\alias{goEnrich,wgcnaDbLite-method}
+\alias{listModuleColors,wgcnaDbLite-method}
+\alias{pickPathway,qusageDbLite-method}
 \title{A parent class for wgcna databases including annotations}
 \usage{
 \S4method{dbconn}{wgcnaDbLite}(x)

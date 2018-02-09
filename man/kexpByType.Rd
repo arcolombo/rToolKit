@@ -14,4 +14,3 @@ kexpByType(kexp, biotype = NULL)
 \description{
 splits a kallisto experiment by gene biotype
 }
-

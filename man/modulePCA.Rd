@@ -12,4 +12,3 @@ modulePCA(lnames)
 \description{
 by clustering moduleEigenvalues one can examine how close other modules are to one another.  if to module eigenvalues are branched in the same tree, then their functions pathway are likely to be similiar.  Further modules with similiar eigenvalues can even be merged.
 }
-

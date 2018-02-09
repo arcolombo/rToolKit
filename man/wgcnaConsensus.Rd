@@ -39,4 +39,3 @@ images and cluster at the gene and repeat level
 \description{
 runs WGNCA consensus analysis could find the gene correlation patterns to infer a relationship behind repeat activation. This uses the recommended 'biocor' function which is a bi-weight mid-correlation calculation. For normalization, the default uses tmm normalization and a log2 transformation for each cpm for genes, and repeat txBiotypes in the *same* way but on separate calls (this seems ok intuitively).  We use 'signed' networks based on the FAQ.  This will create the blockwise/single consensus module data frame and run the soft-thresholding and create a correlation heatmap.  the downstream method is wgcna_analsyis which investigates specific module color and specific biotype. Note this inputs 2 kallistoExperiments and creates a multiExpression structure as a necessary pre-processing step for blockWiseConsensus network call.
 }
-

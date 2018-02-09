@@ -15,4 +15,3 @@ returns a repeat level kallisto Experiment
 \description{
 splits a kexp into repeat level
 }
-

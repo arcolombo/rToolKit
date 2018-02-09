@@ -20,4 +20,3 @@ cool network images and stuff
 \description{
 for wgcna.R call, the network dendrograms are clusterd based on average expression, one for each module. this iteratively goes through each and plots them.
 }
-

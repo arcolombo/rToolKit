@@ -24,4 +24,3 @@ null
 \description{
 provides a qualitative module preservation between two gene networks
 }
-

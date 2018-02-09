@@ -23,4 +23,3 @@ kmeTable(datExpr1 = NULL, ME_G1 = NULL, colorsG1 = NULL,
 \description{
 the module eigenvalues are defined as the variability of a given module, and the kME is the connectivity of genes to the Module eigenvalues.  if genes are highly connected to the moduleseigen values then they will behave connectedly to the gene corresponding to the ME.
 }
-

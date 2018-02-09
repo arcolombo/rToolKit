@@ -19,4 +19,3 @@ returns NULL but plots cool stuff
 \description{
 plots a heatmap of patient specific information using a heatmap and beeswarm for the scatter.  each plot shows fixed patient and fixed repeat biotype
 }
-

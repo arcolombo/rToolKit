@@ -44,4 +44,3 @@ singleModuleAnalysis(kexp, lnames, rnames,
 \description{
 after running wgcna and wrcna we are interested in finding associaitons between one fixed gene with all the repeat modules.  given a fixed module of interest we correlate and test for comparability between every repeat module.  If there is no contrast between the gene modules, i.e. qusage contrasts are not present, then we use the wgcna_goEnrich caller
 }
-

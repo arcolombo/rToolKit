@@ -2,6 +2,7 @@
 % Please edit documentation in R/repeatWGCNA.R, R/wgcna.R
 \name{wgcna}
 \alias{wgcna}
+\alias{wgcna}
 \title{runs a network analysis at the repeat level to investigate repeat initiating pathways creating repeat modules agnostically}
 \usage{
 wgcna(kexp, read.cutoff = 2, minBranch = 2, whichWGCNA = c("single",
@@ -13,7 +14,7 @@ wgcna(kexp, read.cutoff = 2, minBranch = 2, whichWGCNA = c("single",
   "TcMar", "telo", "Transposable Element", "Satellite"),
   useAllBiotypes = FALSE, tmm.norm = TRUE, useBiCor = TRUE,
   how = c("cpm", "tpm"), batchNormalize = FALSE, batchVector = NULL,
-  design = NULL, collapseBy = c("gene_id", "gene_name"))
+  design = NULL, collapseBy = c("gene_id", "gene_name"), annotate = FALSE)
 
 wgcna(kexp, read.cutoff = 2, minBranch = 2, whichWGCNA = c("single",
   "block"), entrezOnly = FALSE, species = c("Homo.sapiens", "Mus.musculus"),
@@ -24,7 +25,7 @@ wgcna(kexp, read.cutoff = 2, minBranch = 2, whichWGCNA = c("single",
   "TcMar", "telo", "Transposable Element", "Satellite"),
   useAllBiotypes = FALSE, tmm.norm = TRUE, useBiCor = TRUE,
   how = c("cpm", "tpm"), batchNormalize = FALSE, batchVector = NULL,
-  design = NULL, collapseBy = c("gene_id", "gene_name"))
+  design = NULL, collapseBy = c("gene_id", "gene_name"), annotate = FALSE)
 }
 \arguments{
 \item{kexp}{a repeat kexp over stages}
@@ -73,4 +74,3 @@ running WGNCA could find the repeat correlation patterns to infer a relationship
 
 running WGNCA could find the gene correlation patterns to infer a relationship behind repeat activation. This uses the recommended 'biocor' function which is a bi-weight mid-correlation calculation. For normalization, the default uses tmm normalization and a log2 transformation for each cpm for genes, and repeat txBiotypes as phenotypic data in the *same* way but on separate calls (this seems ok intuitively).  We use 'signed' networks based on the FAQ.  This will create the blockwise/single module data frame and run the soft-thresholding and create a correlation heatmap.  the downstream method is wgcna_analsyis which investigates specific module color and specific biotype (phenotypic relationship)
 }
-

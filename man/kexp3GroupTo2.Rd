@@ -16,4 +16,3 @@ kexp3GroupTo2(kexp, comparison = NULL, newComparison = NULL)
 \description{
 splits kexp by group  pHSC , LSC, Blast
 }
-

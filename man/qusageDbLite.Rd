@@ -19,4 +19,3 @@ a TxDbLite object
 \description{
 Create a wgcnaDbLite object (usually called by subclass constructors)
 }
-

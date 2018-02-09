@@ -9,4 +9,3 @@ findInterestingModules(n.modules = 7)
 \description{
 read key for inputing interesting modules
 }
-

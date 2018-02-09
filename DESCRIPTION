@@ -29,4 +29,4 @@ Description: This will split the kallisto experiment by patient id, and use
     aml data. Also will normalize using CQN, RUVSeq, and batch correct.
     This package supports TCGA and SRA data downstream of arkas.
 License: GPL (>=2.0)
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1

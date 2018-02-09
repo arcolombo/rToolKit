@@ -17,4 +17,3 @@ a data frame with p adjusted q value genes
 \description{
 often it is needed to filter counts, this filters geneIDs from modules based on student-t p values.  we do have fisher pvalues, but not used to filter (yet)
 }
-

@@ -17,4 +17,3 @@ geneListToGMT(geneList = NULL, fileName = "test.gmt",
 \description{
 given a gene list write to a .gmt file
 }
-

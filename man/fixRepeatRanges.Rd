@@ -12,4 +12,3 @@ a kexp
 \description{
 allows for gene level analsysis competitive against genes and not only transcripts
 }
-

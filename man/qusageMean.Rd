@@ -11,4 +11,3 @@ qusageMean(kexp = NULL, read.cutoff = read.cutoff, comparison = NULL,
 \description{
 calculates the mean pathway activity for a gene set
 }
-

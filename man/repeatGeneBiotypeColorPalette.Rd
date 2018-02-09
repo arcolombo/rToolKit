@@ -15,4 +15,3 @@ a vector ready for rowAnnotation ComplexHeatmap
 \description{
 attempts to uniformly control the color assignment for biotype and family color plots for heatmapping
 }
-

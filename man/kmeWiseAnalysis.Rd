@@ -6,4 +6,3 @@
 \usage{
 kmeWiseAnalysis(gnames, rnames)
 }
-

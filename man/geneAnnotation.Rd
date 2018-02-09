@@ -13,4 +13,3 @@ geneInof0 data frame
 \description{
 used mainly for WGCNA which returns a data frame of geneSym locus link ID module colr and correlations
 }
-

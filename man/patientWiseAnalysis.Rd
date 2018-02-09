@@ -29,4 +29,3 @@ a list of all the monotonic ordinal groups
 \description{
 patientPlot* is exploratory methods for expression patterns, this method is downstream of a selected DE caller. the inputs are a repeat stage level kexp, and the DE object from either cqnDE, poissonFit, edgeR, or limma calls.  The topSelected repeats are used to plot the overall heatmap, and then heatmap each tx_biotype separately.   the topSelected are then categorized based on ordinal groups, and the group frequencies are plotted.  pvalue histograms are included.  delta plots are included (logFC).
 }
-

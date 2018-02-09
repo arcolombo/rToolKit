@@ -13,4 +13,3 @@ kexpAnalysis(kexp, byWhich = c("gene", "repeat"), read.cutoff = 1,
 \description{
 analyzes kexp repeat and gene data but requires a design matrix.  uses RUV and a limma/voom model linear
 }
-

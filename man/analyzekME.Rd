@@ -11,4 +11,3 @@ analyzekME(datExpr1 = NULL, datExpr2 = NULL, ME_G1 = NULL,
 \description{
 given a control module color set we can test for conservation in a comparison set.  by calculating the signedkME, which is the connectivity of the ModuleEigen values of the first PC1, this will quantify the correlation of the gene and moduleEigenvalues between modules across data sets.
 }
-

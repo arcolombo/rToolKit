@@ -22,4 +22,3 @@ images and a pdf/jpeg
 \description{
 for paired time series, this plots the expression across time points in units of TPM. This plots each repeat biotype and every patient trio across stages.
 }
-

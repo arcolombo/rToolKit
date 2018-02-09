@@ -6,7 +6,8 @@
 \usage{
 drawHeatmap(kexp, tags = NULL, annotations = TRUE, byType = c("counts",
   "tpm"), cutoff = 2, title1 = NULL, tx_biotype_color_master = NULL,
-  gene_biotype_color_master = NULL, openDevice = FALSE)
+  gene_biotype_color_master = NULL, openDevice = FALSE,
+  clust.method = "average")
 }
 \arguments{
 \item{kexp}{a kallistoExperiment}
@@ -24,4 +25,3 @@ drawHeatmap(kexp, tags = NULL, annotations = TRUE, byType = c("counts",
 \description{
 draws a heatmap with annotations useful
 }
-

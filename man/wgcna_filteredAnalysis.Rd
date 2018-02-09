@@ -6,4 +6,3 @@
 \usage{
 wgcna_filteredAnalysis(kexp, lnames, useBiCor = TRUE)
 }
-

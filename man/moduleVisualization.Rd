@@ -11,4 +11,3 @@ moduleVisualization(pcTree = NULL, MDS_G = NULL, colorsG = NULL,
 \description{
 The first PC is referred to as the module eigengene (ME), and is a single value that represents the highest percent of variance for all genes in a module. In other words, if we show the ME for module X doing something, there is a good chance that most genes in module X also do that same thing.
 }
-

@@ -24,4 +24,3 @@ list of batch free log2 cpm and batch free repeat biotypes log2 cpm
 \description{
 this is used by qusageTablesFromWGCNA to call batch normalized enrichment.  this returns two levels of batch free log2 cpm gene_id or gene_name. for qusageTablesFromWGCNA calls the correct level is gene_name.  gene_id can be used in wgcna/wrcna however not currently implemented.  if collapseLevel is gene_id then this outputs a list of batch free gene_id log2 CPM and batch free tx_biotype log2 CPM
 }
-

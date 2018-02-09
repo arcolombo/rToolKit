@@ -10,9 +10,10 @@ qusageResultsWithCI(kexp,
   "c4.all.v5.1.symbols.gmt", "c5.all.v5.1.symbols.gmt",
   "c6.all.v5.1.symbols.gmt", "c7.all.v5.1.symbols.gmt",
   "h.all.v5.1.symbols.gmt"), how = c("cpm", "tpm"),
-  species = c("Homo.sapiens"), comparison = NULL, controls = NULL,
-  showPlots = FALSE, comparisonNumber = 1, pathwayTitle = NULL,
-  paired = FALSE, read.cutoff = 2, p.cutoff = 0.05)
+  species = c("Homo.sapiens", "Mus.musculus"), comparison = NULL,
+  controls = NULL, showPlots = FALSE, comparisonNumber = 1,
+  pathwayTitle = NULL, paired = FALSE, read.cutoff = 2, p.cutoff = 0.05,
+  asBand = TRUE, includeNames = FALSE, includeDE = FALSE)
 }
 \arguments{
 \item{p.cutoff}{threshold for FPR filtering alpha significance level}
@@ -20,4 +21,3 @@ qusageResultsWithCI(kexp,
 \description{
 this is a point-wise qusage call not connected to database formations but used for kexp alone. Requires that hte comparison and controls be the leading column name able to be split by kexp2Group.  the qusageTables script is used to make a database. this script is used to make specific plots of qusage calls that target specific pathways.
 }
-

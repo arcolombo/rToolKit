@@ -24,4 +24,3 @@ data print out to screen
 \description{
 given a Differential Expression gene list it is a great interest to query the DE list for each driver identity.
 }
-

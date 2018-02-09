@@ -17,4 +17,3 @@ wgcna_queryFilteredCorSet(filteredCorSet, NKLigs = c("CLEC2B", "KIR3DL3",
 \description{
 in wgcna_analysis a filteredCorSet list is constructed for trait gene correlations and module gene correlations, this will query for specific genes
 }
-

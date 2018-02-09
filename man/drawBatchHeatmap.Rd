@@ -19,4 +19,3 @@ drawBatchHeatmap(kexp, tags = NULL, annotations = TRUE, batchData = NULL,
 \description{
 draws a heatmap with annotations useful for batch analysis normalization. plots the batch normalized data values, and not the raw kallisto data.
 }
-

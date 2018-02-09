@@ -18,4 +18,3 @@ kexpByStage(kexp, stage1 = "pHSC", stage2 = "LSC", stage3 = "Blast")
 \description{
 splits a kallisto experiment by stages
 }
-

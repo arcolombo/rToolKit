@@ -18,4 +18,3 @@ enrichment data set
 \description{
 a general method for calling qusage
 }
-

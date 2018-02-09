@@ -29,4 +29,3 @@ qusage table
 \description{
 since the WGCNA enrichment algorithm is 'experimental' it can only provide preliminary analyses; additionally it returns warnings regarding pvalue calculations on correlations.  qusage can be run to verify using KEGG, GO, and immuneSignatures.  Note that WGCNA:Go enrichment inputs Entrez IDs which is gene specific, so in this function we collapse by gene ids, and run qusage
 }
-
