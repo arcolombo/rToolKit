@@ -38,7 +38,18 @@ The package WGCNA (Horvath,et. al) is wonderful and sophisticated.  It is very u
   design<-model.matrix(~substring(colnames(NS),1,1))
   rownames(design)<-colnames(NS)
   lnames<-wgcna(NS,whichWGCNA="single",species="Homo.sapiens",intBiotypes=c("Alu","ERV1","ERVK","ERVL","ERV3","hAT","L1","L2","PiggyBac"),tmm.norm=TRUE,how="cpm",design=design,collapseBy="gene_id",selectedPower=6,annotate=TRUE,saveToFile=FALSE)
-  
+  rnames<-wgcna(NS,whichWGCNA="single",species="Homo.sapiens",intBiotypes=c("Alu","ERV1","ERVK","ERVL","ERV3","hAT","L1","L2","PiggyBac"),selectedPower=6,tmm.norm=TRUE,how="cpm",design=design,saveToFile=FALSE)  
+  ### network analysis scripts
+  ## scatter Mod shows the correlation of gene significance and module members, and the MSE.
+  wgcna_scatterMod(lnames,biotype=colnames(lnames[["datTraits"]])) 
+
+ ### show module members
+  ##identifies highly correlated genes to the module eigenvalue.
+  MM1<-showModuleMembers(lnames,biocolor="1")
+
+ ##top hub members of module 1
+  ModuleHubGenes(NS,lnames=lnames,module.color="1",connectivity.cutoff=0.85)
+
 
 ```
 

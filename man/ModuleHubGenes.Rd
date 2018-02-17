@@ -4,7 +4,7 @@
 \alias{ModuleHubGenes}
 \title{returns the central hub genes for analysis within a kexp for a selected module color. topHubGenes finds hubs across all modules.}
 \usage{
-ModuleHubGenes(kexp, lnames = NULL, module.color = NULL,
+ModuleHubGenes(kexp, lnames = NULL, module.color = "1",
   connectivity.cutoff = 0.6)
 }
 \arguments{
@@ -12,7 +12,7 @@ ModuleHubGenes(kexp, lnames = NULL, module.color = NULL,
 
 \item{lnames}{wgcna.R output}
 
-\item{topNumber}{connectivity cutoff}
+\item{module.color}{an integer or character specifying the color, "blue", or the module number.  if ME column names are MM.1, then use the integers.  otherwise, the ME labels are characters, requiring "blue" input.}
 }
 \value{
 a list of genes and their connectivity

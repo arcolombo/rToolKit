@@ -9,7 +9,7 @@ showModuleMembers(lnames, biocolor = "blue")
 \arguments{
 \item{lnames}{the output from wgcna}
 
-\item{biocolor}{a color module of interest}
+\item{biocolor}{a color module of interest, if the ME column names are numbers, then an integer must be entered.}
 }
 \value{
 a data frame with the eigenmodule color selected with the correlation score and pvalue and associated gene description.  downstream of this output could include filtering, and expresison plots

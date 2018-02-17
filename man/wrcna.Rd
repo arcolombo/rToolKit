@@ -12,7 +12,7 @@ wrcna(kexp, read.cutoff = 2, minBranch = 2, whichWGCNA = c("single",
   "Repetitive element", "satellite", "snRNA", "SVA", "TcMar", "telo",
   "Transposable Element", "Satellite"), useAllBiotypes = FALSE,
   tmm.norm = TRUE, useBiCor = TRUE, how = c("cpm", "tpm"),
-  design = NULL)
+  design = NULL, saveToFile = FALSE)
 }
 \arguments{
 \item{kexp}{a kexp 2 group stage is preferred}
