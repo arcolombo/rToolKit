@@ -1,7 +1,7 @@
 #' @title shows the genes associated with a module set
 #' @description given a gene module color, we can examine the gene Ids , gene description along side an overall module enrichment activity result.  Module enrichment shows the overall enriched pathway analysis, and won't give specifics about genes.  this will display a specific module enrichment result and the module members with gene information.
 #' @param lnames  the output from wgcna
-#' @param biocolor a color module of interest
+#' @param biocolor a color module of interest, if the ME column names are numbers, then an integer must be entered.
 #' @import WGCNA
 #' @export
 #' @return a data frame with the eigenmodule color selected with the correlation score and pvalue and associated gene description.  downstream of this output could include filtering, and expresison plots

@@ -2,12 +2,12 @@
 #' @description performs a connectivity analysis and returns the top connected genes within an experiment.
 #' @param kexp kexp that is annotated
 #' @param lnames wgcna.R output
-#' @param topNumber  connectivity cutoff
+#' @param module.color an integer or character specifying the color, "blue", or the module number.  if ME column names are MM.1, then use the integers.  otherwise, the ME labels are characters, requiring "blue" input.
 #' @import WGCNA
 #' @import arkas
 #' @export
 #' @return a list of genes and their connectivity
-ModuleHubGenes<-function(kexp,lnames=NULL,module.color=NULL,connectivity.cutoff=0.6){
+ModuleHubGenes<-function(kexp,lnames=NULL,module.color="1",connectivity.cutoff=0.6){
   stopifnot(is.null(module.color)==FALSE)
   datExpr1g<-lnames[["datExpr"]]
   gm1<-signedKME(datExpr1g,lnames[["MEs"]])
@@ -33,6 +33,7 @@ blast<-kexp
    t.DF4<-(t.DF3[id,])
    t.DF5<-(cbind(t.DF4,t.hub))
   t.DF6<-t.DF5[order(t.DF5[,3],decreasing=T),]
+  colnames(t.DF6)<-c("id","gene.symbol","membership.score","p.value")
  ##now the gene modules comparison are to be compared with a reference using the assignments in the comparison
   
 

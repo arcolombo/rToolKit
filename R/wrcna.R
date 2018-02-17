@@ -15,7 +15,7 @@
 #' @import limma
 #' @export
 #' @return images and cluster at the gene and repeat level
-wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),species=c("Homo.sapiens","Mus.musculus"),selectedPower=6, intBiotypes=c("acromeric","centromeric","CR1","Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","hAT","HSFAU","L1","L2","LTR Retrotransposon","Eutr1","Merlin","PiggyBac","Pseudogene","Repetitive element","satellite","snRNA","SVA","TcMar","telo","Transposable Element","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm"), design=NULL){
+wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),species=c("Homo.sapiens","Mus.musculus"),selectedPower=6, intBiotypes=c("acromeric","centromeric","CR1","Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","hAT","HSFAU","L1","L2","LTR Retrotransposon","Eutr1","Merlin","PiggyBac","Pseudogene","Repetitive element","satellite","snRNA","SVA","TcMar","telo","Transposable Element","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm"), design=NULL,saveToFile=FALSE){
   
 
     if(nrow(kexp)>20000){
@@ -76,7 +76,7 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
   gsg<-goodSamplesGenes(datExpr0,verbose=3)
   ##rows must be SAMPLES columns repeats
   
-  if(useAllBiotypes==FALSE&&byWhich=="repeat"){
+  if(useAllBiotypes==FALSE){
   #select columns of intBiotypes
    stopifnot(is.null(intBiotypes)==FALSE)
    rpm<-rpm[rownames(rpm)%in%intBiotypes,]
@@ -105,7 +105,7 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
   #pdf(file = "Plots/sampleClustering.pdf", width = 12, height = 9);
   par(cex = 0.6);
   par(mar = c(0,4,2,0))
-  plot(sampleTree, main =paste0("Sample ",byWhich," clustering to detect outliers"), 
+  plot(sampleTree, main =paste0("Sample clustering to detect outliers"), 
        sub="", 
       xlab="", cex.lab = 1.5, 
      cex.axis = 1.5, cex.main = 2)
@@ -137,13 +137,14 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
                     marAll=c(1,11,3,3),
                     main=paste0("Repeat ",how," Module TxBiotype Correlation Samples"))
   readkey()
+  if(saveToFile==TRUE){
   pdf(paste0("RepeatMM_",how,"_TxBiotype_Correlation_Samples.pdf"),width=12,height=9)
   plotDendroAndColors(sampleTree2, traitColors,
                     groupLabels = names(datTraits),
                     marAll=c(1,11,3,3),
                     main=paste0("Repeat ",how," Module TxBiotype Correlation Samples"))
   dev.off()
-
+  }
 # Choose a set of soft-thresholding powers
   if(is.null(selectedPower)==TRUE){
   powers = c(c(1:10), seq(from = 12, to=20, by=2))
@@ -175,6 +176,7 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
    text(x, y2,
      labels=powers,cex=cex1,col="red");
   selectedPower<-readPower()
+  if(saveToFile==TRUE){
   pdf(paste0("RepeatModule_",how,"_soft_ThresholdPower.pdf"),width=12,height=9)
   plot(x,y,
      xlab=paste0("RE ",how," Soft Threshold (power)"),
@@ -191,6 +193,7 @@ wrcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),sp
    text(x, y2,
      labels=powers,cex=cex1,col="red");
    dev.off()
+    } #save PDF
   } #selectedPower NULL
   message("annotating...")
   datExpr<-as.data.frame(datExpr,stringsAsFactors=FALSE)
@@ -226,7 +229,7 @@ net = blockwiseModules(datExpr, power = selectedPower,
   bwModuleColors = labels2colors(net$colors)
   MEs = net$MEs; ##use the module network calculation, do not recalculate 2nd time
   #plots each gene tree one by one
-  wgcna_plotAll_dendrograms(bwnet=net,whichWGCNA="single",bwModuleColors=bwModuleColors,bwLabels=bwLabels,how=how,byWhich=byWhich)
+  wgcna_plotAll_dendrograms(bwnet=net,whichWGCNA="single",bwModuleColors=bwModuleColors,bwLabels=bwLabels,how=how,byWhich="repeat")
     nGenes = ncol(datExpr);
   nSamples = nrow(datExpr);
   geneTree = net$dendrograms;
@@ -251,7 +254,7 @@ net = blockwiseModules(datExpr, power = selectedPower,
             modulePvalFisher=modulePvalFisher,
             usedbiCor=useBiCor,
             how=how,
-            byWhich=byWhich)
+            byWhich="repeat")
    } ##single block should have 1 module per datTraits column
   if(whichWGCNA=="block"){
 ##############BLOCK LEVEL ###################
@@ -282,7 +285,7 @@ net = blockwiseModules(datExpr, power = selectedPower,
   sizeGrWindow(6,6)
  ########################################################################
   ##plot gene tree one by one 
-  wgcna_plotAll_dendrograms(bwnet=bwnet,whichWGCNA="block",bwModuleColors=bwModuleColors,bwLabels=bwLabels,how=how,byWhich=byWhich)
+  wgcna_plotAll_dendrograms(bwnet=bwnet,whichWGCNA="block",bwModuleColors=bwModuleColors,bwLabels=bwLabels,how=how,byWhich="repeat")
 # this line corresponds to using an R^2 cut-off of h
   # Recalculate MEs with color labels
   nGenes = ncol(datExpr);
@@ -310,10 +313,12 @@ net = blockwiseModules(datExpr, power = selectedPower,
             modulePvalFisher=modulePvalFisher,
             biCor=useBiCor,
             how=how,
-            byWhich=byWhich)
+            byWhich="repeat")
   } ##by block
-  save(rnames,file=paste0("wgcna.",how,"_",selectedPower,"_",byWhich,".dataInput.RData"),compress=TRUE)
+  if(saveToFile==TRUE){
+   save(rnames,file=paste0("wgcna.",how,"_",selectedPower,".dataInput.RData"),compress=TRUE)
    cat("done.\n")
    dev.off()
+  }
    return(rnames)
  }#main

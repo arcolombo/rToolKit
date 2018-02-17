@@ -15,6 +15,7 @@ if(is.null(lnames)==FALSE){
  stop("please run wgcna before analysis")
 }
   bwModuleColors<-lnames[["moduleColors"]]
+  bwModulelabels<-lnames[["moduleLabels"]]
   MEs<-lnames[["MEs"]]
   datExpr<-lnames[["datExpr"]]
   datTraits<-lnames[["datTraits"]]
@@ -58,7 +59,7 @@ if(is.null(lnames)==FALSE){
   }
 
   cat("Plotting module and gene correlations...\n")
-  moduleColors<-bwModuleColors
+  moduleColors<-bwModulelabels
   pdf("scatterModulePlots.pdf")
   for(j in 1:length(as.vector(unique(moduleColors)))){
 
