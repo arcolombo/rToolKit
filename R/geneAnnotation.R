@@ -49,7 +49,7 @@ require(biomaRt)
   dataset <- switch(match.arg(commonName),
                     human="hsapiens_gene_ensembl",
                     mouse="mmusculus_gene_ensembl")
-  useMart("ENSEMBL_MART_ENSEMBL", dataset=dataset, host=host)
+  useMart(biomart="ENSEMBL_MART_ENSEMBL", dataset=dataset)#, host=host)
 
 } #}}}
 

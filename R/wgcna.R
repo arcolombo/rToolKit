@@ -14,16 +14,8 @@
 #' @import limma
 #' @export
 #' @return images and cluster at the gene and repeat level
-wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE,species=c("Homo.sapiens","Mus.musculus"),selectedPower=NULL,intBiotypes=c("acromeric","centromeric","CR1","Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","hAT","HSFAU","L1","L2","LTR Retrotransposon","Eutr1","Merlin","PiggyBac","Pseudogene","Repetitive element","satellite","snRNA","SVA","TcMar","telo","Transposable Element","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm"),batchNormalize=FALSE,batchVector=NULL,design=NULL,collapseBy=c("gene_id","gene_name"),annotate=FALSE){
-  if(batchNormalize==TRUE && is.null(design)==TRUE){
-   stopifnot(is.null(metadata(kexp)$design)==FALSE)
-   design<-metadata(kexp)$design
-  }
-  if(batchNormalize==TRUE && is.null(batchVector)==TRUE){
- stopifnot(is.null(metadata(kexp)$batch)==FALSE)
-   batchVector<-metadata(kexp)$batch
- }
-
+wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),entrezOnly=FALSE,species=c("Homo.sapiens","Mus.musculus"),selectedPower=NULL,intBiotypes=c("acromeric","centromeric","CR1","Alu","DNA transposon","Endogenous Retrovirus","ERV1","ERV3","ERVK","ERVL","hAT","HSFAU","L1","L2","LTR Retrotransposon","Eutr1","Merlin","PiggyBac","Pseudogene","Repetitive element","satellite","snRNA","SVA","TcMar","telo","Transposable Element","Satellite"),useAllBiotypes=FALSE,tmm.norm=TRUE,useBiCor=TRUE,how=c("cpm","tpm"),design=NULL,collapseBy=c("gene_id","gene_name"),annotate=FALSE,saveToFile=FALSE){
+ 
   collapseBy=match.arg(collapseBy,c("gene_id","gene_name"))
    how<-match.arg(how,c("cpm","tpm"))
   ##prepare data
@@ -33,7 +25,6 @@ wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),en
 
   if(how=="cpm"){
   ###rows must be SAMPLES columns genes
-  if(batchNormalize==FALSE){
   cpm<-collapseBundles(kexp,collapseBy,read.cutoff=read.cutoff)
   cpm<-cpm[!grepl("^ERCC",rownames(cpm)),]
   rexp<-findRepeats(kexp)
@@ -66,63 +57,9 @@ wgcna<-function(kexp,read.cutoff=2,minBranch=2,whichWGCNA=c("single","block"),en
     cpm<-cpm.norm #log2 norm
    cpm.norm<-NULL
    rdm.norm<-NULL
-    }
- # cpm<-cpm.norm
- # cpm.norm<-NULL
-#  rd<-DGEList(counts=rpm)
-#  rd<-calcNormFactors(rd)
- # rdm.norm<-cpm(rd,normalized.lib.sizes=TRUE,log=FALSE)
- # rpm<-rdm.norm
- # rdm.norm<-NULL
+    }##no DESIGN
    }#tmm norm
-  #  rpm<-log2(1+rpm)
-    intBiotypes<-rownames(rpm)
-  #  cpm<-log2(1+cpm)
-    }else if(batchNormalize==TRUE){
-   ##task: input kexp, metadata$design, metadata$batch
-   ##the caller will batch normalize WITH design matrix
-   ##output: log2 batch cpm, re-convert into CPM, collapse tx_id normalized into gene bundles CPM ,final output is batch correct CPM values tx_id
-  ##taks for this branch is to collapse tx_id into gene_id (CPM), and tx_biotype(cpm)
-   cpm<-collapseBundles(kexp,"tx_id",read.cutoff=read.cutoff)
-   d<-DGEList(counts=cpm)
-   d<-calcNormFactors(d)
-   log.cpm<-cpm(d,log=TRUE,normalize.lib.sizes=TRUE) #log2
-    ##removeBatch requires log2
-   logCPM<-removeBatchEffect(log.cpm,batch=batchVector,design=design)
-   CPM<-logCPM^2
-   ####now split gene and repeats
- 
-    bundleable <- !is.na(mcols(rowRanges(kexp))[["gene_id"]])
-    feats<-rowRanges(kexp)[bundleable] 
-    feats<-feats[rownames(CPM),]
-    bundleable<-!is.na(mcols(feats)[["gene_id"]])
-  cts <- split.data.frame(CPM[bundleable, ], mcols(feats)[["gene_id"]])
-  cts <- cts[ sapply(cts, function(x) max(x) >= read.cutoff) ]
-  cts <- lapply(cts, function(x) x[ rowSums(x) >= read.cutoff, ])
- bundled <- do.call(rbind, lapply(cts,
-                                   function(x)
-                                     if(!is.null(nrow(x))) colSums(x) else x))
-   ####split genes and repeats
-  cpm.norm<-bundled[grepl("^ENS",rownames(bundled)),]
-  rpm.norm<-bundled[!grepl("^ENS",rownames(bundled)),]
-  rpm.norm<-rpm.norm[!grepl("^ERCC",rownames(rpm.norm)),] ##repeat batch free tx
-  ##########collapse batch free repeat transcripts into tx_biotype aggregates
-    bundleable <- !is.na(mcols(rowRanges(kexp))[["tx_biotype"]])
-    feats<-rowRanges(kexp)[bundleable]
-    feats<-feats[rownames(rpm.norm),]
-    bundleable<-!is.na(mcols(feats)[["tx_biotype"]])
-  rts <- split.data.frame(rpm.norm[bundleable, ], mcols(feats)[["tx_biotype"]])
-  rts <- rts[ sapply(rts, function(x) max(x) >= read.cutoff) ]
-  rts <- lapply(rts, function(x) x[ rowSums(x) >= read.cutoff, ])
- tx.bundled <- do.call(rbind, lapply(rts,
-                                   function(x)
-                                     if(!is.null(nrow(x))) colSums(x) else x))
-
-  cpm<-log2(1+cpm.norm)
-  rpm<-log2(1+tx.bundled)
-  ############collapse by gene_id
-  }##batch
-  }else if(how=="tpm"){
+    }else if(how=="tpm"){
   cpm<-collapseTpm(kexp,collapseBy,read.cutoff=read.cutoff)
   cpm<-cpm[!grepl("^ERCC",rownames(cpm)),]
   rexp<-findRepeats(kexp)
@@ -157,9 +94,6 @@ if (!gsg$allOK)
   # Remove the offending genes and samples from the data:
   datExpr0 = datExpr0[gsg$goodSamples, gsg$goodGenes]
 }
-
-
-
   sampleTree = hclust(dist(datExpr0), method = "average");
   # Plot the sample tree: Open a graphic output window of size 12 by 9 inches
   # The user should change the dimensions if the window is too large or too small.
@@ -176,26 +110,23 @@ if (!gsg$allOK)
 # Plot a line to show the cut
   abline(h = cutHeight, col = "red");
   readkey()
-
+  if(saveToFile==TRUE){
   pdf(paste0("hclust_",selectedPower,"_",how,".pdf"),width=12,height=9)
   plot(sampleTree, main = "Sample clustering to detect outliers",
        sub="",
       xlab="", cex.lab = 1.5,
      cex.axis = 1.5, cex.main = 2)
    dev.off()
- 
-
+  }
 # Determine cluster under the line
   clust = cutreeStatic(sampleTree, cutHeight = cutHeight, minSize = minBranch)
   print(table(clust))
-
 # clust 1 contains the samples we want to keep.
   keepSamples = (clust!=0)
   print(paste0("samples to omit ",colnames(kexp)[which(keepSamples==FALSE)]))
   datExpr = datExpr0[keepSamples, ]
   nGenes = ncol(datExpr)
   nSamples = nrow(datExpr)
-  
   if((nrow(datExpr)!=nrow(datExpr0))==TRUE){
  datTraits<-datTraits[keepSamples,]
   }
@@ -215,12 +146,14 @@ if (!gsg$allOK)
                     marAll=c(1,11,3,3),
                     main=paste0("TxBiotype ",how," Correlation Samples")) 
   readkey()   
+ if(saveToFile==TRUE){
   pdf(paste0("TxBiotype_",how,"_Correlation_Samples.pdf"),width=12,heigh=10)
   plotDendroAndColors(sampleTree2, traitColors,
                     groupLabels = names(datTraits),
                     marAll=c(1,11,3,3),
                     main=paste0("TxBiotype ",how," Correlation Samples") )
   dev.off() 
+  }
 # Choose a set of soft-thresholding powers
   if(is.null(selectedPower)==TRUE){
   powers = c(c(1:10), seq(from = 12, to=20, by=2))
@@ -247,7 +180,8 @@ if (!gsg$allOK)
      labels=powers,cex=cex1,col="red");
   selectedPower<-readPower()
   ####Print to PDF############
-  pdf(paste0("WGCNAselectedPower_",how,"analysis.pdf"))
+ if(saveToFile==TRUE){ 
+ pdf(paste0("WGCNAselectedPower_",how,"analysis.pdf"))
   cex1 = 0.9;
   # Scale-free topology fit index as a function of the soft-thresholding power
   plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
@@ -263,7 +197,7 @@ if (!gsg$allOK)
    text(sft$fitIndices[,1], sft$fitIndices[,5],
      labels=powers,cex=cex1,col="red");
   dev.off()
-
+    } ##saveToFile
   } #selectedPower NULL
   if(annotate==TRUE){
   message("annotating...")
@@ -297,8 +231,7 @@ net = blockwiseModules(datExpr, power = selectedPower,
                        TOMType = "signed", minModuleSize = 30,
                        reassignThreshold = 0, mergeCutHeight = 0.25,
                        numericLabels = TRUE, pamRespectsDendro = FALSE,
-                       saveTOMs = TRUE,
-                       saveTOMFileBase = "rwasingleTOM", 
+                       saveTOMs = FALSE,
                        verbose = 3)
 
 # Convert labels to colors for plotting
@@ -353,15 +286,16 @@ net = blockwiseModules(datExpr, power = selectedPower,
                        reassignThreshold = 0, 
                        mergeCutHeight = 0.25,
                        numericLabels = TRUE,
-                       saveTOMs = TRUE,
-                       saveTOMFileBase = "rwaTOM-blockwise",
+                       saveTOMs = FALSE,
                        verbose = 3)
 # Load the results of single-block analysis
   bwLabels = matchLabels(bwnet$colors,bwnet$colors)
   # Convert labels to colors for plotting
   bwModuleColors = labels2colors(bwLabels)
   geneTree<-bwnet$dendrograms
+  if(saveToFile==TRUE){
   save(bwnet,file=paste0("bwnet_",selectedPower,".RData"),compress=TRUE)
+  }
   # open a graphics window
   sizeGrWindow(6,6)
  ########################################################################
@@ -397,8 +331,10 @@ net = blockwiseModules(datExpr, power = selectedPower,
             how=how, 
             byWhich="gene")
   } ##by block
-  save(lnames,file=paste0("wgcna.",how,"_",selectedPower,".dataInput.RData"),compress=TRUE)
+  if(saveToFile==TRUE){ 
+ save(lnames,file=paste0("wgcna.",how,"_",selectedPower,".dataInput.RData"),compress=TRUE)
   dev.off()  
+  }
 # Display the correlation values within a heatmap plot
   #wgcna_Cormap(lnames,read.cutoff=read.cutoff,plotDot=FALSE,how=how) 
   return(lnames)

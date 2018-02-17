@@ -3,8 +3,15 @@
 "How'd you like some ice cream, Doc?"
 
 ## Work Flow
-
-   lnames<-wgcna(kexp)
+  library(arkasData)
+  library(arkas)
+  library(repeatToolKit)
+  data(NS)
+  kexp<-annotateFeatures(NS,'transcript')
+  design<-model.matrix(~substring(colnames(kexp),1,1))
+  rownames(design)<-colnames(kexp)
+   lnames<-wgcna(kexp,whichWGCNA="single",species="Homo.sapiens",selectedPower=6,
+                how="cpm",design=design,collapseBy="gene_id",annotate=TRUE)
    rnames<-wrcna(findRepeats(kexp))
    repeatTablesFromWGCNA(lnames,annotate=TRUE,byWhich="gene")
    repeatTablesFromWGCNA(rnames,annotate=FALSE,byWhich="repeat")
@@ -15,9 +22,8 @@
 ## Exploratory
 
   wgcna_Heatcor(kexp)
-  moduleWiseAnalysis(kexp,dbname....)
-  repeatWiseAnalysis(kexp..)
+  moduleWiseAnalysis(kexp,dbname)
+  repeatWiseAnalysis(kexp)
   patientTrioPlot(kexp,printWhat="pdf")
-  drawBoxPlots(kexpByTrio(kexp),numberComparisons=2,read.cutoff=1,adjustBy="none",wilcox.Alternative="greater",testMedians=TRUE,title1="Absolute Differential Transposable Element Activity Comparing ",ylab1=ylab1,xlab1=xlab1,xlab2=xlab2)
-   qusageResults(kexp,MSigDB="my.gmt",...)
-   topHubGenes(kexp,lnames,topNumber=25)
+   qusageResults(kexp,MSigDB="my.gmt")
+    topHubGenes(kexp,lnames,topNumber=25)

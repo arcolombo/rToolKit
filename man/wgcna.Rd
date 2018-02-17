@@ -13,8 +13,8 @@ wgcna(kexp, read.cutoff = 2, minBranch = 2, whichWGCNA = c("single",
   "PiggyBac", "Pseudogene", "Repetitive element", "satellite", "snRNA", "SVA",
   "TcMar", "telo", "Transposable Element", "Satellite"),
   useAllBiotypes = FALSE, tmm.norm = TRUE, useBiCor = TRUE,
-  how = c("cpm", "tpm"), batchNormalize = FALSE, batchVector = NULL,
-  design = NULL, collapseBy = c("gene_id", "gene_name"), annotate = FALSE)
+  how = c("cpm", "tpm"), design = NULL, collapseBy = c("gene_id",
+  "gene_name"), annotate = FALSE, saveToFile = FALSE)
 
 wgcna(kexp, read.cutoff = 2, minBranch = 2, whichWGCNA = c("single",
   "block"), entrezOnly = FALSE, species = c("Homo.sapiens", "Mus.musculus"),
@@ -24,8 +24,8 @@ wgcna(kexp, read.cutoff = 2, minBranch = 2, whichWGCNA = c("single",
   "PiggyBac", "Pseudogene", "Repetitive element", "satellite", "snRNA", "SVA",
   "TcMar", "telo", "Transposable Element", "Satellite"),
   useAllBiotypes = FALSE, tmm.norm = TRUE, useBiCor = TRUE,
-  how = c("cpm", "tpm"), batchNormalize = FALSE, batchVector = NULL,
-  design = NULL, collapseBy = c("gene_id", "gene_name"), annotate = FALSE)
+  how = c("cpm", "tpm"), design = NULL, collapseBy = c("gene_id",
+  "gene_name"), annotate = FALSE, saveToFile = FALSE)
 }
 \arguments{
 \item{kexp}{a repeat kexp over stages}
